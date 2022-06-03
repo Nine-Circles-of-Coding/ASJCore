@@ -8,28 +8,31 @@ import java.util.*
 
 abstract class ShadedObject(val shaderID: Int, val materialID: Int, val texture: ResourceLocation?): Comparable<ShadedObject> {
 	
-	val translations = ArrayList<Matrix4f>()
+	val translations = ArrayList<Pair<Matrix4f, Array<out Any?>>>()
 	
 	abstract fun preRender()
 	
-	fun addTranslation() {
+	fun addTranslation(vararg additionalData: Any?) {
 		glGetFloat(GL_MODELVIEW_MATRIX, usableBuffer)
-		translations.add(Matrix4f().load(usableBuffer) as Matrix4f)
+		translations.add(Matrix4f().load(usableBuffer) as Matrix4f to additionalData)
 		usableBuffer.clear()
 	}
 	
-	abstract fun drawMesh()
+	open fun drawMesh(data: Array<out Any?>) = Unit
 	
 	fun doRender() {
 		glMatrixMode(GL_MODELVIEW)
 		glPushMatrix()
-		for (translation in translations) {
+		for ((translation, data) in translations) {
 			glLoadIdentity()
 			translation.store(usableBuffer)
 			usableBuffer.flip()
 			glMultMatrix(usableBuffer)
 			usableBuffer.clear()
-			drawMesh()
+			if (data.size == 1 && data[0] == NULL) // REMOVE
+				drawMesh() // REMOVE
+			else // REMOVE
+				drawMesh(data)
 		}
 		glPopMatrix()
 	}
@@ -53,4 +56,12 @@ abstract class ShadedObject(val shaderID: Int, val materialID: Int, val texture:
 	companion object {
 		private val usableBuffer = BufferUtils.createFloatBuffer(32)
 	}
+	
+	// REMOVE backward compatibility
+	
+	fun addTranslation() = addTranslation(NULL)
+	
+	open fun drawMesh() = Unit
+	
+	private object NULL
 }

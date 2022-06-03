@@ -212,7 +212,7 @@ object ASJHookHandler {
 	// potion dup id fix
 	@JvmStatic
 	@Hook(targetMethod = "<init>")
-	fun Potion(id: Int, bad: Boolean, color: Int) {
+	fun Potion(thiz: Potion, id: Int, bad: Boolean, color: Int) {
 		if (PatcherConfigHandler.potionDuplication && Potion.potionTypes[id] != null)
 			throw IllegalArgumentException("Potion with id $id is already registered!")
 	}

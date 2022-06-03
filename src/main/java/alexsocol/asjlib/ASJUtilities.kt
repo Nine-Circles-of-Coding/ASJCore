@@ -708,8 +708,8 @@ object ASJUtilities {
 	 * @param keepLoaded Keep spawn chunks loaded
 	 */
 	@JvmStatic
-	fun registerDimension(id: Int, w: Class<out WorldProvider>, keepLoaded: Boolean) {
-		require(DimensionManager.registerProviderType(id, w, keepLoaded)) { String.format("Failed to register provider for id %d, One is already registered", id) }
+	fun registerDimension(id: Int, provider: Class<out WorldProvider>, keepLoaded: Boolean) {
+		require(DimensionManager.registerProviderType(id, provider, keepLoaded)) { String.format("Failed to register provider for id %d, One is already registered", id) }
 		DimensionManager.registerDimension(id, id)
 	}
 	

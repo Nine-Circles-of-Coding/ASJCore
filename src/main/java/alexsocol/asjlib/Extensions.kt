@@ -10,6 +10,7 @@ import net.minecraft.entity.*
 import net.minecraft.entity.player.*
 import net.minecraft.inventory.IInventory
 import net.minecraft.item.*
+import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.PotionEffect
 import net.minecraft.stats.Achievement
 import net.minecraft.tileentity.TileEntity
@@ -17,7 +18,7 @@ import net.minecraft.util.*
 import net.minecraft.world.World
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.oredict.OreDictionary
-import java.util.Random
+import java.util.*
 import kotlin.math.*
 
 fun convertRange(x: Number, originalStart: Number, originalEnd: Number, targetStart: Number, targetEnd: Number): Double {
@@ -30,10 +31,10 @@ fun Int.bidiRange(range: Int) = (this - range)..(this + range)
 fun safeIndex(id: Int, size: Int) = max(0, min(id, size - 1))
 
 fun <T> List<T>.safeGet(id: Int): T = this[safeIndex(id, size)]
-fun <T> List<T>.safeZeroGet(id: Int): T? = if (size == 0) null else this[safeIndex(id, size)]
+fun <T> List<T>.safeZeroGet(id: Int): T? = if (isEmpty()) null else this[safeIndex(id, size)]
 
 fun <T> Array<T>.safeGet(id: Int): T = this[safeIndex(id, size)]
-fun <T> Array<T>.safeZeroGet(id: Int): T? = if (size == 0) null else this[safeIndex(id, size)]
+fun <T> Array<T>.safeZeroGet(id: Int): T? = if (isEmpty()) null else this[safeIndex(id, size)]
 
 fun <T> Array<T>.shuffled(): MutableList<T> = toMutableList().apply { shuffle() }
 
@@ -42,7 +43,7 @@ fun <T> Array<T>.shuffled(): MutableList<T> = toMutableList().apply { shuffle() 
  */
 @OptIn(kotlin.experimental.ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
-@kotlin.jvm.JvmName("sumOfFloat")
+@JvmName("sumOfFloat")
 inline fun <T> Iterable<T>.sumOf(selector: (T) -> Float): Float {
 	var sum = 0f
 	for (element in this)
@@ -50,11 +51,7 @@ inline fun <T> Iterable<T>.sumOf(selector: (T) -> Float): Float {
 	return sum
 }
 
-fun <T> Collection<T>.random(random: Random): T {
-	if (isEmpty())
-		throw NoSuchElementException("Collection is empty.")
-	return elementAt(random.nextInt(size))
-}
+fun <T> Collection<T>.random(random: Random = Random()) = if (isEmpty()) null else elementAt(random.nextInt(size))
 
 /**
  * Makes a list of [Pair]s from original [Iterable] (zero to first, second to third, etc)
@@ -76,8 +73,8 @@ fun <T> MutableIterator<T>.onEach(action: MutableIterator<T>.(T) -> Unit): Mutab
 	return apply { for (element in this) action(element) }
 }
 
-fun <T> MutableCollection<T>.removeRandom(): T {
-	return this.random().also { remove(it) }
+fun <T> MutableCollection<T>.removeRandom(): T? {
+	return this.random()?.also { remove(it) }
 }
 
 fun <T> Array<T?>.ensureCapacity(min: Int): Array<T?> {
@@ -100,7 +97,7 @@ val Number.I get() = toInt()
 
 operator fun <T> T.plus(s: String) = "$this$s"
 
-fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+//fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
 /**
  * Tries block and ignores any thrown exceptions
@@ -199,7 +196,7 @@ fun Vec3(x: Number, y: Number, z: Number): Vec3 = Vec3.createVectorHelper(x.D, y
 
 fun EntityLivingBase.getActivePotionEffect(id: Int) = activePotionsMap[id] as PotionEffect?
 
-fun Entity.knockback(attacker: Entity, dmg: Float, force: Float) {
+fun Entity.knockback(attacker: Entity, force: Float) {
 	val (mx, _, mz) = Vector3.fromEntity(attacker).sub(this).mul(1, 0, 1).normalize().mul(force)
 	isAirBorne = true
 	motionX -= mx
@@ -210,6 +207,14 @@ fun Entity.knockback(attacker: Entity, dmg: Float, force: Float) {
 fun EntityPlayerMP.hasAchievement(a: Achievement?) = if (a == null) false else func_147099_x().hasAchievementUnlocked(a)
 
 fun EntityPlayer.hasAchievement(a: Achievement?) = if (this is EntityPlayerMP) hasAchievement(a) else if (this is EntityClientPlayerMP) hasAchievement(a) else false
+
+val EntityPlayer.persistentData: NBTTagCompound
+	get() {
+		if (!entityData.hasKey(EntityPlayer.PERSISTED_NBT_TAG))
+			entityData.setTag(EntityPlayer.PERSISTED_NBT_TAG, NBTTagCompound())
+		
+		return entityData.getCompoundTag(EntityPlayer.PERSISTED_NBT_TAG)
+	}
 
 fun ItemStack.itemEquals(ingredient: Any): Boolean {
 	return when (ingredient) {
@@ -349,3 +354,5 @@ fun EntityLivingBase.teleportTo(x: Double, y: Double, z: Double): Boolean {
 
 // REMOVE backwarn compatibility
 fun Entity.setPosition(c: ChunkCoordinates) = setPosition(c, 0.0, 0.0, 0.0)
+
+fun Entity.knockback(attacker: Entity, dmg: Float, force: Float) = knockback(attacker, force)

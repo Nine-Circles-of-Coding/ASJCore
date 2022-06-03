@@ -13,7 +13,7 @@ class ASJClassTransformer: IClassTransformer {
 		
 		var returnClass = basicClass
 		
-		try {
+		if (transformedName != "alexsocol.patcher.asm.ASJClassTransformer\$ClassVisitorPotionMethodPublicizer") try {
 			val cr = ClassReader(returnClass)
 			val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
 			val cv = ClassVisitorPotionMethodPublicizer(cw, "$name ($transformedName)")

@@ -3,7 +3,7 @@ apply plugin: 'kotlin'
 apply plugin: 'idea'
 
 buildscript {
-	ext.kotlinVersion = '1.6.21'
+	ext.kotlinVersion = '1.4.32'
 	
 	repositories {
 		mavenCentral()
@@ -33,7 +33,7 @@ repositories {
 }
 
 version = "1.1.4.0"
-archivesBaseName = "ASJCore"
+archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
 	version = "1.7.10-10.13.4.1614-1.7.10"
@@ -54,7 +54,7 @@ dependencies {
 //	compile "mcp.mobius.waila:Waila:1.5.10_1.7.10"
 	
 	compile fileTree(dir: 'lib', include: ['*.jar'])
-	compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+	embed "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 }
 
 compileJava {
@@ -72,7 +72,7 @@ jar {
 	
 	manifest {
 		attributes 'FMLAT': 'asjlib_at.cfg'
-		attributes 'FMLCorePlugin': 'alexsocol.common.core.asm.ASJHookLoader'
+		attributes 'FMLCorePlugin': 'alexsocol.patcher.asm.ASJHookLoader'
 		attributes 'FMLCorePluginContainsFMLMod': 'true'
 	}
 }

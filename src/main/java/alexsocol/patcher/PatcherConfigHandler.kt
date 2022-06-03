@@ -27,6 +27,8 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var voidFog = true
 	var WEBiomeID = 152
 	
+	var blacklistWither = true
+	
 	override fun addCategories() {
 		addCategory(CATEGORY_DANGER, "[WARNING!] Backup your world before changing something here!")
 	}
@@ -50,5 +52,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		showOreDict = loadProp(CATEGORY_GENERAL, "showOreDict", showOreDict, false, "Set this to true to show all oredict names in item tooltip when holding SHIFT")
 		voidFog = loadProp(CATEGORY_GENERAL, "voidFog", voidFog, false, "Set this to false to disable void fog")
 		WEBiomeID = loadProp(CATEGORY_GENERAL, "WEBiomeID", WEBiomeID, true, "ID for standart WorldEngine biome")
+		
+		blacklistWither = loadProp(CATEGORY_INTEGRATION, "NEI.blacklistWither", blacklistWither, true, "Set this to false to make Wither spawner visible")
 	}
 }

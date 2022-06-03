@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package alexsocol.patcher.asm
 
 import alexsocol.asjlib.ASJReflectionHelper
@@ -12,15 +14,13 @@ object ASJPatches {
 	fun patchNeiNoWither() {
 		if (!PatcherConfigHandler.blacklistWither) return
 		
-		val ItemMobSpawner: Class<*>
 		try {
-			ItemMobSpawner = Class.forName("codechicken.nei.ItemMobSpawner")
+			val ItemMobSpawner: Class<*> = Class.forName("codechicken.nei.ItemMobSpawner")
+			val IDtoNameMap: MutableMap<Int, String> = ASJReflectionHelper.getStaticValue(ItemMobSpawner, "IDtoNameMap") ?: return
+			
+			IDtoNameMap.remove(EntityList.classToIDMapping[EntityWither::class.java])
 		} catch (e: Throwable) {
 			return
 		}
-		
-		val IDtoNameMap: MutableMap<Int, String> = ASJReflectionHelper.getStaticValue(ItemMobSpawner, "IDtoNameMap") ?: return
-		
-		IDtoNameMap.remove(EntityList.classToIDMapping[EntityWither::class.java])
 	}
 }
