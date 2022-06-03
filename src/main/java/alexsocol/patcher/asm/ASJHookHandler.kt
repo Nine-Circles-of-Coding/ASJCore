@@ -1,6 +1,7 @@
 package alexsocol.patcher.asm
 
 import alexsocol.asjlib.*
+import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
 import com.google.common.collect.*
@@ -21,6 +22,7 @@ import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.*
 import net.minecraft.entity.EntityList.EntityEggInfo
+import net.minecraft.entity.ai.attributes.AttributeModifier
 import net.minecraft.entity.boss.*
 import net.minecraft.entity.effect.*
 import net.minecraft.entity.monster.*
@@ -36,12 +38,13 @@ import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
 import net.minecraft.world.biome.BiomeGenBase
-import net.minecraftforge.common.ISpecialArmor
-import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.client.event.EntityViewRenderEvent
+import net.minecraftforge.common.*
 import net.minecraftforge.common.util.ForgeDirection
 import org.lwjgl.opengl.*
 import org.objectweb.asm.Opcodes
 import java.nio.FloatBuffer
+import java.util.*
 import kotlin.math.*
 
 @Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST")
@@ -56,6 +59,18 @@ object ASJHookHandler {
 		thiz.boltLivingTime = ASJUtilities.randInBounds(1, 3)
 	}
 	
+	// AIOOBE 257+ crash fix
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ALWAYS, targetMethod = "<clinit>")
+	fun EntityEnderman(thiz: EntityEnderman?) {
+		EntityEnderman.attackingSpeedBoostModifierUUID = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0")
+		EntityEnderman.attackingSpeedBoostModifier = AttributeModifier(EntityEnderman.attackingSpeedBoostModifierUUID, "Attacking speed boost", 6.199999809265137, 0).setSaved(false)
+		
+		arrayOf(Blocks.grass, Blocks.dirt, Blocks.sand, Blocks.gravel, Blocks.yellow_flower, Blocks.red_flower, Blocks.brown_mushroom, Blocks.red_mushroom, Blocks.tnt, Blocks.cactus, Blocks.clay, Blocks.pumpkin, Blocks.melon_block, Blocks.mycelium).forEach {
+			EntityEnderman.setCarriable(it, true)
+		}
+	}
+	
 	@JvmStatic
 	@Hook(returnCondition = ReturnCondition.ON_TRUE)
 	fun spawnEntityInWorld(world: World, target: Entity?): Boolean {
@@ -64,6 +79,16 @@ object ASJHookHandler {
 		
 		world.addWeatherEffect(target)
 		return false
+	}
+	
+	// damageMobArmor config prop impl
+	@JvmStatic
+	@Hook
+	fun damageArmor(entity: EntityLivingBase, damage: Float) {
+		if (!PatcherConfigHandler.damageMobArmor) return
+		
+		val dmg = max(damage / 4f, 1f).I
+		for (i in 1..4) entity.getEquipmentInSlot(i)?.damageItem(dmg, entity)
 	}
 	
 	// Adding eggs
@@ -97,6 +122,13 @@ object ASJHookHandler {
 	@Hook(returnCondition = ReturnCondition.ALWAYS, createMethod = true)
 	fun getCommandAliases(c: CommandDefaultGameMode): List<String>? {
 		return null
+	}
+	
+	// summon usage
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ALWAYS, createMethod = true)
+	fun getCommandUsage(c: CommandSummon, sender: ICommandSender?): String {
+		return "commands.summon.usage.new"
 	}
 	
 	// entity batches in /summon command
@@ -234,9 +266,7 @@ object ASJHookHandler {
 		if (id.isBlank()) return true
 		
 		val (modid, name) = id.split(':')
-		val item = GameRegistry.findItem(modid, name) ?: Blocks.stone.toItem()
-		
-		stack.func_150996_a(item)
+		stack.func_150996_a(GameRegistry.findItem(modid, name))
 		stack.stackSize = nbt.getInteger("Count")
 		stack.itemDamage = max(0, nbt.getInteger("Damage"))
 		
@@ -270,6 +300,49 @@ object ASJHookHandler {
 	}
 	
 	fun armorNotApplied(targetClass: ISpecialArmor?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource?, damage: Double) = damage.F
+	
+//	@JvmStatic
+//	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+//	fun writeItemStackToBuffer(buf: PacketBuffer, stack: ItemStack?): Boolean {
+//		if (!PatcherConfigHandler.textIDs) return false
+//
+//		if (stack == null) {
+//			buf.writeStringToBuffer("")
+//			return true
+//		}
+//
+//		val name = GameRegistry.findUniqueIdentifierFor(stack.item).toString()
+//		buf.writeInt(name.length)
+//		buf.writeStringToBuffer(name)
+//		buf.writeInt(stack.stackSize)
+//		buf.writeInt(stack.itemDamage)
+//		var nbt: NBTTagCompound? = null
+//		if (stack.item.isDamageable || stack.item.shareTag)
+//			nbt = stack.stackTagCompound
+//
+//		buf.writeNBTTagCompoundToBuffer(nbt)
+//
+//		return true
+//	}
+//
+//	@JvmStatic
+//	@Hook(returnCondition = ReturnCondition.ON_NOT_NULL)
+//	fun readItemStackFromBuffer(buf: PacketBuffer): ItemStack? {
+//		if (!PatcherConfigHandler.textIDs) return null
+//
+//		val id = buf.readStringFromBuffer(buf.readInt())
+//		if (id.isEmpty())
+//			return null
+//
+//		val (modid, name) = id.split(':')
+//		val item = GameRegistry.findItem(modid, name) ?: return null
+//		val count = buf.readInt()
+//		val meta = buf.readInt()
+//		val stack = ItemStack(item, count, meta)
+//		stack.stackTagCompound = buf.readNBTTagCompoundFromBuffer()
+//
+//		return stack
+//	}
 	
 	// events
 	@JvmStatic
@@ -457,10 +530,16 @@ object ASJHookHandler {
 		} catch (ex: ConcurrentModificationException) {
 			ASJUtilities.log("Well, that was expected. Ignore.")
 			ex.printStackTrace()
-		} catch (e: Throwable) {
-			e.stackTrace.toMutableList().removeAll { "alexsocol" in it.className }
+		} catch (e: Exception) {
+			ASJReflectionHelper.setValue(message_f, e, ASJReflectionHelper.getValue<String>(message_f, e) + " Stop harassing me for your potion id conflicts! Go install Dragon API or smth! This hook has nothing to do with your problem! F*ck off!", true)
+			val stackTrace = e.stackTrace.filter { "alexsocol" !in it.className }.toTypedArray()
+			ASJReflectionHelper.setValue(stackTrace_f, e, stackTrace)
+			throw e
 		}
 	}
+	
+	private val message_f = ASJReflectionHelper.getField(java.lang.Throwable::class.java, "detailMessage")
+	private val stackTrace_f = ASJReflectionHelper.getField(java.lang.Throwable::class.java, "stackTrace")
 	
 	// modded fire breaking in creative fix
 	@JvmStatic
@@ -561,9 +640,9 @@ object ASJHookHandler {
 	
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook
+	@Hook(injectOnExit = true)
 	fun getSubBlocks(block: BlockDirt, item: Item?, tab: CreativeTabs?, list: MutableList<ItemStack?>) {
-		list.add(ItemStack(item, 1, 1))
+		list.add(list.size - 1, ItemStack(item, 1, 1))
 	}
 	
 	// int overflow fix
@@ -611,7 +690,7 @@ object ASJHookHandler {
 			val block = ActiveRenderInfo.getBlockAtEntityViewpoint(renderer.mc.theWorld, entitylivingbase, renderPartialTicks)
 			var f1: Float
 			
-			val event = net.minecraftforge.client.event.EntityViewRenderEvent.FogDensity(renderer, entitylivingbase, block, renderPartialTicks.D, 0.1f)
+			val event = EntityViewRenderEvent.FogDensity(renderer, entitylivingbase, block, renderPartialTicks.D, 0.1f)
 			
 			if (MinecraftForge.EVENT_BUS.post(event)) {
 				GL11.glFogf(GL11.GL_FOG_DENSITY, event.density)
@@ -693,7 +772,7 @@ object ASJHookHandler {
 					GL11.glFogf(GL11.GL_FOG_END, min(f1, 192f) * 0.5f)
 				}
 				
-				MinecraftForge.EVENT_BUS.post(net.minecraftforge.client.event.EntityViewRenderEvent.RenderFogEvent(renderer, entitylivingbase, block, renderPartialTicks.D, fogMode, f1))
+				MinecraftForge.EVENT_BUS.post(EntityViewRenderEvent.RenderFogEvent(renderer, entitylivingbase, block, renderPartialTicks.D, fogMode, f1))
 			}
 			
 			GL11.glEnable(GL11.GL_COLOR_MATERIAL)
@@ -702,7 +781,6 @@ object ASJHookHandler {
 	}
 	
 	// fixing some occasional OptiFine crashes
-	
 	@SideOnly(Side.CLIENT)
 	@Synchronized
 	@JvmStatic
@@ -730,4 +808,10 @@ object ASJHookHandler {
 		
 		return false
 	}
+	
+	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ALWAYS, injectOnExit = true)
+	fun getArmSwingAnimationEnd(e: EntityLivingBase, @Hook.ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getArmSwingAnimationEnd() else result
 }

@@ -33,6 +33,12 @@ public @interface Hook {
 	String superClass() default "";
 	
 	/**
+	 * Делает создаваемый метод абстрактным
+	 * @author KAIIIAK
+	 */
+	boolean isAbstract() default false;
+	
+	/**
 	 * Делает создаваемый метод статическим - теоретически бесполезный параметр
 	 * @author KAIIIAK
 	 */

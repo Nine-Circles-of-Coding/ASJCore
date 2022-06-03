@@ -87,3 +87,18 @@ inline fun <T> Array<T>.mapInPlace(transform: (T) -> T): Array<T> {
 	for (i in indices) this[i] = transform(this[i])
 	return this
 }
+
+// REMOVE backward compatibility
+/**
+ * Checks if element reference is in array
+ */
+infix fun <T> T.inn(array: Array<out T>): Boolean {
+	return array.indexOfLink(this) != -1
+}
+
+/**
+ * Checks if element reference is in iterable
+ */
+infix fun <T> T.inn(iterable: Iterable<T>): Boolean {
+	return iterable.indexOfLink(this) != -1
+}

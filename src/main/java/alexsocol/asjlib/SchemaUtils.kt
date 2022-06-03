@@ -70,8 +70,8 @@ object SchemaUtils {
 	}
 	
 	fun loadStructure(path: String): String {
-		return javaClass.getResourceAsStream("/assets/$path").use {
-			it.readBytes().toString(Charsets.UTF_8)
+		return javaClass.getResourceAsStream("/assets/$path")!!.use {
+			it.readBytes().decodeToString()
 		}
 	}
 }

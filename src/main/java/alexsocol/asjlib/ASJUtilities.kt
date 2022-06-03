@@ -86,20 +86,51 @@ object ASJUtilities {
 	
 	/**
 	 * Sends entity to dimension without portal frames
-	 * @param player The player to send
+	 * @param target Entity to send
 	 * @param dimTo ID of the dimension the entity should be sent to
 	 */
 	@JvmStatic
-	fun sendToDimensionWithoutPortal(player: EntityPlayer, dimTo: Int, x: Double, y: Double, z: Double) {
-		player.ridingEntity?.riddenByEntity = null
-		player.ridingEntity = null
+	fun sendToDimensionWithoutPortal(target: Entity, dimTo: Int, x: Double, y: Double, z: Double) {
+		if (target.worldObj.isRemote || target.isDead) return
 		
-		if (dimTo == player.dimension) {
-			player.setPositionAndUpdate(x, y, z)
-		} else if (player is EntityPlayerMP) {
-			val worldTo = player.mcServer.worldServerForDimension(dimTo)
-			player.mcServer.configurationManager.transferPlayerToDimension(player, dimTo, FreeTeleporter(worldTo, x, y, z))
+		val server = MinecraftServer.getServer()
+		
+		target.ridingEntity?.riddenByEntity = null
+		target.ridingEntity = null
+		
+		if (dimTo == target.dimension)
+			return target.setLocationAndAngles(x, y, z, target.rotationYaw, target.rotationPitch)
+		
+		val worldTo = server.worldServerForDimension(dimTo)
+		
+		if (target is EntityPlayerMP)
+			return server.configurationManager.transferPlayerToDimension(target, dimTo, FreeTeleporter(worldTo, x, y, z))
+		
+		val dimFrom = target.dimension
+		val worldFrom = server.worldServerForDimension(dimFrom)
+		
+		target.worldObj.theProfiler.startSection("changeDimension")
+		
+		worldTo.getBlock(x.mfloor(), y.mfloor(), z.mfloor()) // explicit world load ._.
+		
+		target.dimension = dimTo
+		target.worldObj.removeEntity(target)
+		target.isDead = false
+		
+		target.worldObj.theProfiler.startSection("reposition")
+		server.configurationManager.transferEntityToWorld(target, dimFrom, worldFrom, worldTo, FreeTeleporter(worldTo, x, y, z))
+		target.worldObj.theProfiler.endStartSection("reloading")
+		
+		EntityList.createEntityByName(EntityList.getEntityString(target), worldTo)?.also { new ->
+			new.copyDataFrom(target, true)
+			new.spawn(worldTo)
 		}
+		
+		target.isDead = true
+		target.worldObj.theProfiler.endSection()
+		worldFrom.resetUpdateEntityTick()
+		worldTo.resetUpdateEntityTick()
+		target.worldObj.theProfiler.endSection()
 	}
 	
 	/**
@@ -109,9 +140,9 @@ object ASJUtilities {
 	fun dispatchTEToNearbyPlayers(tile: TileEntity) {
 		val world = tile.worldObj
 		val players = world.playerEntities
-		for (player in players) if (player is EntityPlayerMP) {
-			if (Vector3.pointDistancePlane(player.posX, player.posZ, tile.xCoord + 0.5, tile.zCoord + 0.5) < 64) tile.descriptionPacket?.let { player.playerNetServerHandler.sendPacket(it) }
-		}
+		for (player in players)
+			if (player is EntityPlayerMP && Vector3.pointDistancePlane(player.posX, player.posZ, tile.xCoord + 0.5, tile.zCoord + 0.5) < 64)
+				tile.descriptionPacket?.let { player.playerNetServerHandler.sendPacket(it) }
 	}
 	
 	/**
@@ -363,7 +394,7 @@ object ASJUtilities {
 	 * @author a_dizzle (minecraftforum.net)
 	 */
 	@JvmStatic
-	fun isNotInFieldOfVision(target: EntityLivingBase, observer: EntityLivingBase): Boolean {
+	fun isNotInFieldOfVision(target: Entity, observer: EntityLivingBase): Boolean {
 		//save Entity 2's original rotation variables
 		var rotationYawPrime = observer.rotationYaw
 		var rotationPitchPrime = observer.rotationPitch
@@ -400,7 +431,7 @@ object ASJUtilities {
 			(e2.boundingBox.minY + e2.boundingBox.maxY) / 2.0 - (e1.posY + e1.eyeHeight.D)
 		}
 		
-		val d3 = MathHelper.sqrt_double(d0 * d0 + d2 * d2).D
+		val d3 = sqrt(d0 * d0 + d2 * d2)
 		val f2 = (atan2(d2, d0) * 180.0 / Math.PI).F - 90f
 		val f3 = (-(atan2(d1, d3) * 180.0 / Math.PI)).F
 		e1.rotationPitch = updateRotation(e1.rotationPitch, f3, pitch)
@@ -483,7 +514,8 @@ object ASJUtilities {
 	 * Raytracer for 'getMouseOver' method.
 	 */
 	private fun rayTrace(entity: EntityLivingBase, dist: Double): MovingObjectPosition? {
-		val vec3 = Vector3.fromEntity(entity).toVec3()
+		// NO THAT CANNOT BE REPLACED BY Vector3#fromEntity
+		val vec3 = Vec3.createVectorHelper(entity.posX, if (isServer) entity.posY + entity.eyeHeight else entity.posY, entity.posZ)
 		val vec31 = entity.lookVec
 		val vec32 = vec3.addVector(vec31.xCoord * dist, vec31.yCoord * dist, vec31.zCoord * dist)
 		return entity.worldObj.func_147447_a(vec3, vec32, false, false, true)
@@ -497,11 +529,29 @@ object ASJUtilities {
 	 */
 	@JvmStatic
 	fun getSelectedBlock(entity: EntityLivingBase, dist: Double, stopOnWater: Boolean): MovingObjectPosition? {
-		val vec3 = Vector3.fromEntity(entity).toVec3()
-		vec3.yCoord += entity.eyeHeight.D
-		val vec31 = entity.lookVec
-		val vec32 = vec3.addVector(vec31.xCoord * dist, vec31.yCoord * dist, vec31.zCoord * dist)
-		return entity.worldObj.rayTraceBlocks(vec3, vec32, stopOnWater)
+		// NO THAT CANNOT BE REPLACED BY Vector3#fromEntity
+		val pos = getPosition(entity)
+		val look = entity.getLook(0f)
+		val combined = pos.addVector(look.xCoord * dist, look.yCoord * dist, look.zCoord * dist)
+		return entity.worldObj.rayTraceBlocks(pos, combined, stopOnWater)
+	}
+	
+	/**
+	 * Corrected position vector
+	 * @author Azanor
+	 */
+	@JvmStatic
+	fun getPosition(target: EntityLivingBase): Vec3 {
+		val v = Vec3.createVectorHelper(target.posX, target.posY, target.posZ)
+		if (target.worldObj.isRemote) {
+			v.yCoord += (target.eyeHeight - if (target is EntityPlayer) target.defaultEyeHeight else 0f)
+		} else {
+			v.yCoord += target.eyeHeight
+			if (target.isSneaking)
+				v.yCoord -= 0.08
+		}
+		
+		return v
 	}
 	
 	@JvmStatic
@@ -762,26 +812,32 @@ object ASJUtilities {
 	
 	@JvmStatic
 	fun log(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.INFO, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.INFO, message)
 	}
 	
 	@JvmStatic
 	fun debug(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.DEBUG, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.DEBUG, message)
 	}
 	
 	@JvmStatic
 	fun warn(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.WARN, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.WARN, message)
 	}
 	
 	@JvmStatic
 	fun error(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.ERROR, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.ERROR, message)
 	}
 	
-	private fun trace(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.TRACE, message)
+	@JvmStatic
+	fun fatal(message: String) {
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.FATAL, message)
+	}
+	
+	@JvmStatic
+	fun trace(message: String) {
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.TRACE, message)
 	}
 	
 	@JvmStatic
@@ -821,7 +877,7 @@ object ASJUtilities {
 	
 	@JvmStatic
 	val isClient
-		get() = !isServer
+		get() = FMLCommonHandler.instance().effectiveSide == Side.CLIENT
 	
 	@JvmStatic
 	fun toString(nbt: NBTTagCompound): String {
@@ -851,4 +907,36 @@ object ASJUtilities {
 		sb.append("]")
 		return "$sb"
 	}
+	
+	// REMOVE backward compatibility
+	/**
+	 * Registers new entity
+	 * @param entityClass Entity's class file
+	 * @param name The name of this entity
+	 * @param instance Mod instance
+	 * @param id Mod-specific entity id
+	 */
+	@JvmStatic
+	fun registerEntity(entityClass: Class<out Entity>, name: String, instance: Any, id: Int) {
+		//val modid = FMLCommonHandler.instance().findContainerFor(instance).modId
+		EntityRegistry.registerModEntity(entityClass, name, id, instance, 128, 1, true)
+	}
+	
+	/**
+	 * Sends entity to dimension without portal frames
+	 * @param player player to send
+	 * @param dimTo ID of the dimension the entity should be sent to
+	 */
+	@JvmStatic
+	fun sendToDimensionWithoutPortal(player: EntityPlayer, dimTo: Int, x: Double, y: Double, z: Double) = sendToDimensionWithoutPortal(player as Entity, dimTo, x, y, z)
+	
+	/**
+	 * Checks whether [target] is NOT in FOV of [observer]
+	 * @author a_dizzle (minecraftforum.net)
+	 */
+	@JvmStatic
+	fun isNotInFieldOfVision(target: EntityLivingBase, observer: EntityLivingBase) = isNotInFieldOfVision(target as Entity, observer)
+	
+	@JvmStatic
+	fun sayToAllOnline(message: String) = sayToAllOnline(message, *emptyArray())
 }

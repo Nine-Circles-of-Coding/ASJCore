@@ -2,7 +2,6 @@ package alexsocol.asjlib.command
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.math.Vector3
-import alexsocol.patcher.PatcherConfigHandler
 import com.google.gson.*
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.FMLInjectionData
@@ -114,10 +113,10 @@ object CommandSchema: CommandBase() {
 		class LocationElement(val x: Int, val y: Int, val z: Int, val meta: Int, val nbt: NBTTagCompound?) {
 			
 			fun getJson(): JsonObject = JsonObject().apply {
-				addProperty("x", x)
-				addProperty("y", y)
-				addProperty("z", z)
-				addProperty("meta", meta)
+				if (x != 0) addProperty("x", x)
+				if (y != 0) addProperty("y", y)
+				if (z != 0) addProperty("z", z)
+				if (meta != 0) addProperty("meta", meta)
 				if (nbt != null) addProperty("nbt", nbt.toString())
 			}
 		}

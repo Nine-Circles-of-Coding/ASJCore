@@ -1,6 +1,6 @@
 package alexsocol.asjlib.math
 
-import alexsocol.asjlib.D
+import alexsocol.asjlib.*
 import cpw.mods.fml.relauncher.*
 import net.minecraft.util.*
 import org.lwjgl.opengl.GL11.*
@@ -45,12 +45,12 @@ open class OrientedBB() {
 		fromAABB(aabb)
 	}
 	
-	constructor(length: Number, height: Number, width: Number): this(AxisAlignedBB.getBoundingBox(length.D / -2, height.D / -2, width.D / -2, length.D / 2, height.D / 2, width.D / 2))
+	constructor(length: Number, height: Number, width: Number): this(getBoundingBox(length.D / -2, height.D / -2, width.D / -2, length.D / 2, height.D / 2, width.D / 2))
 	
 	/** Returns array of vertices for this BB  */
 	fun vertices() = arrayOf(a, b, c, d, e, f, g, h)
 	
-	fun fromParams(length: Number, height: Number, width: Number) = fromAABB(AxisAlignedBB.getBoundingBox(length.D / -2, height.D / -2, width.D / -2, length.D / 2, height.D / 2, width.D / 2))
+	fun fromParams(length: Number, height: Number, width: Number) = fromAABB(getBoundingBox(length.D / -2, height.D / -2, width.D / -2, length.D / 2, height.D / 2, width.D / 2))
 	
 	fun fromAABB(aabb: AxisAlignedBB): OrientedBB {
 		pos.set(getAABBPosition(aabb))
@@ -73,7 +73,7 @@ open class OrientedBB() {
 		val xs = listOf(a.x, b.x, c.x, d.x, e.x, f.x, g.x, h.x)
 		val ys = listOf(a.y, b.y, c.y, d.y, e.y, f.y, g.y, h.y)
 		val zs = listOf(a.z, b.z, c.z, d.z, e.z, f.z, g.z, h.z)
-		return AxisAlignedBB.getBoundingBox(xs.minOrNull()!!, ys.minOrNull()!!, zs.minOrNull()!!, xs.maxOrNull()!!, ys.maxOrNull()!!, zs.maxOrNull()!!)
+		return getBoundingBox(xs.minOrNull()!!, ys.minOrNull()!!, zs.minOrNull()!!, xs.maxOrNull()!!, ys.maxOrNull()!!, zs.maxOrNull()!!)
 	}
 	
 	/** Sets BB's center to this coords  */
@@ -456,4 +456,16 @@ open class OrientedBB() {
 		
 		fun getAABBSize(aabb: AxisAlignedBB) = Vector3(sqrt((aabb.minX - aabb.maxX).pow(2.0)) / 2.0, sqrt((aabb.minY - aabb.maxY).pow(2.0)) / 2.0, sqrt((aabb.minZ - aabb.maxZ).pow(2.0)) / 2.0)
 	}
+	
+	// REMOVE backward compatibility
+	constructor(length: Double, width: Double, height: Double): this(AxisAlignedBB.getBoundingBox(length/-2, width/-2, height/-2, length/2, width/2, height/2))
+	fun fromParams(length: Double, width: Double, height: Double) = fromAABB(AxisAlignedBB.getBoundingBox(length/-2, width/-2, height/-2, length/2, width/2, height/2))
+	fun setPosition(x: Double, y: Double, z: Double) = setPosition(x as Number, y, z)
+	fun translate(x: Double, y: Double, z: Double) = translate(x as Number, y, z)
+	fun scale(x: Double, y: Double, z: Double) = scale(x as Number, y, z)
+	fun rotate(angle: Double, axis: Vector3) = rotate(angle as Number, axis)
+	fun rotateLocal(angle: Double, axis: Vector3) = rotateLocal(angle as Number, axis)
+	fun rotateOX(angle: Double) = rotateOX(angle as Number)
+	fun rotateOY(angle: Double) = rotateOY(angle as Number)
+	fun rotateOZ(angle: Double) = rotateOZ(angle as Number)
 }

@@ -17,7 +17,7 @@ import net.minecraft.util.*
 import net.minecraft.world.World
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.oredict.OreDictionary
-import java.util.*
+import java.util.Random
 import kotlin.math.*
 
 fun convertRange(x: Number, originalStart: Number, originalEnd: Number, targetStart: Number, targetEnd: Number): Double {
@@ -94,9 +94,9 @@ infix fun <A, B, C> Pair<A, B>.with(third: C): Triple<A, B, C> = Triple(first, s
 
 fun String.substringEnding(lastNChars: Int): String = this.substring(0, length - lastNChars)
 
-val Number.D get() = this.toDouble()
-val Number.F get() = this.toFloat()
-val Number.I get() = this.toInt()
+val Number.D get() = toDouble()
+val Number.F get() = toFloat()
+val Number.I get() = toInt()
 
 operator fun <T> T.plus(s: String) = "$this$s"
 
@@ -121,6 +121,8 @@ fun Float.clamp(min: Float, max: Float) = MathHelper.clamp_float(this, min, max)
 fun Double.clamp(min: Double, max: Double) = MathHelper.clamp_double(this, min, max)
 fun Double.mfloor() = MathHelper.floor_double(this)
 fun Float.mfloor() = MathHelper.floor_float(this)
+fun Double.mceil() = MathHelper.ceiling_double_int(this)
+fun Float.mceil() = MathHelper.ceiling_float_int(this)
 
 fun Entity.setSize(wid: Double, hei: Double) {
 	var f2: Float
@@ -153,15 +155,21 @@ fun DataWatcher.getWatchableObjectChunkCoordinates(id: Int): ChunkCoordinates {
 	return getWatchedObject(id).`object` as ChunkCoordinates? ?: ChunkCoordinates()
 }
 
-fun getBoundingBox(x: Number, y: Number, z: Number) = AxisAlignedBB.getBoundingBox(x.D, y.D, z.D, x.D, y.D, z.D)!!
+fun getBoundingBox(x: Number, y: Number, z: Number) = getBoundingBox(x, y, z, x, y, z)
 
-fun TileEntity.boundingBox(range: Number = 0) = AxisAlignedBB.getBoundingBox(xCoord.D, yCoord.D, zCoord.D, xCoord.D + 1, yCoord.D + 1, zCoord.D + 1).expand(range)
+fun getBoundingBox(x1: Number, y1: Number, z1: Number, x2: Number, y2: Number, z2: Number) = AxisAlignedBB.getBoundingBox(x1.D, y1.D, z1.D, x2.D, y2.D, z2.D)!!
 
-fun Entity.boundingBox(range: Number = 0) = AxisAlignedBB.getBoundingBox(posX, posY, posZ, posX + width, posY + height, posZ + width).offset(width / 2.0, 0.0, width / 2.0).expand(range)
+fun TileEntity.boundingBox(range: Number = 0) = getBoundingBox(xCoord, yCoord, zCoord, xCoord + 1, yCoord + 1, zCoord + 1).expand(range)
 
-fun AxisAlignedBB.expand(d: Number) = this.expand(d.D, d.D, d.D)!!
+fun Entity.boundingBox(range: Number = 0) = getBoundingBox(posX, posY, posZ, posX + width, posY + height, posZ + width).offset(width / 2.0, 0.0, width / 2.0).expand(range)
 
-fun AxisAlignedBB.offset(d: Number) = this.offset(d.D, d.D, d.D)!!
+fun AxisAlignedBB.expand(d: Number) = expand(d, d, d)
+
+fun AxisAlignedBB.offset(d: Number) = offset(d, d, d)
+
+fun AxisAlignedBB.expand(x: Number, y: Number, z: Number) = expand(x.D, y.D, z.D)!!
+
+fun AxisAlignedBB.offset(x: Number, y: Number, z: Number) = offset(x.D, y.D, z.D)!!
 
 fun Entity.playSoundAtEntity(sound: String, volume: Float, duration: Float) {
 	worldObj.playSoundAtEntity(this, sound, volume, duration)
@@ -169,13 +177,15 @@ fun Entity.playSoundAtEntity(sound: String, volume: Float, duration: Float) {
 
 fun Entity.setPosition(e: Entity, oX: Double = 0.0, oY: Double = 0.0, oZ: Double = 0.0) = setPosition(e.posX + oX, e.posY + oY, e.posZ + oZ)
 
-fun Entity.setPosition(c: ChunkCoordinates) = setPosition(c.posX.D, c.posY.D, c.posZ.D)
+fun Entity.setPosition(c: ChunkCoordinates, oX: Double = 0.0, oY: Double = 0.0, oZ: Double = 0.0) = setPosition(c.posX + oX, c.posY + oY, c.posZ + oZ)
 
 fun Entity.setMotion(x: Double, y: Double = x, z: Double = y) {
 	motionX = x
 	motionY = y
 	motionZ = z
 }
+
+fun Entity.spawn(world: World = this.worldObj) = world.spawnEntityInWorld(this)
 
 operator fun ChunkCoordinates.component1() = posX
 operator fun ChunkCoordinates.component2() = posY
@@ -185,11 +195,16 @@ operator fun Vec3.component1() = xCoord
 operator fun Vec3.component2() = yCoord
 operator fun Vec3.component3() = zCoord
 
+fun Vec3(x: Number, y: Number, z: Number): Vec3 = Vec3.createVectorHelper(x.D, y.D, z.D)
+
 fun EntityLivingBase.getActivePotionEffect(id: Int) = activePotionsMap[id] as PotionEffect?
 
 fun Entity.knockback(attacker: Entity, dmg: Float, force: Float) {
-	val (mx, mz) = Vector3.fromEntity(attacker).sub(this).mul(1, 0, 1).normalize().mul(force)
-	if (this is EntityLivingBase) knockBack(attacker, dmg, mx, mz)
+	val (mx, _, mz) = Vector3.fromEntity(attacker).sub(this).mul(1, 0, 1).normalize().mul(force)
+	isAirBorne = true
+	motionX -= mx
+	motionY += 0.4
+	motionZ -= mz
 }
 
 fun EntityPlayerMP.hasAchievement(a: Achievement?) = if (a == null) false else func_147099_x().hasAchievementUnlocked(a)
@@ -237,6 +252,8 @@ val Block.id get() = Block.getIdFromBlock(this)
 val Item.id get() = Item.getIdFromItem(this)
 val ItemStack.block: Block? get() = item.toBlock()
 
+fun PotionEffectU(id: Int, time: Int, lvl: Int = 0, ambient: Boolean = false) = PotionEffect(id, time, lvl, ambient).apply { curativeItems.clear() }
+
 fun <T> T.eventForge(): T {
 	MinecraftForge.EVENT_BUS.register(this)
 	return this
@@ -272,3 +289,63 @@ fun World.setBlock(e: Entity, block: Block, x: Int = 0, y: Int = 0, z: Int = 0, 
 fun addStringToTooltip(tooltip: MutableList<Any?>, s: String, vararg format: String) {
 	tooltip.add(StatCollector.translateToLocalFormatted(s, *format).replace("&".toRegex(), "\u00a7"))
 }
+
+fun EntityLivingBase.teleportRandomly(diameter: Double): Boolean {
+	val d0 = posX + (rng.nextDouble() - 0.5) * diameter
+	val d1 = posY + (rng.nextInt(diameter.I) - (diameter.I) / 2)
+	val d2 = posZ + (rng.nextDouble() - 0.5) * diameter
+	return teleportTo(d0, d1, d2)
+}
+
+fun EntityLivingBase.teleportTo(x: Double, y: Double, z: Double): Boolean {
+	val prevX = posX
+	val prevY = posY
+	val prevZ = posZ
+	posX = x
+	posY = y
+	posZ = z
+	var flag = false
+	val i = posX.mfloor()
+	var j = posY.mfloor()
+	val k = posZ.mfloor()
+	if (worldObj.blockExists(i, j, k)) {
+		var flag1 = false
+		while (!flag1 && j > 0) {
+			val block: Block = worldObj.getBlock(i, j - 1, k)
+			if (block.material.blocksMovement()) {
+				flag1 = true
+			} else {
+				--posY
+				--j
+			}
+		}
+		if (flag1) {
+			setPosition(posX, posY, posZ)
+			if (worldObj.getCollidingBoundingBoxes(this, boundingBox).isEmpty() && !worldObj.isAnyLiquid(boundingBox)) {
+				flag = true
+			}
+		}
+	}
+	return if (!flag) {
+		setPosition(prevX, prevY, prevZ)
+		false
+	} else {
+		val short1: Short = 128
+		for (l in 0 until short1) {
+			val d6 = l.toDouble() / (short1.toDouble() - 1.0)
+			val f: Float = (rng.nextFloat() - 0.5f) * 0.2f
+			val f1: Float = (rng.nextFloat() - 0.5f) * 0.2f
+			val f2: Float = (rng.nextFloat() - 0.5f) * 0.2f
+			val d7: Double = prevX + (posX - prevX) * d6 + (rng.nextDouble() - 0.5) * width * 2.0
+			val d8: Double = prevY + (posY - prevY) * d6 + rng.nextDouble() * height
+			val d9: Double = prevZ + (posZ - prevZ) * d6 + (rng.nextDouble() - 0.5) * width * 2.0
+			worldObj.spawnParticle("portal", d7, d8, d9, f.toDouble(), f1.toDouble(), f2.toDouble())
+		}
+		worldObj.playSoundEffect(prevX, prevY, prevZ, "mob.endermen.portal", 1.0f, 1.0f)
+		playSound("mob.endermen.portal", 1.0f, 1.0f)
+		true
+	}
+}
+
+// REMOVE backwarn compatibility
+fun Entity.setPosition(c: ChunkCoordinates) = setPosition(c, 0.0, 0.0, 0.0)

@@ -15,6 +15,8 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var biomeDuplication = false
 	var clearWater = true
 	var creativeDamage = false
+	var damageMobArmor = true
+	var explosions = true
 	var floatingTrapDoors = true
 	var interactionSecurity = "default"
 	var lightningID = 150
@@ -24,8 +26,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var showOreDict = true
 	var voidFog = true
 	var WEBiomeID = 152
-	
-	var blacklistWither = true
 	
 	override fun addCategories() {
 		addCategory(CATEGORY_DANGER, "[WARNING!] Backup your world before changing something here!")
@@ -39,6 +39,8 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		biomeDuplication = loadProp(CATEGORY_GENERAL, "biomeDuplication", biomeDuplication, false, "Set this to true to allow registering duplicated biome ids")
 		clearWater = loadProp(CATEGORY_GENERAL, "clearWater", clearWater, false, "Set this to true for clear, transparent water")
 		creativeDamage = loadProp(CATEGORY_GENERAL, "creativeDamage", creativeDamage, false, "Set this to true to allow taking damage in creative")
+		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")
+		explosions = loadProp(CATEGORY_GENERAL, "explosions", explosions, false, "Set this to false to disable explosions")
 		floatingTrapDoors = loadProp(CATEGORY_GENERAL, "floatingTrapDoors", floatingTrapDoors, false, "Set this to false to forbid trapdoors to remain free-floating (as in vanilla, may break some world structures)")
 		interactionSecurity = loadProp(CATEGORY_GENERAL, "interactionSecurity", interactionSecurity, false, "Region security manager")
 		lightningID = loadProp(CATEGORY_GENERAL, "lightningID", lightningID, true, "ID for lightning bolt entity")
@@ -48,7 +50,5 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		showOreDict = loadProp(CATEGORY_GENERAL, "showOreDict", showOreDict, false, "Set this to true to show all oredict names in item tooltip when holding SHIFT")
 		voidFog = loadProp(CATEGORY_GENERAL, "voidFog", voidFog, false, "Set this to false to disable void fog")
 		WEBiomeID = loadProp(CATEGORY_GENERAL, "WEBiomeID", WEBiomeID, true, "ID for standart WorldEngine biome")
-		
-		blacklistWither = loadProp(CATEGORY_INTEGRATION, "NEI.blacklistWither", blacklistWither, true, "Set this to false to make Wither spawner visible")
 	}
 }

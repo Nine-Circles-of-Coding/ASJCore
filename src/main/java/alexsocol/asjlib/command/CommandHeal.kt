@@ -25,7 +25,7 @@ object CommandHeal: CommandBase() {
 			eAll = contains("e!")
 		}
 		
-		if (heal) sender.health = sender.maxHealth
+		if (heal) sender.heal(sender.maxHealth)
 		if (feed) sender.foodStats.addStats(20, 20f)
 		if (effs) sender.activePotionEffects.removeAll {
 			val flag = Potion.potionTypes[(it as PotionEffect).potionID].isBadEffect || eAll

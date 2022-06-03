@@ -151,6 +151,9 @@ public class HookContainerParser {
 			invalidHook("Hook method must return object if returnCodition is ON_NULL or ON_NOT_NULL.");
 			return;
 		}
+		if (this.annotationValues.containsKey("isAbstract")) {
+			builder.setIsAbstract(Boolean.TRUE.equals(this.annotationValues.get("isAbstract")));
+		}
 		if (annotationValues.containsKey("isStatic")) {
 			builder.setIsStatic(Boolean.TRUE.equals(annotationValues.get("isStatic")));
 		}

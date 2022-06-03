@@ -45,6 +45,7 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun onServerStarting(e: FMLServerStartingEvent) {
 		e.registerServerCommand(CommandDimTP)
+		e.registerServerCommand(CommandExplode)
 		e.registerServerCommand(CommandHeal)
 		e.registerServerCommand(CommandSchema)
 		

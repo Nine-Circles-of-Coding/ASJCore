@@ -4,9 +4,10 @@ import alexsocol.asjlib.*
 import net.minecraft.entity.*
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
-import net.minecraft.util.*
+import net.minecraft.util.DamageSource
 import net.minecraft.world.World
 import net.minecraftforge.common.ForgeHooks
+import kotlin.math.sqrt
 
 @Suppress("LeakingThis")
 abstract class EntityRidable(world: World): EntityCreature(world) {
@@ -70,7 +71,7 @@ abstract class EntityRidable(world: World): EntityCreature(world) {
 			prevLimbSwingAmount = limbSwingAmount
 			val d0 = posX - prevPosX
 			val d1 = posZ - prevPosZ
-			var f4 = MathHelper.sqrt_double(d0 * d0 + d1 * d1) * 4f
+			var f4 = sqrt(d0 * d0 + d1 * d1).F * 4f
 			if (f4 > 1f) {
 				f4 = 1f
 			}

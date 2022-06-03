@@ -20,3 +20,7 @@ asjcore.commands.schema.loadOk=Схема загружена
 asjcore.commands.schema.noFile=Файл %s не найден
 asjcore.commands.schema.noPosN=Установите позицию %s перед сохранением
 asjcore.commands.schema.posSet=Позиция %s установлен на (%s, %s, %s)
+
+commands.summon.usage.new=/summon <имя> [['x'кол-во]] [x] [y] [z] [нбт]
+
+explode.usage=/explode [размер] [разрушения] [огонь]

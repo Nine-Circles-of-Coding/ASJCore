@@ -87,6 +87,11 @@ object ASJRenderHelper {
 		glColor4ub((color shr 16 and 0xFF).toByte(), (color shr 8 and 0xFF).toByte(), (color and 0xFF).toByte(), (color shr 24 and 0xFF).toByte())
 	}
 	
+	@JvmStatic
+	fun glColor1u(color: UInt) {
+		glColor1u(color.toInt())
+	}
+	
 	/**
 	 * Interpolates values, e.g. for smoother render
 	 */

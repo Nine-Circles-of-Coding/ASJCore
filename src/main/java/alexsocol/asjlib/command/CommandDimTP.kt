@@ -21,10 +21,10 @@ object CommandDimTP: CommandBase() {
 			sender as EntityPlayer
 			val id = args[0].toInt()
 			val w = MinecraftServer.getServer().worldServerForDimension(id) ?: throw NoWorldException("Loaded dimension is null")
-			var s: ChunkCoordinates? = sender.getBedLocation(id)
+//			val s: ChunkCoordinates = sender.getBedLocation(id) ?: w.spawnPoint ?: ChunkCoordinates(0, w.getHeightValue(0, 0) + 1, 0)
+			val s: ChunkCoordinates = w.spawnPoint ?: throw NoWorldException("No spawnpoint")
 			// stupid minecraft returns overworld coordinates in ANY dimension
-			if (s == null) s = w.spawnPoint!!
-			ASJUtilities.sendToDimensionWithoutPortal(sender, id, s.posX.D, s.posY.D, s.posZ.D)
+			ASJUtilities.sendToDimensionWithoutPortal(sender, id, s.posX + 0.5, s.posY.D, s.posZ + 0.5)
 		} catch (e: NoWorldException) {
 			throw WrongUsageException("asjcore.commands.tpdim.worlderr", e)
 		} catch (e: Throwable) {
