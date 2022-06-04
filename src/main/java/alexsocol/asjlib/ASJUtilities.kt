@@ -214,32 +214,26 @@ object ASJUtilities {
 	 * @see [TAG_ASJIGNORENBT]
 	 * @see [TAG_ASJONLYNBT]
 	 */
-	// WHAT THE HELL IS WRONG WITH THE COMPILER?!
 	@JvmStatic
 	fun isItemStackEqualCrafting(ingredient: ItemStack, input: ItemStack): Boolean {
-		if (!ingredient.isItemEqual(input))
-			return false
-		
-		if (ItemNBTHelper.getBoolean(ingredient, TAG_ASJIGNORENBT, false))
-			return true
-		
-		if (ItemNBTHelper.getBoolean(ingredient, TAG_ASJONLYNBT, false)) {
-			val tags = input.tagCompound ?: return false
-			val itags = ingredient.tagCompound.copy() as NBTTagCompound
-			itags.removeTag(TAG_ASJONLYNBT)
-			
-			for (key in itags.func_150296_c()) {
-				if (!tags.hasKey(key as String))
-					return false
+		when {
+			!ingredient.isItemEqual(input)                                -> return false
+			ItemNBTHelper.getBoolean(ingredient, TAG_ASJIGNORENBT, false) -> return true
+			ItemNBTHelper.getBoolean(ingredient, TAG_ASJONLYNBT, false)   -> {
+				val tags = input.tagCompound ?: return false
+				val itags = ingredient.tagCompound.copy() as NBTTagCompound
+				itags.removeTag(TAG_ASJONLYNBT)
 				
-				if (itags.getTag(key) != tags.getTag(key))
-					return false
+				for (key in itags.func_150296_c()) {
+					if (!tags.hasKey(key as String)) return false
+					
+					if (itags.getTag(key) != tags.getTag(key)) return false
+				}
+				
+				return true
 			}
-			
-			return true
+			else                                                          -> return ingredient.areItemStackTagsEqual(input)
 		}
-		
-		return ingredient.areItemStackTagsEqual(input)
 	}
 	
 	/**
