@@ -531,7 +531,7 @@ object ASJHookHandler {
 			ASJUtilities.log("Well, that was expected. Ignore.")
 			ex.printStackTrace()
 		} catch (e: Exception) {
-			ASJReflectionHelper.setValue(message_f, e, ASJReflectionHelper.getValue<String>(message_f, e) + " Stop harassing me for your potion id conflicts! Go install Dragon API or smth! This hook has nothing to do with your problem! F*ck off!", true)
+			ASJReflectionHelper.setValue(message_f, e, ASJReflectionHelper.getValue<String>(message_f, e) + "\nIt is possible that you got potion ID conflict. Try installing 'Extended Potions' or make sure you have all IDs BELOW 128!", true)
 			val stackTrace = e.stackTrace.filter { "alexsocol" !in it.className }.toTypedArray()
 			ASJReflectionHelper.setValue(stackTrace_f, e, stackTrace)
 			throw e
@@ -809,8 +809,6 @@ object ASJHookHandler {
 		return false
 	}
 	
-	
-	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(returnCondition = ReturnCondition.ALWAYS, injectOnExit = true)
 	fun getArmSwingAnimationEnd(e: EntityLivingBase, @Hook.ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getArmSwingAnimationEnd() else result

@@ -1,1 +1,2 @@
-Fixed direct stack meta getter/setter
+Fixed "getArmSwingAnimationEnd" crash
+Fixed "updatePotionEffects" crash
