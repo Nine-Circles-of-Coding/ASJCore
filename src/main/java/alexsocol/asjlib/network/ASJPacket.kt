@@ -43,7 +43,7 @@ abstract class ASJPacket: IMessage {
 		
 		@JvmStatic
 		fun write(buf: ByteBuf, w: Char) {
-			buf.writeChar(w.toInt())
+			buf.writeChar(w.code)
 		}
 		
 		@JvmStatic

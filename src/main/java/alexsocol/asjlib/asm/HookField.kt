@@ -1,7 +1,7 @@
 package alexsocol.asjlib.asm
 
 @Target(AnnotationTarget.FIELD)
-@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.RUNTIME)
 /**
  * WARNING! Incompatible with kotlin properties! Please, use ONLY java for classes with HookFields
  *

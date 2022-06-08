@@ -29,9 +29,6 @@ abstract class ShadedObject(val shaderID: Int, val materialID: Int, val texture:
 			usableBuffer.flip()
 			glMultMatrix(usableBuffer)
 			usableBuffer.clear()
-			if (data.size == 1 && data[0] == NULL) // REMOVE
-				drawMesh() // REMOVE
-			else // REMOVE
 				drawMesh(data)
 		}
 		glPopMatrix()
@@ -44,7 +41,6 @@ abstract class ShadedObject(val shaderID: Int, val materialID: Int, val texture:
 		if (shaderID > other.shaderID) return 1
 		if (materialID < other.materialID) return -1
 		return if (materialID > other.materialID) 1 else 0
-		//if (texture != ro.texture) return -1;
 	}
 	
 	override fun equals(other: Any?) =
@@ -56,12 +52,4 @@ abstract class ShadedObject(val shaderID: Int, val materialID: Int, val texture:
 	companion object {
 		private val usableBuffer = BufferUtils.createFloatBuffer(32)
 	}
-	
-	// REMOVE backward compatibility
-	
-	fun addTranslation() = addTranslation(NULL)
-	
-	open fun drawMesh() = Unit
-	
-	private object NULL
 }

@@ -3,6 +3,7 @@ package alexsocol.asjlib.math
 import cpw.mods.fml.relauncher.*
 import java.math.*
 import java.nio.*
+import kotlin.math.*
 
 /**
  * Class representing 4x4 Matrix
@@ -106,8 +107,8 @@ class Matrix4 {
 	}
 	
 	fun rotate(angle: Double, axis: Vector3): Matrix4 {
-		val c = Math.cos(angle)
-		val s = Math.sin(angle)
+		val c = cos(angle)
+		val s = sin(angle)
 		val mc = 1f - c
 		val xy = axis.x * axis.y
 		val yz = axis.y * axis.z

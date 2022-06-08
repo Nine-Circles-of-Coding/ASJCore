@@ -9,13 +9,14 @@ import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.entity.living.LivingAttackEvent
 import net.minecraftforge.event.entity.player.EntityInteractEvent
 
-object InteractionSecurity: ISecurityManager {
+@Suppress("unused")
+object InteractionSecurity {
 	
-	override fun canDoSomethingHere(performer: EntityLivingBase) = canDoSomethingHere(performer, performer.posX, performer.posY, performer.posZ)
+	fun canDoSomethingHere(performer: EntityLivingBase) = canDoSomethingHere(performer, performer.posX, performer.posY, performer.posZ, performer.worldObj)
 	
-	override fun canDoSomethingHere(performer: EntityLivingBase, x: Double, y: Double, z: Double, world: World) = canDoSomethingHere(performer, x.mfloor(), y.mfloor(), z.mfloor())
+	fun canDoSomethingHere(performer: EntityLivingBase, x: Double, y: Double, z: Double, world: World = performer.worldObj) = canDoSomethingHere(performer, x.mfloor(), y.mfloor(), z.mfloor(), world)
 	
-	override fun canDoSomethingHere(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World): Boolean {
+	fun canDoSomethingHere(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World = performer.worldObj): Boolean {
 		if (performer !is EntityPlayerMP) return true
 		return world.canMineBlock(performer, x, y, z)
 	}
@@ -26,17 +27,5 @@ object InteractionSecurity: ISecurityManager {
 		else                      -> true
 	}
 	
-	override fun canHurtEntity(attacker: EntityLivingBase, target: EntityLivingBase) = if (attacker === target) true else !MinecraftForge.EVENT_BUS.post(LivingAttackEvent(target, if (attacker is EntityPlayer) DamageSource.causePlayerDamage(attacker) else DamageSource.causeMobDamage(attacker), 0f))
-	
-	// REMOVE backward compatibility
-	override fun canDoSomethingWithEntity(performer: EntityLivingBase, target: Entity) = canInteractWithEntity(performer, target)
-}
-
-// REMOVE backward compatibility FUCK THAT
-interface ISecurityManager {
-	fun canDoSomethingHere(performer: EntityLivingBase): Boolean
-	fun canDoSomethingHere(performer: EntityLivingBase, x: Double, y: Double, z: Double, world: World = performer.worldObj): Boolean
-	fun canDoSomethingHere(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World = performer.worldObj): Boolean
-	fun canDoSomethingWithEntity(performer: EntityLivingBase, target: Entity): Boolean
-	fun canHurtEntity(attacker: EntityLivingBase, target: EntityLivingBase): Boolean
+	fun canHurtEntity(attacker: EntityLivingBase, target: EntityLivingBase) = if (attacker === target) true else !MinecraftForge.EVENT_BUS.post(LivingAttackEvent(target, if (attacker is EntityPlayer) DamageSource.causePlayerDamage(attacker) else DamageSource.causeMobDamage(attacker), 0f))
 }

@@ -13,6 +13,7 @@ import java.util.logging.*;
  *
  * @author Clashsoft; slightly improved by AlexSocol
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ASJReflectionHelper {
 	
 	public static final Field modifiersField;
@@ -210,13 +211,8 @@ public class ASJReflectionHelper {
 	@Nullable
 	public static Method getMethod(Class clazz, String methodName, Class[] parameterTypes) {
 		try {
-			Method m = clazz.getDeclaredMethod(methodName, parameterTypes);
-			if (m != null) {
-				return m;
-			}
-		} catch (NoSuchMethodException ex) {
-			ex.printStackTrace();
-		} catch (SecurityException ex) {
+			return clazz.getDeclaredMethod(methodName, parameterTypes);
+		} catch (NoSuchMethodException | SecurityException ex) {
 			ex.printStackTrace();
 		}
 		return null;

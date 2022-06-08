@@ -351,8 +351,3 @@ fun EntityLivingBase.teleportTo(x: Double, y: Double, z: Double): Boolean {
 		true
 	}
 }
-
-// REMOVE backwarn compatibility
-fun Entity.setPosition(c: ChunkCoordinates) = setPosition(c, 0.0, 0.0, 0.0)
-
-fun Entity.knockback(attacker: Entity, dmg: Float, force: Float) = knockback(attacker, force)

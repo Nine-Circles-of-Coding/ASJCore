@@ -97,10 +97,7 @@ public class WE_BigTreeGen extends WorldGenerator {
 					f2 *= 0.5F;
 				}
 				//-//
-				if (f2 < 0.0F) {
-					--j;
-					--i1;
-				} else {
+				if (!(f2 < 0.0F)) {
 					for (double d0 = 0.5D; j1 < i; ++j1) {
 						double d1 = scaleWidth * (double) f2 * ((double) p_76484_2_.nextFloat() + 0.328D), d2 = (double) p_76484_2_.nextFloat() * 2.0D * Math.PI;
 						int k1 = MathHelper.floor_double(d1 * Math.sin(d2) + (double) basePos[0] + d0),
@@ -127,10 +124,9 @@ public class WE_BigTreeGen extends WorldGenerator {
 							}
 						}
 					}
-					
-					--j;
-					--i1;
 				}
+				--j;
+				--i1;
 			}
 			
 			leafNodes = new int[k][4];

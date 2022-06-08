@@ -1,2 +1,2 @@
-Fixed "getArmSwingAnimationEnd" crash
-Fixed "updatePotionEffects" crash
+Updated Kotlin to 1.6.21
+Removed deprecated and backward-compatibility methods

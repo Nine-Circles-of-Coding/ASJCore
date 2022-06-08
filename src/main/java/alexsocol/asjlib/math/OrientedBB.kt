@@ -456,16 +456,4 @@ open class OrientedBB() {
 		
 		fun getAABBSize(aabb: AxisAlignedBB) = Vector3(sqrt((aabb.minX - aabb.maxX).pow(2.0)) / 2.0, sqrt((aabb.minY - aabb.maxY).pow(2.0)) / 2.0, sqrt((aabb.minZ - aabb.maxZ).pow(2.0)) / 2.0)
 	}
-	
-	// REMOVE backward compatibility
-	constructor(length: Double, width: Double, height: Double): this(AxisAlignedBB.getBoundingBox(length/-2, width/-2, height/-2, length/2, width/2, height/2))
-	fun fromParams(length: Double, width: Double, height: Double) = fromAABB(AxisAlignedBB.getBoundingBox(length/-2, width/-2, height/-2, length/2, width/2, height/2))
-	fun setPosition(x: Double, y: Double, z: Double) = setPosition(x as Number, y, z)
-	fun translate(x: Double, y: Double, z: Double) = translate(x as Number, y, z)
-	fun scale(x: Double, y: Double, z: Double) = scale(x as Number, y, z)
-	fun rotate(angle: Double, axis: Vector3) = rotate(angle as Number, axis)
-	fun rotateLocal(angle: Double, axis: Vector3) = rotateLocal(angle as Number, axis)
-	fun rotateOX(angle: Double) = rotateOX(angle as Number)
-	fun rotateOY(angle: Double) = rotateOY(angle as Number)
-	fun rotateOZ(angle: Double) = rotateOZ(angle as Number)
 }

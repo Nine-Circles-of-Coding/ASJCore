@@ -18,7 +18,7 @@ object CommandHeal: CommandBase() {
 		var effs: Boolean
 		var eAll: Boolean
 		
-		args.getOrElse(0) { "hfe" }.toLowerCase().apply {
+		args.getOrElse(0) { "hfe" }.lowercase().apply {
 			heal = contains('h')
 			feed = contains('f')
 			effs = contains('e')

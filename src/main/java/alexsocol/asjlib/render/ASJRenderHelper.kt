@@ -64,7 +64,7 @@ object ASJRenderHelper {
 		}
 	}
 	
-	fun Color.toVec3() = Vec3.createVectorHelper(red.D, green.D, blue.D)
+	fun Color.toVec3() = Vec3.createVectorHelper(red.D, green.D, blue.D)!!
 	
 	/**
 	 * @return enum color packed in uInt with max alpha
@@ -109,38 +109,6 @@ object ASJRenderHelper {
 	 */
 	@JvmStatic
 	fun interpolatedTranslationReverse(entity: Entity) = glTranslated(-interpolate(entity.lastTickPosX, entity.posX), -interpolate(entity.lastTickPosY, entity.posY), -interpolate(entity.lastTickPosZ, entity.posZ))
-	
-	/**
-	 * Sets matrix and translation to world's zero coordinates
-	 * so you can render something as in TileEntitySpecialRenderer (if you are used to it)
-	 * Don't forget to call [.postRenderISBRH]
-	 * Use this before your render something in ISimpleBlockRenderingHandler
-	 */
-	@JvmStatic
-	@Deprecated("Do not use it")
-	fun preRenderISBRH(x: Int, z: Int) {
-		val X = (x / 16 - if (x < 0 && x % 16 != 0) 1 else 0) * -16
-		val Z = (z / 16 - if (z < 0 && z % 16 != 0) 1 else 0) * -16
-		Tessellator.instance.draw()
-		Tessellator.instance.setTranslation(0.0, 0.0, 0.0)
-		glPushMatrix()
-		glTranslated(X.D, 0.0, Z.D)
-	}
-	
-	/**
-	 * This gets everything back for other blocks to render properly
-	 * Don't use unless you've used [.preRenderISBRH]
-	 * Use this after your render something in ISimpleBlockRenderingHandler
-	 */
-	@JvmStatic
-	@Deprecated("Do not use it")
-	fun postRenderISBRH(x: Int, z: Int) {
-		val X = (x / 16 - if (x < 0 && x % 16 != 0) 1 else 0) * -16
-		val Z = (z / 16 - if (z < 0 && z % 16 != 0) 1 else 0) * -16
-		glPopMatrix()
-		Tessellator.instance.startDrawingQuads()
-		Tessellator.instance.setTranslation(X.D, 0.0, Z.D)
-	}
 	
 	@JvmStatic
 	fun drawRect(radius: Double = 1.0) {

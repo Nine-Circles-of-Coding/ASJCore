@@ -9,7 +9,6 @@ import net.minecraft.world.World
 import net.minecraftforge.common.ForgeHooks
 import kotlin.math.sqrt
 
-@Suppress("LeakingThis")
 abstract class EntityRidable(world: World): EntityCreature(world) {
 	
 	var rider: EntityPlayer? = null

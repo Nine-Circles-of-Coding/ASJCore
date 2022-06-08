@@ -603,30 +603,12 @@ object ASJUtilities {
 	}
 	
 	/**
-	 * Registers new entity with egg
-	 * @param entityClass Entity's class file
-	 * @param name The name of this entity
-	 * @param backColor Background egg color
-	 * @param frontColor The color of dots
-	 */
-	@Deprecated("Use local registrations instead", ReplaceWith("registerEntity(entityClass, name, instance, id)"), DeprecationLevel.ERROR)
-	@JvmStatic
-	fun registerEntityEgg(entityClass: Class<out Entity>, name: String, backColor: Int, frontColor: Int, instance: Any) {
-		val id = EntityRegistry.findGlobalUniqueEntityId()
-//		val modid = FMLCommonHandler.instance().findContainerFor(instance).modId
-		EntityRegistry.registerGlobalEntityID(entityClass, name, id)
-		EntityRegistry.registerModEntity(entityClass, name, id, instance, 128, 1, true)
-		EntityList.entityEggs[id] = EntityList.EntityEggInfo(id, backColor, frontColor)
-	}
-	
-	/**
 	 * Changes the biome at given coordinates, currently really buggy
 	 * @param world This World
 	 * @param x -Coordinate
 	 * @param z -Coordinate
 	 * @param biome The biome to set at this location
 	 */
-	@Deprecated("")
 	@JvmStatic
 	fun setBiomeAt(world: World, x: Int, z: Int, biome: BiomeGenBase) {
 		val chunk = world.getChunkFromBlockCoords(x, z)
@@ -692,7 +674,7 @@ object ASJUtilities {
 		for (t in coll) {
 			++id
 			
-			if (t?.let { key.compareTo(it) } ?: continue == 0) return id
+			if ((t?.let { key.compareTo(it) } ?: continue) == 0) return id
 		}
 		return id
 	}
@@ -806,32 +788,32 @@ object ASJUtilities {
 	
 	@JvmStatic
 	fun log(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.INFO, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.INFO, message)
 	}
 	
 	@JvmStatic
 	fun debug(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.DEBUG, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.DEBUG, message)
 	}
 	
 	@JvmStatic
 	fun warn(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.WARN, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.WARN, message)
 	}
 	
 	@JvmStatic
 	fun error(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.ERROR, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.ERROR, message)
 	}
 	
 	@JvmStatic
 	fun fatal(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.FATAL, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.FATAL, message)
 	}
 	
 	@JvmStatic
 	fun trace(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.toUpperCase(), Level.TRACE, message)
+		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.TRACE, message)
 	}
 	
 	@JvmStatic
@@ -858,7 +840,6 @@ object ASJUtilities {
 	}
 	
 	@JvmStatic
-	@Deprecated("Untested")
 	fun sayToAllOPs(message: String) {
 		val ops = MinecraftServer.getServer().configurationManager.func_152606_n()
 		MinecraftServer.getServer().configurationManager.playerEntityList.forEach { if ((it as EntityPlayer).commandSenderName in ops)  say(it, message) }
@@ -901,36 +882,4 @@ object ASJUtilities {
 		sb.append("]")
 		return "$sb"
 	}
-	
-	// REMOVE backward compatibility
-	/**
-	 * Registers new entity
-	 * @param entityClass Entity's class file
-	 * @param name The name of this entity
-	 * @param instance Mod instance
-	 * @param id Mod-specific entity id
-	 */
-	@JvmStatic
-	fun registerEntity(entityClass: Class<out Entity>, name: String, instance: Any, id: Int) {
-		//val modid = FMLCommonHandler.instance().findContainerFor(instance).modId
-		EntityRegistry.registerModEntity(entityClass, name, id, instance, 128, 1, true)
-	}
-	
-	/**
-	 * Sends entity to dimension without portal frames
-	 * @param player player to send
-	 * @param dimTo ID of the dimension the entity should be sent to
-	 */
-	@JvmStatic
-	fun sendToDimensionWithoutPortal(player: EntityPlayer, dimTo: Int, x: Double, y: Double, z: Double) = sendToDimensionWithoutPortal(player as Entity, dimTo, x, y, z)
-	
-	/**
-	 * Checks whether [target] is NOT in FOV of [observer]
-	 * @author a_dizzle (minecraftforum.net)
-	 */
-	@JvmStatic
-	fun isNotInFieldOfVision(target: EntityLivingBase, observer: EntityLivingBase) = isNotInFieldOfVision(target as Entity, observer)
-	
-	@JvmStatic
-	fun sayToAllOnline(message: String) = sayToAllOnline(message, *emptyArray())
 }
