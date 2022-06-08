@@ -97,7 +97,7 @@ val Number.I get() = toInt()
 
 operator fun <T> T.plus(s: String) = "$this$s"
 
-//fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
 /**
  * Tries block and ignores any thrown exceptions
