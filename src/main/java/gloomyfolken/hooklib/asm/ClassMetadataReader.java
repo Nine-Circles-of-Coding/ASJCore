@@ -188,7 +188,7 @@ public class ClassMetadataReader {
 		
 		@Override
 		public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-			System.out.println("visiting " + name + "#" + desc);
+//			System.out.println("visiting " + name + "#" + desc);
 			if ((access & Opcodes.ACC_PRIVATE) == 0 && checkSameMethod(name, desc, targetName, targetDesc)) {
 				found = true;
 				targetName = name;
