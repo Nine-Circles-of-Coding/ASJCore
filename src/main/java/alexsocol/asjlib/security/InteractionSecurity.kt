@@ -5,6 +5,7 @@ import net.minecraft.entity.*
 import net.minecraft.entity.player.*
 import net.minecraft.util.DamageSource
 import net.minecraft.world.World
+import net.minecraftforge.common.ForgeHooks
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.entity.living.LivingAttackEvent
 import net.minecraftforge.event.entity.player.EntityInteractEvent
@@ -18,7 +19,8 @@ object InteractionSecurity {
 	
 	fun canDoSomethingHere(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World = performer.worldObj): Boolean {
 		if (performer !is EntityPlayerMP) return true
-		return world.canMineBlock(performer, x, y, z)
+//		return world.canMineBlock(performer, x, y, z)
+		return ForgeHooks.onBlockBreakEvent(world, performer.theItemInWorldManager.gameType, performer, x, y, z).isCanceled
 	}
 	
 	fun canInteractWithEntity(performer: EntityLivingBase, target: Entity) = when {

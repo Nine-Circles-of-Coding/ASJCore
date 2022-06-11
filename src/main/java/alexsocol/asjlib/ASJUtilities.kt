@@ -787,33 +787,42 @@ object ASJUtilities {
 	fun worldInfoForLog(world: World?) = "${time(world)} ${if (world?.isRemote == true) "[C]" else "[S]"}"
 	
 	@JvmStatic
+	fun trace(message: String) {
+		moddedLog(Level.TRACE, message)
+	}
+	
+	@JvmStatic
 	fun log(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.INFO, message)
+		moddedLog(Level.INFO, message)
 	}
 	
 	@JvmStatic
 	fun debug(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.DEBUG, message)
+		moddedLog(Level.DEBUG, message)
 	}
 	
 	@JvmStatic
 	fun warn(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.WARN, message)
+		moddedLog(Level.WARN, message)
 	}
 	
 	@JvmStatic
-	fun error(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.ERROR, message)
+	fun error(message: String, e: Throwable? = null) {
+		moddedLog(Level.ERROR, message, e)
 	}
 	
 	@JvmStatic
-	fun fatal(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.FATAL, message)
+	fun fatal(message: String, e: Throwable? = null) {
+		moddedLog(Level.FATAL, message, e)
 	}
 	
-	@JvmStatic
-	fun trace(message: String) {
-		FMLRelaunchLog.log(Loader.instance().activeModContainer().modId.uppercase(), Level.TRACE, message)
+	private fun moddedLog(level: Level, message: String, e: Throwable? = null) {
+		val modid = Loader.instance().activeModContainer().modId.uppercase()
+		
+		if (e == null)
+			FMLRelaunchLog.log(modid, level, message)
+		else
+			FMLRelaunchLog.log(modid, level, e, message)
 	}
 	
 	@JvmStatic

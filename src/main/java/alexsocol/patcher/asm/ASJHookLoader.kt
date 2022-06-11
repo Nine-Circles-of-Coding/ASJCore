@@ -8,6 +8,7 @@ import gloomyfolken.hooklib.minecraft.*
 import org.apache.commons.io.FileUtils
 import java.io.File
 
+// -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 class ASJHookLoader: HookLoader() {
 	
@@ -16,12 +17,6 @@ class ASJHookLoader: HookLoader() {
 		val OBF = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true
 		
 		init {
-			if (!OBF) {
-				// omg fucking IntelliJ can't move images go to hell bruh
-				FileUtils.deleteDirectory(File("../build/classes/main/assets/"))
-				FileUtils.copyDirectory(File("../src/main/resources/assets/"), File("../build/classes/main/assets/"))
-			}
-			
 			PatcherConfigHandler.loadConfig(File("config/ASJCore.cfg"))
 		}
 	}
