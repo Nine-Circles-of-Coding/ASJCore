@@ -1,26 +1,44 @@
 package alexsocol.asjlib.security
 
-import alexsocol.asjlib.mfloor
+import alexsocol.asjlib.*
+import net.minecraft.block.Block
 import net.minecraft.entity.*
 import net.minecraft.entity.player.*
+import net.minecraft.init.Blocks
 import net.minecraft.util.DamageSource
 import net.minecraft.world.World
-import net.minecraftforge.common.ForgeHooks
 import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.common.util.*
+import net.minecraftforge.event.ForgeEventFactory
 import net.minecraftforge.event.entity.living.LivingAttackEvent
-import net.minecraftforge.event.entity.player.EntityInteractEvent
+import net.minecraftforge.event.entity.player.*
+import net.minecraftforge.event.world.BlockEvent.BreakEvent
 
 @Suppress("unused")
 object InteractionSecurity {
 	
-	fun canDoSomethingHere(performer: EntityLivingBase) = canDoSomethingHere(performer, performer.posX, performer.posY, performer.posZ, performer.worldObj)
+	fun isInteractionBanned(performer: EntityLivingBase) = isInteractionBanned(performer, performer.posX, performer.posY, performer.posZ, performer.worldObj)
 	
-	fun canDoSomethingHere(performer: EntityLivingBase, x: Double, y: Double, z: Double, world: World = performer.worldObj) = canDoSomethingHere(performer, x.mfloor(), y.mfloor(), z.mfloor(), world)
+	fun isInteractionBanned(performer: EntityLivingBase, x: Number, y: Number, z: Number, world: World = performer.worldObj): Boolean {
+		if (performer !is EntityPlayerMP) return false
+		
+		return ForgeEventFactory.onPlayerInteract(performer, PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK, x.D.mfloor(), y.D.mfloor(), z.D.mfloor(), 1, world).isCanceled
+	}
 	
-	fun canDoSomethingHere(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World = performer.worldObj): Boolean {
-		if (performer !is EntityPlayerMP) return true
-//		return world.canMineBlock(performer, x, y, z)
-		return ForgeHooks.onBlockBreakEvent(world, performer.theItemInWorldManager.gameType, performer, x, y, z).isCanceled
+	fun isBreakingBanned(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World = performer.worldObj, block: Block = Blocks.stone, meta: Int = 0): Boolean {
+		if (performer !is EntityPlayerMP) return false
+		if (!world.canMineBlock(performer, x, y, z)) return true
+		
+		val event = BreakEvent(x, y, z, world, block, meta, performer)
+		MinecraftForge.EVENT_BUS.post(event)
+		
+		return event.isCanceled
+	}
+	
+	fun isPlacementBanned(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World = performer.worldObj, block: Block = Blocks.stone, meta: Int = 0): Boolean {
+		if (performer !is EntityPlayerMP) return false
+		
+		return ForgeEventFactory.onPlayerBlockPlace(performer, BlockSnapshot(world, x, y, z, block, meta), ForgeDirection.UNKNOWN).isCanceled
 	}
 	
 	fun canInteractWithEntity(performer: EntityLivingBase, target: Entity) = when {
