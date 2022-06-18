@@ -29,10 +29,7 @@ object InteractionSecurity {
 		if (performer !is EntityPlayerMP) return false
 		if (!world.canMineBlock(performer, x, y, z)) return true
 		
-		val event = BreakEvent(x, y, z, world, block, meta, performer)
-		MinecraftForge.EVENT_BUS.post(event)
-		
-		return event.isCanceled
+		return MinecraftForge.EVENT_BUS.post(BreakEvent(x, y, z, world, block, meta, performer))
 	}
 	
 	fun isPlacementBanned(performer: EntityLivingBase, x: Int, y: Int, z: Int, world: World = performer.worldObj, block: Block = Blocks.stone, meta: Int = 0): Boolean {
