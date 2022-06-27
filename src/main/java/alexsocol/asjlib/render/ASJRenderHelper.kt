@@ -64,7 +64,7 @@ object ASJRenderHelper {
 		}
 	}
 	
-	fun Color.toVec3() = Vec3.createVectorHelper(red.D, green.D, blue.D)!!
+	fun Color.toVec3() = Vec3.createVectorHelper(red.D / 255, green.D / 255, blue.D / 255)!!
 	
 	/**
 	 * @return enum color packed in uInt with max alpha

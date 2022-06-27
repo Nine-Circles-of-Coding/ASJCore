@@ -1,5 +1,6 @@
 package alexsocol.asjlib.extendables.block
 
+import alexsocol.asjlib.ASJUtilities
 import net.minecraft.nbt.NBTTagCompound
 
 open class TileImmobile: ASJTile() {
@@ -7,7 +8,8 @@ open class TileImmobile: ASJTile() {
 	private var lock = Lock(0, -1, 0, 0)
 	
 	override fun updateEntity() {
-		if (lock != Lock(xCoord, yCoord, zCoord, worldObj.provider.dimensionId)) worldObj.setBlockToAir(xCoord, yCoord, zCoord)
+		if (ASJUtilities.isServer && lock != Lock(xCoord, yCoord, zCoord, worldObj.provider.dimensionId))
+			worldObj.setBlockToAir(xCoord, yCoord, zCoord)
 	}
 	
 	override fun writeCustomNBT(nbt: NBTTagCompound) {

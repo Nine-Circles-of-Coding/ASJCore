@@ -295,10 +295,10 @@ fun addStringToTooltip(tooltip: MutableList<Any?>, s: String, vararg format: Str
 	tooltip.add(StatCollector.translateToLocalFormatted(s, *format).replace("&".toRegex(), "\u00a7"))
 }
 
-fun EntityLivingBase.teleportRandomly(diameter: Double): Boolean {
-	val d0 = posX + (rng.nextDouble() - 0.5) * diameter
-	val d1 = posY + (rng.nextInt(diameter.I) - (diameter.I) / 2)
-	val d2 = posZ + (rng.nextDouble() - 0.5) * diameter
+fun EntityLivingBase.teleportRandomly(radius: Double): Boolean {
+	val d0 = posX + (rng.nextDouble() - 0.5) * radius
+	val d1 = posY + (rng.nextInt(radius.I) - (radius.I) / 2)
+	val d2 = posZ + (rng.nextDouble() - 0.5) * radius
 	return teleportTo(d0, d1, d2)
 }
 

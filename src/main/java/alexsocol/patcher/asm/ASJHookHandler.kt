@@ -34,6 +34,7 @@ import net.minecraft.inventory.*
 import net.minecraft.item.*
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.*
+import net.minecraft.server.ServerEula
 import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
@@ -43,12 +44,20 @@ import net.minecraftforge.common.*
 import net.minecraftforge.common.util.ForgeDirection
 import org.lwjgl.opengl.*
 import org.objectweb.asm.Opcodes
+import java.io.File
 import java.nio.FloatBuffer
 import java.util.*
 import kotlin.math.*
 
 @Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST")
 object ASJHookHandler {
+	
+	@SideOnly(Side.SERVER)
+	@JvmStatic
+	@Hook(injectOnExit = true, targetMethod = "<init>")
+	fun ServerEula(thiz: ServerEula, p_i1227_1_: File) {
+		ASJReflectionHelper.setFinalValue(thiz, true, "field_154351_c")
+	}
 	
 	// summon lightning bolt in /summon command
 	@JvmStatic
@@ -696,11 +705,12 @@ object ASJHookHandler {
 			if (MinecraftForge.EVENT_BUS.post(event)) {
 				GL11.glFogf(GL11.GL_FOG_DENSITY, event.density)
 			} else if (entitylivingbase.isPotionActive(Potion.blindness) && !creative) {
-				f1 = 5f
-				val j = entitylivingbase.getActivePotionEffect(Potion.blindness.id)!!.duration
+				val pe = entitylivingbase.getActivePotionEffect(Potion.blindness.id)!!
+				val j = pe.duration
+				f1 = 5f / (pe.amplifier + 1)
 				
 				if (j < 20) {
-					f1 = 5f + (renderer.farPlaneDistance - 5f) * (1f - j.F / 20f)
+					f1 += (renderer.farPlaneDistance - f1) * (1f - j.F / 20f)
 				}
 				
 				GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR)

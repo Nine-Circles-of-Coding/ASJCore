@@ -7,7 +7,7 @@ import cpw.mods.fml.relauncher.*
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.event.entity.living.*
-import net.minecraftforge.event.entity.player.ItemTooltipEvent
+import net.minecraftforge.event.entity.player.*
 import net.minecraftforge.event.world.ExplosionEvent
 import net.minecraftforge.oredict.OreDictionary
 
@@ -34,6 +34,12 @@ object PatcherEventHandler {
 		
 		if (target.health > target.maxHealth) target.health = target.maxHealth
 		if (target.health < 0f) target.health = 0f
+	}
+	
+	@SubscribeEvent
+	fun onBreakingInAir(e: PlayerEvent.BreakSpeed) {
+		if (!PatcherConfigHandler.flyFastDig || e.entityPlayer.onGround || !e.entityPlayer.capabilities.isFlying) return
+		e.newSpeed *= 5f
 	}
 }
 

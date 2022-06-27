@@ -1,2 +1,4 @@
-Updated Kotlin to 1.6.21
-Removed deprecated and backward-compatibility methods
+Dig speed when flying like in creative (not something like jetpacks) is now normal
+Blindness can be 'blinder' depending on potion level
+Auto-accepted server EULA
+Immobile tile client dissapear fix
