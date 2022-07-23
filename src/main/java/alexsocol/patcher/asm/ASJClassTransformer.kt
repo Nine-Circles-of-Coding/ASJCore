@@ -70,6 +70,15 @@ class ASJClassTransformer: IClassTransformer {
 				cw.toByteArray()
 			}
 			
+			"net.minecraft.nbt.JsonToNBT"                              -> {
+				println("Transforming $transformedName")
+				val cr = ClassReader(returnClass)
+				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
+				val ct = `JsonToNBT$ClassVisitor`(cw)
+				cr.accept(ct, ClassReader.EXPAND_FRAMES)
+				cw.toByteArray()
+			}
+			
 			"net.minecraft.network.play.client.C17PacketCustomPayload" -> {
 				println("Transforming $transformedName")
 				val cr = ClassReader(returnClass)
@@ -240,6 +249,25 @@ class ASJClassTransformer: IClassTransformer {
 			override fun visitLdcInsn(cst: Any?) {
 				val ncst = if ("commands.summon.usage" == cst) "commands.summon.usage.new" else cst
 				super.visitLdcInsn(ncst)
+			}
+		}
+	}
+	
+	internal class `JsonToNBT$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+		
+		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
+			if (name == "func_150316_a" || name == "c") {
+				println("Visiting JsonToNBT#func_150316_a: $name$desc")
+				return `JsonToNBT$func_150316_a$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
+			}
+			
+			return super.visitMethod(access, name, desc, signature, exceptions)
+		}
+		
+		internal class `JsonToNBT$func_150316_a$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+			
+			override fun visitLdcInsn(cst: Any?) {
+				super.visitLdcInsn(if (cst == "\\[[-\\d|,\\s]+\\]") "\\[[-\\db,\\s]+]" else cst)
 			}
 		}
 	}

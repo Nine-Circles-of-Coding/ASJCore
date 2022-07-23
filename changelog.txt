@@ -1,4 +1,10 @@
 Dig speed when flying like in creative (not something like jetpacks) is now normal
 Blindness can be 'blinder' depending on potion level
-Auto-accepted server EULA
-Immobile tile client dissapear fix
+Immobile tile client disappear fix
+Removed merging attribute modifiers from item itself and stack nbt
+Auto-accepted server EULA (we all already know what's in)
+Fixed NBT Byte Array to string conversion and reading from JSON
+Added PlayerEatingEvent
+
+All hooks are now mandatory (cause why they were not before)
+ICustomArmSwingEndEntity method name change

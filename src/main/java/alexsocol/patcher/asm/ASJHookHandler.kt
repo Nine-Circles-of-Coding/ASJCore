@@ -4,7 +4,6 @@ import alexsocol.asjlib.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
-import com.google.common.collect.*
 import cpw.mods.fml.client.FMLClientHandler
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
@@ -32,7 +31,7 @@ import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.init.Blocks
 import net.minecraft.inventory.*
 import net.minecraft.item.*
-import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.nbt.*
 import net.minecraft.potion.*
 import net.minecraft.server.ServerEula
 import net.minecraft.tileentity.TileEntityFurnace
@@ -227,28 +226,6 @@ object ASJHookHandler {
 			throw IllegalArgumentException("Potion with id $id is already registered!")
 	}
 	
-	// stack attributes fix
-	@JvmStatic
-	@Hook(isMandatory = true, returnCondition = ReturnCondition.ALWAYS)
-	fun getAttributeModifiers(stack: ItemStack): Multimap<Any, Any> {
-		val map = stack.item.getAttributeModifiers(stack) ?: HashMultimap.create<Any, Any>()
-		
-		if (stack.stackTagCompound?.hasKey("AttributeModifiers", 9) != true)
-			return map
-		
-		val list = stack.stackTagCompound.getTagList("AttributeModifiers", 10)
-		
-		for (i in 0 until list.tagCount()) {
-			val nbt = list.getCompoundTagAt(i)
-			val modifier = SharedMonsterAttributes.readAttributeModifierFromNBT(nbt)
-			
-			if (modifier.id.leastSignificantBits != 0L && modifier.id.mostSignificantBits != 0L)
-				map.put(nbt.getString("AttributeName"), modifier)
-		}
-		
-		return map
-	}
-	
 	// stack NBT fix
 	@JvmStatic
 	@Hook(returnCondition = ReturnCondition.ON_NOT_NULL)
@@ -362,33 +339,45 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(injectOnExit = true, isMandatory = true)
+	@Hook(injectOnExit = true)
 	fun onNewPotionEffect(e: EntityLivingBase, pe: PotionEffect) {
 		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Add.Post(e, pe))
 	}
 	
 	@JvmStatic
-	@Hook(injectOnExit = true, isMandatory = true)
+	@Hook(injectOnExit = true)
 	fun onChangedPotionEffect(e: EntityLivingBase, pe: PotionEffect, was: Boolean) {
 		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Change.Post(e, pe, was))
 	}
 	
 	@JvmStatic
-	@Hook(injectOnExit = true, isMandatory = true)
+	@Hook(injectOnExit = true)
 	fun onFinishedPotionEffect(e: EntityLivingBase, pe: PotionEffect) {
 		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Remove.Post(e, pe))
 	}
 	
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook(isMandatory = true, returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ReturnCondition.ON_TRUE)
 	fun doRenderShadowAndFire(render: Render, entity: Entity, x: Double, y: Double, z: Double, yaw: Float, ticks: Float): Boolean {
 		return MinecraftForge.EVENT_BUS.post(RenderEntityPostEvent(entity, x, y, z, yaw))
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE, targetMethod = "func_150000_e", isMandatory = true)
+	@Hook(returnCondition = ReturnCondition.ON_TRUE, targetMethod = "func_150000_e")
 	fun tryToCreatePortal(portal: BlockPortal, world: World, x: Int, y: Int, z: Int) = MinecraftForge.EVENT_BUS.post(NetherPortalActivationEvent(world, x, y, z))
+	
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	fun addStats(stats: FoodStats, foodLevel: Int, foodSaturationLevel: Float) {
+		val e = PlayerEatingEvent(stats.host, foodLevel, foodSaturationLevel)
+		MinecraftForge.EVENT_BUS.post(e)
+		
+		if (e.isCanceled) return
+		
+		stats.foodLevel = min(e.newFoodLevel + stats.foodLevel, 20)
+		stats.setFoodSaturationLevel(min(stats.saturationLevel + e.newFoodLevel * e.newSaturationLevel * 2f, stats.foodLevel.F))
+	}
 	
 	// Portal closes GUI fix
 	
@@ -470,7 +459,7 @@ object ASJHookHandler {
 	
 	// potion fixes
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, isMandatory = true)
+	@Hook(returnCondition = ReturnCondition.ALWAYS)
 	fun updatePotionEffects(e: EntityLivingBase) {
 		try {
 			val iterator = e.activePotionsMap.keys.iterator()
@@ -553,7 +542,7 @@ object ASJHookHandler {
 	
 	// modded fire breaking in creative fix
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, isMandatory = true)
+	@Hook(returnCondition = ReturnCondition.ALWAYS)
 	fun extinguishFire(world: World, player: EntityPlayer?, x: Int, y: Int, z: Int, side: Int): Boolean {
 		var i = x
 		var j = y
@@ -820,7 +809,85 @@ object ASJHookHandler {
 		return false
 	}
 	
+	// custom arm swinging
 	@JvmStatic
 	@Hook(returnCondition = ReturnCondition.ALWAYS, injectOnExit = true)
-	fun getArmSwingAnimationEnd(e: EntityLivingBase, @Hook.ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getArmSwingAnimationEnd() else result
+	fun getArmSwingAnimationEnd(e: EntityLivingBase, @Hook.ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getCustomArmSwingAnimationEnd() else result
+	
+	// NBT ByteArray to string fix -- STUPID FUCKING MOTHERFUCKERS
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	fun toString(tag: NBTTagByteArray): String {
+		var s = "["
+		val abyte: ByteArray = tag.func_150292_c()
+		val i = abyte.size
+		
+		for (j in 0 until i) {
+			val k = abyte[j]
+			s = "$s${k}b,"
+		}
+		
+		return "$s]"
+	}
+	
+	@Suppress("LocalVariableName")
+	fun func_150489_a(primitive: JsonToNBT.Primitive): NBTBase {
+		val field_150493_b = primitive.field_150493_b
+		return try {
+			if (field_150493_b.matches("[-+]?\\d*\\.?\\d+[dD]".toRegex())) {
+				NBTTagDouble(field_150493_b.substring(0, field_150493_b.length - 1).toDouble())
+			} else if (field_150493_b.matches("[-+]?\\d*\\.?\\d+[fF]".toRegex())) {
+				NBTTagFloat(field_150493_b.substring(0, field_150493_b.length - 1).toFloat())
+			} else if (field_150493_b.matches("[-+]?\\d+[bB]".toRegex())) {
+				NBTTagByte(field_150493_b.substring(0, field_150493_b.length - 1).toByte())
+			} else if (field_150493_b.matches("[-+]?\\d+[lL]".toRegex())) {
+				NBTTagLong(field_150493_b.substring(0, field_150493_b.length - 1).toLong())
+			} else if (field_150493_b.matches("[-+]?\\d+[sS]".toRegex())) {
+				NBTTagShort(field_150493_b.substring(0, field_150493_b.length - 1).toShort())
+			} else if (field_150493_b.matches("[-+]?\\d+".toRegex())) {
+				NBTTagInt(field_150493_b.substring(0, field_150493_b.length).toInt())
+			} else if (field_150493_b.matches("[-+]?\\d*\\.?\\d+".toRegex())) {
+				NBTTagDouble(field_150493_b.substring(0, field_150493_b.length).toDouble())
+			} else if (!field_150493_b.equals("true", true) && !field_150493_b.equals("false", true)) {
+				if (field_150493_b.startsWith("[") && field_150493_b.endsWith("]")) {
+					if (field_150493_b.length > 2) {
+						val s = field_150493_b.substring(1, field_150493_b.length - 1)
+						val astring = s.split(",")
+						
+						try {
+							if (astring.size <= 1) {
+								val st = s.trim()
+								if (st.endsWith('b') || st.endsWith('B'))
+									NBTTagByteArray(byteArrayOf(st.substringEnding(1).toByte()))
+								else
+									NBTTagIntArray(intArrayOf(st.toInt()))
+							} else {
+								val st = astring[0].trim() // supposing that all other also endsWith b
+								if (st.endsWith('b') || st.endsWith('B'))
+									NBTTagByteArray(ByteArray(astring.size) { astring[it].trim().substringEnding(1).toByte() })
+								else
+									NBTTagIntArray(IntArray(astring.size) { astring[it].trim().toInt() })
+							}
+						} catch (e: NumberFormatException) {
+							NBTTagString(field_150493_b)
+						}
+					} else {
+						NBTTagIntArray(IntArray(0))
+					}
+				} else {
+					var field_150493_b_ = field_150493_b
+					if (field_150493_b_.startsWith("\"") && field_150493_b_.endsWith("\"") && field_150493_b_.length > 2) {
+						field_150493_b_ = field_150493_b_.substring(1, field_150493_b_.length - 1)
+					}
+					
+					field_150493_b_ = field_150493_b_.replace("\\\\\"", "\"")
+					NBTTagString(field_150493_b_)
+				}
+			} else {
+				NBTTagByte(if (field_150493_b.toBoolean()) 1 else 0)
+			}
+		} catch (e: NumberFormatException) {
+			NBTTagString(field_150493_b.replace("\\\\\"", "\""))
+		}
+	}
 }

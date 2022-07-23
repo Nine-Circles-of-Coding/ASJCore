@@ -5,7 +5,6 @@ import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
-import org.apache.commons.io.FileUtils
 import java.io.File
 
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
@@ -29,5 +28,7 @@ class ASJHookLoader: HookLoader() {
 		FMLRelaunchLog.info("[ASJLib] Loaded coremod. Registering hooks...")
 		
 		registerHookContainer("alexsocol.patcher.asm.ASJHookHandler")
+		
+		if (OBF) ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.ASJFieldHookHandler")
 	}
 }

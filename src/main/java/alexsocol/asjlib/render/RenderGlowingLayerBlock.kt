@@ -9,7 +9,7 @@ import net.minecraft.world.IBlockAccess
 import net.minecraftforge.common.util.ForgeDirection
 import org.lwjgl.opengl.GL11.*
 
-class RenderGlowingLayerBlock: ISimpleBlockRenderingHandler {
+open class RenderGlowingLayerBlock: ISimpleBlockRenderingHandler {
 	
 	override fun renderWorldBlock(world: IBlockAccess, x: Int, y: Int, z: Int, block: Block, modelId: Int, renderer: RenderBlocks): Boolean {
 		renderer.renderStandardBlock(block, x, y, z)

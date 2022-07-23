@@ -34,7 +34,7 @@ object PatcherMain {
 	
 	@Mod.EventHandler
 	fun init(e: FMLInitializationEvent) {
-		PatcherEventHandler.eventForge()
+		PatcherEventHandler.eventForge().eventFML()
 		
 		BlockTrapDoor.disableValidation = PatcherConfigHandler.floatingTrapDoors
 		
