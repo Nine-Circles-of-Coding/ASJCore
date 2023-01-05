@@ -41,7 +41,7 @@ public class WE_TerrainGenerator extends WE_CreateChunkGen {
 		//-//
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++) {
-				int n = MathHelper.floor_double(interpolatedBlock(data.chunkProvider.worldObj.getSeed(), data.chunk_X, data.chunk_Z, x, z, bl, ni, q));
+				int n = MathHelper.floor_double(interpolatedBlock(data.chunkProvider.world.getSeed(), data.chunk_X, data.chunk_Z, x, z, bl, ni, q));
 				for (int y = 0; y < 256; y++)
 					if (y <= n)
 						setBlock(data, worldStoneBlock, worldStoneBlockMeta, x, y, z);

@@ -121,7 +121,7 @@ public class WE_Biome extends BiomeGenBase {
 	}
 	
 	public static WE_Biome getBiomeAt(WE_ChunkProvider cp, long x, long z) {
-		double biomeMapData = WE_PerlinNoise.PerlinNoise2D((long) Math.pow(cp.worldObj.getSeed() * 84, 6),
+		double biomeMapData = WE_PerlinNoise.PerlinNoise2D((long) Math.pow(cp.world.getSeed() * 84, 6),
 			x / cp.biomemapScaleX, z / cp.biomemapScaleX,
 			cp.biomemapPersistence, cp.biomemapNumberOfOctaves)
 			                      * cp.biomemapScaleY;

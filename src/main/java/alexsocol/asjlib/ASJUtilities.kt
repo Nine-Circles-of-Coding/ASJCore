@@ -138,8 +138,7 @@ object ASJUtilities {
 	 * @author Vazkii
 	 */
 	fun dispatchTEToNearbyPlayers(tile: TileEntity) {
-		val world = tile.worldObj
-		val players = world.playerEntities
+		val players = tile.worldObj?.playerEntities ?: return
 		for (player in players)
 			if (player is EntityPlayerMP && Vector3.pointDistancePlane(player.posX, player.posZ, tile.xCoord + 0.5, tile.zCoord + 0.5) < 64)
 				tile.descriptionPacket?.let { player.playerNetServerHandler.sendPacket(it) }
@@ -464,36 +463,35 @@ object ASJUtilities {
 		}
 		
 		val f1 = 1f
-		val list = entity.worldObj.getEntitiesWithinAABBExcludingEntity(entity, entity.boundingBox.addCoord(vec31.xCoord * dist, vec31.yCoord * dist, vec31.zCoord * dist).expand(f1.D, f1.D, f1.D))
+		val list = getEntitiesWithinAABB(entity.worldObj, Entity::class.java, entity.boundingBox.addCoord(vec31.xCoord * dist, vec31.yCoord * dist, vec31.zCoord * dist).expand(f1.D, f1.D, f1.D))
+		list.remove(entity)
 		var d2 = d1
 		
-		for (e in list) {
-			e as Entity
-			if (e.canBeCollidedWith() || interact) {
-				val f2 = e.collisionBorderSize
-				val axisalignedbb = e.boundingBox.expand(f2.D, f2.D, f2.D)
-				val movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32)
+		list.forEach {
+			if (!it.canBeCollidedWith() && !interact) return@forEach
+			val f2 = it.collisionBorderSize
+			val axisalignedbb = it.boundingBox.expand(f2.D, f2.D, f2.D)
+			val movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32)
+			
+			if (axisalignedbb.isVecInside(vec3)) {
+				if (0.0 < d2 || d2 == 0.0) {
+					pointedEntity = it
+					vec33 = if (movingobjectposition == null) vec3 else movingobjectposition.hitVec
+					d2 = 0.0
+				}
+			} else if (movingobjectposition != null) {
+				val d3 = vec3.distanceTo(movingobjectposition.hitVec)
 				
-				if (axisalignedbb.isVecInside(vec3)) {
-					if (0.0 < d2 || d2 == 0.0) {
-						pointedEntity = e
-						vec33 = if (movingobjectposition == null) vec3 else movingobjectposition.hitVec
-						d2 = 0.0
-					}
-				} else if (movingobjectposition != null) {
-					val d3 = vec3.distanceTo(movingobjectposition.hitVec)
-					
-					if (d3 < d2 || d2 == 0.0) {
-						if (e === entity.ridingEntity && !e.canRiderInteract()) {
-							if (d2 == 0.0) {
-								pointedEntity = e
-								vec33 = movingobjectposition.hitVec
-							}
-						} else {
-							pointedEntity = e
+				if (d3 < d2 || d2 == 0.0) {
+					if (it === entity.ridingEntity && !it.canRiderInteract()) {
+						if (d2 == 0.0) {
+							pointedEntity = it
 							vec33 = movingobjectposition.hitVec
-							d2 = d3
 						}
+					} else {
+						pointedEntity = it
+						vec33 = movingobjectposition.hitVec
+						d2 = d3
 					}
 				}
 			}
@@ -710,24 +708,38 @@ object ASJUtilities {
 	
 	/**
 	 * Fills holes of worldgen (no more structures in mid-air)
-	 * Args: world, filler, x start, x end, upper height, z start, z end
-	 * @param radius Radius of cylinder-shaped structure's base (0 for square)
+	 * Args: world, filler, x start, x end, y to start from, z start, z end
 	 */
 	@JvmStatic
-	fun fillGenHoles(world: World, filler: Block, meta: Int, xmn: Int, xmx: Int, ystart: Int, zmn: Int, zmx: Int, radius: Int) {
-		if (xmn < -29999999 || xmx > 29999999 || ystart < 0 || ystart > 255 || zmn < -29999999 || zmx > 29999999 || radius < 0) return
+	fun fillGenHoles(world: World, filler: Block, meta: Int, xmn: Int, xmx: Int, ystart: Int, zmn: Int, zmx: Int) {
+		if (xmn < -29999999 || xmx > 29999999 || ystart < 0 || ystart > 255 || zmn < -29999999 || zmx > 29999999) return
 		for (i in xmn..xmx) {
 			for (k in zmn..zmx) {
-				var j = ystart - 1
+				var j = ystart
 				while (j >= 0 && isBlockReplaceable(world.getBlock(i, j, k))) {
-					if (radius != 0) if (sqrt(((xmx - xmn) / 2 + xmn - i).D.pow(2.0) + ((zmx - zmn) / 2 + zmn - k).D.pow(2.0)) > radius) {
-						j--
-						continue
-					}
 					world.setBlock(i, j, k, filler, meta, 3)
 					j--
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Fills holes of worldgen (no more structures in mid-air)
+	 */
+	@JvmStatic
+	fun fillGenHoles(world: World, filler: Block, meta: Int, centerX: Int, yStart: Int, centerZ: Int, radius: Int) {
+		var j = yStart
+		while (j >= 0) {
+			for (i in 0 until radius * 2 + 1) {
+				for (k in 0 until radius * 2 + 1) {
+					val xp: Int = centerX + i - radius
+					val zp: Int = centerZ + k - radius
+					if (Vector3.pointDistancePlane(xp, zp, centerX, centerZ).mfloor() <= radius - 1 && isBlockReplaceable(world.getBlock(xp, j, zp)))
+						world.setBlock(xp, j, zp, filler, meta, 3)
+				}
+			}
+			j--
 		}
 	}
 	

@@ -8,6 +8,7 @@ import cpw.mods.fml.client.FMLClientHandler
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.*
+import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.client.Minecraft
@@ -40,6 +41,7 @@ import net.minecraft.world.*
 import net.minecraft.world.biome.BiomeGenBase
 import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
+import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.ForgeDirection
 import org.lwjgl.opengl.*
 import org.objectweb.asm.Opcodes
@@ -282,11 +284,12 @@ object ASJHookHandler {
 	// armor can't block damage that is set to bypass armor
 	@JvmStatic
 	@Hook(returnCondition = ReturnCondition.ON_TRUE, returnType = "float", returnAnotherMethod = "armorNotApplied")
-	fun ApplyArmor(targetClass: ISpecialArmor?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double): Boolean {
+	fun ApplyArmor(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double): Boolean {
 		return source.isUnblockable
 	}
 	
-	fun armorNotApplied(targetClass: ISpecialArmor?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource?, damage: Double) = damage.F
+	@JvmStatic
+	fun armorNotApplied(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource?, damage: Double) = damage.F
 	
 //	@JvmStatic
 //	@Hook(returnCondition = ReturnCondition.ON_TRUE)
@@ -375,8 +378,14 @@ object ASJHookHandler {
 		
 		if (e.isCanceled) return
 		
-		stats.foodLevel = min(e.newFoodLevel + stats.foodLevel, 20)
-		stats.setFoodSaturationLevel(min(stats.saturationLevel + e.newFoodLevel * e.newSaturationLevel * 2f, stats.foodLevel.F))
+		// FUCKING SIDEONLY SHIT
+		val nbt = NBTTagCompound()
+		stats.writeNBT(nbt)
+		
+		nbt.setInteger("foodLevel", min(e.newFoodLevel + stats.foodLevel, 20))
+		nbt.setFloat("foodSaturationLevel", min(stats.saturationLevel + e.newFoodLevel * e.newSaturationLevel * 2f, stats.foodLevel.F))
+		
+		stats.readNBT(nbt)
 	}
 	
 	// Portal closes GUI fix
@@ -812,7 +821,7 @@ object ASJHookHandler {
 	// custom arm swinging
 	@JvmStatic
 	@Hook(returnCondition = ReturnCondition.ALWAYS, injectOnExit = true)
-	fun getArmSwingAnimationEnd(e: EntityLivingBase, @Hook.ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getCustomArmSwingAnimationEnd() else result
+	fun getArmSwingAnimationEnd(e: EntityLivingBase, @ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getCustomArmSwingAnimationEnd() else result
 	
 	// NBT ByteArray to string fix -- STUPID FUCKING MOTHERFUCKERS
 	@JvmStatic
@@ -889,5 +898,53 @@ object ASJHookHandler {
 		} catch (e: NumberFormatException) {
 			NBTTagString(field_150493_b.replace("\\\\\"", "\""))
 		}
+	}
+	
+//	// flag count expansion to 32
+//	// Byte -> Int in ASJClassTransformer
+//	@JvmStatic
+//	@Hook(returnCondition = ReturnCondition.ALWAYS)
+//	fun getFlag(entity: Entity, id: Int) = entity.dataWatcher.getWatchableObjectInt(0) and (1 shl id) != 0
+//
+//	@JvmStatic
+//	@Hook(returnCondition = ReturnCondition.ALWAYS)
+//	fun setFlag(entity: Entity, id: Int, value: Boolean) {
+//		val allFlags = entity.dataWatcher.getWatchableObjectInt(0)
+//
+//		if (value) {
+//			entity.dataWatcher.updateObject(0, allFlags or (1 shl id))
+//		} else {
+//			entity.dataWatcher.updateObject(0, allFlags and (1 shl id).inv())
+//		}
+//	}
+	
+	// NPE fix
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	fun func_151519_b(src: EntityDamageSource, victim: EntityLivingBase): IChatComponent {
+		val damageSourceEntity: Entity? = src.entity
+		val itemstack = if (damageSourceEntity is EntityLivingBase) damageSourceEntity.heldItem else null
+		val s = "death.attack." + src.damageType
+		val s1 = "$s.item"
+		val component = damageSourceEntity?.func_145748_c_() ?: ChatComponentText("null")
+		return if (itemstack != null && itemstack.hasDisplayName() && StatCollector.canTranslate(s1)) ChatComponentTranslation(s1, victim.func_145748_c_(), component, itemstack.func_151000_E()) else ChatComponentTranslation(s, victim.func_145748_c_(), component)
+	}
+	
+	// disable vignette
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	fun renderVignette(gui: GuiIngame, vignetteBrightness: Float, width: Int, height: Int): Boolean {
+		val disable = !PatcherConfigHandler.vignette
+		if (disable) OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
+		return disable
+	}
+	
+	// NPE fix
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun getCollidingBoundingBoxes(world: World, entity: Entity?, aabb: AxisAlignedBB?, @ReturnValue result: MutableList<AxisAlignedBB?>): List<AxisAlignedBB?> {
+		result.removeAll { it == null }
+		return result
 	}
 }

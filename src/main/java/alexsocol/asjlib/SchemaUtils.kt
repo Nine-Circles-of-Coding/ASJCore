@@ -10,10 +10,10 @@ import net.minecraft.world.World
 
 object SchemaUtils {
 	
+	val type = object: TypeToken<List<BlockElement>>() {}.type
+	
 	fun generate(world: World, x: Int, y: Int, z: Int, schemaText: String) {
-		val type = object: TypeToken<List<BlockElement>>() {}.type
-		
-		val arr = Gson().fromJson<List<BlockElement>>(schemaText, type)
+		val arr = parse(schemaText)
 		world.setBlock(x, y, z, Blocks.air, 0, 4)
 		
 		for (ele in arr) {
@@ -34,9 +34,7 @@ object SchemaUtils {
 	}
 	
 	fun checkStructure(world: World, x: Int, y: Int, z: Int, structure: String, onFail: ((Int, Int, Int, Int) -> Unit)? = null): Boolean {
-		val type = object: TypeToken<List<BlockElement>>() {}.type
-		
-		val arr = Gson().fromJson<List<BlockElement>>(structure, type)
+		val arr = parse(structure)
 		
 		for (ele in arr) {
 			for (loc in ele.location) {
@@ -68,6 +66,8 @@ object SchemaUtils {
 		
 		return true
 	}
+	
+	fun parse(schemaText: String) = Gson().fromJson<List<BlockElement>>(schemaText, type)!!
 	
 	fun loadStructure(path: String): String {
 		return javaClass.getResourceAsStream("/assets/$path")!!.use {

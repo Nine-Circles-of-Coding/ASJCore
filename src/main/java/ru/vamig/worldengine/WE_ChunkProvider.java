@@ -19,7 +19,7 @@ import java.util.*;
 
 public class WE_ChunkProvider extends ChunkProviderGenerate {
 	
-	public final World worldObj;
+	public final World world;
 	public final Random rand;
 	
 	//////////////////
@@ -45,7 +45,7 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 	
 	public WE_ChunkProvider(WE_WorldProvider wp) {
 		super(wp.worldObj, wp.getSeed(), wp.worldObj.getWorldInfo().isMapFeaturesEnabled());
-		worldObj = wp.worldObj;
+		world = wp.worldObj;
 		rand = new Random(wp.getSeed());
 		
 		/////
@@ -81,7 +81,7 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 		long chunk_X = (long) chunkX * 16L, chunk_Z = (long) chunkZ * 16L;
 		Block[] chunkBlocks = new Block[65536];
 		byte[] chunkBlocksMeta = new byte[65536];
-		rand.setSeed(worldObj.getSeed() * (long) Math.pow(chunkX, 3) + (long) Math.pow(chunkZ, 2) * 9874L + 7684053L);
+		rand.setSeed(world.getSeed() * (long) Math.pow(chunkX, 3) + (long) Math.pow(chunkZ, 2) * 9874L + 7684053L);
 		//-//
 		WE_Biome[][] chunkBiomes = new WE_Biome[16][16];
 		for (int x = 0; x < 16; x++)
@@ -111,7 +111,7 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 		//=//
 		/////
 		
-		WE_ChunkSmartLight chunk = new WE_ChunkSmartLight(worldObj, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ);
+		WE_ChunkSmartLight chunk = new WE_ChunkSmartLight(world, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ);
 		chunk.generateSkylightMap();
 		return chunk;
 	}
@@ -120,24 +120,24 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 	public void populate(IChunkProvider chunkProvider, int chunkX, int chunkZ) {
 		BlockFalling.fallInstantly = true;
 		//-//
-		rand.setSeed(worldObj.getSeed() * chunkX + (long) Math.pow(chunkZ, 2) * 107L + 2394720L);
-		MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Pre(chunkProvider, worldObj, rand, chunkX, chunkZ, false));
+		rand.setSeed(world.getSeed() * chunkX + (long) Math.pow(chunkZ, 2) * 107L + 2394720L);
+		MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Pre(chunkProvider, world, rand, chunkX, chunkZ, false));
 		
 		/////
 		//=//
 		/////
 		
-		for (IWorldGenerator iWorldGenerator : decorateChunkGen_List) iWorldGenerator.generate(rand, chunkX, chunkZ, worldObj, this, this);
+		for (IWorldGenerator iWorldGenerator : decorateChunkGen_List) iWorldGenerator.generate(rand, chunkX, chunkZ, world, this, this);
 		//-//
 		WE_Biome b = WE_Biome.getBiomeAt(this, (long) chunkX * 16L + (long) rand.nextInt(16), (long) chunkZ * 16L + (long) rand.nextInt(16));
 		for (int i = 0; i < b.decorateChunkGen_List.size(); i++)
-			b.decorateChunkGen_List.get(i).generate(rand, chunkX, chunkZ, worldObj, this, this);
+			b.decorateChunkGen_List.get(i).generate(rand, chunkX, chunkZ, world, this, this);
 		
 		/////
 		//=//
 		/////
 		
-		MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Post(chunkProvider, worldObj, rand, chunkX, chunkZ, false));
+		MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Post(chunkProvider, world, rand, chunkX, chunkZ, false));
 		//-//
 		BlockFalling.fallInstantly = false;
 	}

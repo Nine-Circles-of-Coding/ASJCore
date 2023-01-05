@@ -1,5 +1,6 @@
 package gloomyfolken.hooklib.asm;
 
+import cpw.mods.fml.relauncher.*;
 import gloomyfolken.hooklib.asm.Hook.ReturnValue;
 import gloomyfolken.hooklib.asm.Hook.*;
 import org.objectweb.asm.*;
@@ -9,6 +10,13 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 public class HookContainerParser {
+	
+	// AlexSocol side parsing --
+	private static final String SIDEONLY_DESC = Type.getDescriptor(SideOnly.class);
+	private static final String SIDE = FMLLaunchHandler.side().name();
+	private boolean isSideOnly = false;
+	private boolean sideMismatch = false;
+	// -- end
 	
 	private static final String HOOK_DESC = Type.getDescriptor(Hook.class);
 	private static final String LOCAL_DESC = Type.getDescriptor(LocalVariable.class);
@@ -47,6 +55,11 @@ public class HookContainerParser {
 	}
 	
 	private void createHook() {
+		if (sideMismatch) {
+			sideMismatch = false;
+			return;
+		}
+		
 		AsmHook.Builder builder = AsmHook.newBuilder();
 		Type methodType = Type.getMethodType(currentMethodDesc);
 		Type[] argumentTypes = methodType.getArgumentTypes();
@@ -166,6 +179,8 @@ public class HookContainerParser {
 		}
 		if (annotationValues.containsKey("isMandatory")) {
 			builder.setMandatory(Boolean.TRUE.equals(annotationValues.get("isMandatory")));
+		} else {
+			builder.setMandatory(true);
 		}
 		
 		transformer.registerHook(builder.build());
@@ -218,6 +233,9 @@ public class HookContainerParser {
 				annotationValues = new HashMap<String, Object>();
 				inHookAnnotation = true;
 			}
+			if (SIDEONLY_DESC.equals(desc)) {
+				isSideOnly = true;
+			}
 			return new HookAnnotationVisitor();
 		}
 		
@@ -265,11 +283,16 @@ public class HookContainerParser {
 		@Override
 		public void visitEnum(String name, String desc, String value) {
 			visit(name, value);
+			
+			if (isSideOnly) {
+				sideMismatch = !SIDE.equals(value);
+			}
 		}
 		
 		@Override
 		public void visitEnd() {
 			inHookAnnotation = false;
+			isSideOnly = false;
 		}
 	}
 }

@@ -24,6 +24,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var portalHook = true
 	var potionDuplication = false
 	var showOreDict = true
+	var vignette = false
 	var voidFog = true
 	var WEBiomeID = 152
 	
@@ -50,6 +51,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
 		potionDuplication = loadProp(CATEGORY_GENERAL, "potionDuplication", potionDuplication, true, "Set this to true to allow registering duplicated potion ids")
 		showOreDict = loadProp(CATEGORY_GENERAL, "showOreDict", showOreDict, false, "Set this to true to show all oredict names in item tooltip when holding SHIFT")
+		vignette = loadProp(CATEGORY_GENERAL, "vignette", vignette, false, "Set this to true to enable vignette on fancy graphics")
 		voidFog = loadProp(CATEGORY_GENERAL, "voidFog", voidFog, false, "Set this to false to disable void fog")
 		WEBiomeID = loadProp(CATEGORY_GENERAL, "WEBiomeID", WEBiomeID, true, "ID for standart WorldEngine biome")
 		

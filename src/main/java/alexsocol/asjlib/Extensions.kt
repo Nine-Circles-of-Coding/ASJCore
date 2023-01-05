@@ -6,6 +6,7 @@ import alexsocol.asjlib.math.Vector3
 import cpw.mods.fml.common.FMLCommonHandler
 import net.minecraft.block.Block
 import net.minecraft.client.entity.EntityClientPlayerMP
+import net.minecraft.command.IEntitySelector
 import net.minecraft.entity.*
 import net.minecraft.entity.player.*
 import net.minecraft.inventory.IInventory
@@ -152,13 +153,26 @@ fun DataWatcher.getWatchableObjectChunkCoordinates(id: Int): ChunkCoordinates {
 	return getWatchedObject(id).`object` as ChunkCoordinates? ?: ChunkCoordinates()
 }
 
+@Suppress("UNCHECKED_CAST") // FUCKING RAW GENERICS
+fun <E: Any> getEntitiesWithinAABB(world: World, clazz: Class<E>, aabb: AxisAlignedBB): ArrayList<E> = world.getEntitiesWithinAABB(clazz, aabb) as ArrayList<E>
+
+@Suppress("UNCHECKED_CAST") // FUCKING RAW GENERICS
+fun <E: Any> selectEntitiesWithinAABB(world: World, clazz: Class<E>, aabb: AxisAlignedBB, selector: (E) -> Boolean): ArrayList<E> {
+	// tf is wrong with compiler -_-
+	class GenericLambdaEntitySelector<E>(val selector: (E) -> Boolean): IEntitySelector {
+		@Suppress("UNCHECKED_CAST") override fun isEntityApplicable(entity: Entity) = selector(entity as E)
+	}
+	
+	return world.selectEntitiesWithinAABB(clazz, aabb, GenericLambdaEntitySelector(selector)) as ArrayList<E>
+}
+
 fun getBoundingBox(x: Number, y: Number, z: Number) = getBoundingBox(x, y, z, x, y, z)
 
 fun getBoundingBox(x1: Number, y1: Number, z1: Number, x2: Number, y2: Number, z2: Number) = AxisAlignedBB.getBoundingBox(x1.D, y1.D, z1.D, x2.D, y2.D, z2.D)!!
 
 fun TileEntity.boundingBox(range: Number = 0) = getBoundingBox(xCoord, yCoord, zCoord, xCoord + 1, yCoord + 1, zCoord + 1).expand(range)
 
-fun Entity.boundingBox(range: Number = 0) = getBoundingBox(posX, posY, posZ, posX + width, posY + height, posZ + width).offset(width / 2.0, 0.0, width / 2.0).expand(range)
+fun Entity.boundingBox(range: Number = 0) = getBoundingBox(posX, posY, posZ, posX + width, posY + height, posZ + width).offset(width / -2.0, 0.0, width / -2.0).expand(range)
 
 fun AxisAlignedBB.expand(d: Number) = expand(d, d, d)
 

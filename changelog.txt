@@ -5,6 +5,7 @@ Removed merging attribute modifiers from item itself and stack nbt
 Auto-accepted server EULA (we all already know what's in)
 Fixed NBT Byte Array to string conversion and reading from JSON
 Added PlayerEatingEvent
-
 All hooks are now mandatory (cause why they were not before)
 ICustomArmSwingEndEntity method name change
+Expanded entity flags limit to 32
+... maybe something else, I don't remember, sorry, just check the repository

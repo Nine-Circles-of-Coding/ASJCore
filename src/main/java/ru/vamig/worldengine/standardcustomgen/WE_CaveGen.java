@@ -32,12 +32,12 @@ public class WE_CaveGen extends WE_CreateChunkGen {
 	
 	@Override
 	public void gen(WE_GeneratorData data) {
-		rand.setSeed(data.chunkProvider.worldObj.getSeed());
+		rand.setSeed(data.chunkProvider.world.getSeed());
 		long rx = rand.nextLong(), rz = rand.nextLong();
 		for (long cx = data.chunk_X / 16L - (long) range; cx <= data.chunk_X / 16L + (long) range; ++cx)
 			for (long cz = data.chunk_Z / 16L - (long) range; cz <= data.chunk_Z / 16L + (long) range; ++cz) {
 				long nv1 = cx * rx, nv2 = cz * rz;
-				rand.setSeed(nv1 ^ nv2 ^ data.chunkProvider.worldObj.getSeed());
+				rand.setSeed(nv1 ^ nv2 ^ data.chunkProvider.world.getSeed());
 				
 				int e = rand.nextInt(rand.nextInt(rand.nextInt(15) + 1) + 1);
 				if (rand.nextInt(7) != 0)

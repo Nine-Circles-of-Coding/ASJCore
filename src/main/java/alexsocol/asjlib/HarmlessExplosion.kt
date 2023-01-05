@@ -17,7 +17,7 @@ class HarmlessExplosion(worldObj: World, exploder: EntityPlayer?, explosionX: Do
 		worldObj.playSoundEffect(explosionX, explosionY, explosionZ, "random.explode", 4f, (1f + (worldObj.rand.nextFloat() - worldObj.rand.nextFloat()) * 0.2f) * 0.7f)
 		worldObj.spawnParticle("hugeexplosion", explosionX, explosionY, explosionZ, 1.0, 0.0, 0.0)
 		
-		val list = worldObj.getEntitiesWithinAABB(EntityLivingBase::class.java, getBoundingBox(explosionX, explosionY, explosionZ).expand(explosionSize + 1)) as MutableList<EntityLivingBase>
+		val list = getEntitiesWithinAABB(worldObj, EntityLivingBase::class.java, getBoundingBox(explosionX, explosionY, explosionZ).expand(explosionSize + 1))
 		exploder?.let { list.remove(it) }
 		
 		val vec3 = Vec3.createVectorHelper(explosionX, explosionY, explosionZ)

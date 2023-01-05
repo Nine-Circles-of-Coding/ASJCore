@@ -134,14 +134,14 @@ open class OrientedBB() {
 		orient.rotate(Math.toRadians(angle.D), axis)
 		pos.rotate(angle, axis)
 		
-		a.rotate(angle, axis)
-		b.rotate(angle, axis)
-		c.rotate(angle, axis)
-		d.rotate(angle, axis)
-		e.rotate(angle, axis)
-		f.rotate(angle, axis)
-		g.rotate(angle, axis)
-		h.rotate(angle, axis)
+		a.rotate(-angle.D, axis)
+		b.rotate(-angle.D, axis)
+		c.rotate(-angle.D, axis)
+		d.rotate(-angle.D, axis)
+		e.rotate(-angle.D, axis)
+		f.rotate(-angle.D, axis)
+		g.rotate(-angle.D, axis)
+		h.rotate(-angle.D, axis)
 		
 		return this
 	}

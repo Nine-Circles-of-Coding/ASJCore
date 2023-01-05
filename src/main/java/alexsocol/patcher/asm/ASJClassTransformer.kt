@@ -1,3 +1,5 @@
+@file:Suppress("ClassName", "unused")
+
 package alexsocol.patcher.asm
 
 import alexsocol.patcher.PatcherConfigHandler
@@ -5,11 +7,23 @@ import alexsocol.patcher.asm.ASJHookLoader.Companion.OBF
 import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
+import org.objectweb.asm.tree.ClassNode
 
 class ASJClassTransformer: IClassTransformer {
 	
+	var transformedName = ""
+	var basicClass = byteArrayOf()
+	
 	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
+		@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN", "KotlinConstantConditions")
+		transformedName as java.lang.String // fix of java.lang.ClassCircularityError: kotlin/text/StringsKt
+		
+		if (transformedName.startsWith("kotlin") || transformedName.startsWith("gloomyfolken")) return basicClass
+		
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
+		
+		this.transformedName = transformedName
+		this.basicClass = basicClass
 		
 		var returnClass = basicClass
 		
@@ -25,105 +39,19 @@ class ASJClassTransformer: IClassTransformer {
 		}
 		
 		return when (transformedName) {
-			"codechicken.nei.api.ItemInfo"                             -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `ItemInfo$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"io.netty.channel.DefaultChannelPipeline"                  -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `DefaultChannelPipeline$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.client.network.NetHandlerPlayClient"        -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `NetHandlerPlayClient$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.client.particle.EffectRenderer"             -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `EffectRenderer$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.command.server.CommandSummon"               -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `CommandSummon$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.nbt.JsonToNBT"                              -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `JsonToNBT$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.network.play.client.C17PacketCustomPayload" -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `C17PacketCustomPayload$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.server.management.ItemInWorldManager"       -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `ItemInWorldManager$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.EXPAND_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.tileentity.TileEntityFurnace"               -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `TileEntityFurnace$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.SKIP_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"net.minecraft.world.World"                                -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `World$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.SKIP_FRAMES)
-				cw.toByteArray()
-			}
-			
-			"thaumcraft.common.blocks.BlockCustomOre"                  -> {
-				println("Transforming $transformedName")
-				val cr = ClassReader(returnClass)
-				val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-				val ct = `BlockCustomOre$ClassVisitor`(cw)
-				cr.accept(ct, ClassReader.SKIP_FRAMES)
-				cw.toByteArray()
-			}
-			
+			"codechicken.nei.api.ItemInfo"                             -> core { `ItemInfo$ClassVisitor`(it) }
+			"io.netty.channel.DefaultChannelPipeline"                  -> core { `DefaultChannelPipeline$ClassVisitor`(it) }
+			"net.minecraft.client.network.NetHandlerPlayClient"        -> core { `NetHandlerPlayClient$ClassVisitor`(it) }
+			"net.minecraft.client.particle.EffectRenderer"             -> core { `EffectRenderer$ClassVisitor`(it) }
+			"net.minecraft.command.server.CommandSummon"               -> core { `CommandSummon$ClassVisitor`(it) }
+			"net.minecraft.entity.Entity"                              -> core { `Entity$ClassVisitor`(it) }
+			"net.minecraft.item.ItemGlassBottle"                       -> core { `ItemGlassBottle$ClassVisitor`(it) }
+			"net.minecraft.nbt.JsonToNBT"                              -> core { `JsonToNBT$ClassVisitor`(it) }
+			"net.minecraft.network.play.client.C17PacketCustomPayload" -> core { `C17PacketCustomPayload$ClassVisitor`(it) }
+			"net.minecraft.server.management.ItemInWorldManager"       -> core { `ItemInWorldManager$ClassVisitor`(it) }
+			"net.minecraft.tileentity.TileEntityFurnace"               -> core { `TileEntityFurnace$ClassVisitor`(it) }
+			"net.minecraft.world.World"                                -> core { `World$ClassVisitor`(it) }
+			"thaumcraft.common.blocks.BlockCustomOre"                  -> core { `BlockCustomOre$ClassVisitor`(it) }
 			else                                                       -> returnClass
 		}
 	}
@@ -249,6 +177,65 @@ class ASJClassTransformer: IClassTransformer {
 			override fun visitLdcInsn(cst: Any?) {
 				val ncst = if ("commands.summon.usage" == cst) "commands.summon.usage.new" else cst
 				super.visitLdcInsn(ncst)
+			}
+		}
+	}
+	
+	// flag count expansion to 32
+	// set/get in ASJHookHandler
+	internal class `Entity$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+		
+		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
+			val visitMethod = super.visitMethod(access, name, desc, signature, exceptions)
+			
+			if (name == "<init>") {
+				println("Visiting Entity#init: $name$desc")
+				return `Entity$init$MethodVisitor`(visitMethod)
+			} else if (name == "getFlag" || name == "setFlag" || (name == "g" && desc == "(I)Z") || (name == "a" && desc == "(IZ)V")) {
+				println("Visiting Entity#flag property: $name$desc")
+				return `Entity$init$MethodVisitor`(visitMethod)
+			}
+			
+			return visitMethod
+		}
+		
+		internal class `Entity$init$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+			
+			override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
+				if ((owner == "net/minecraft/entity/DataWatcher" || owner == "te") && desc == "(I)B")
+					super.visitMethodInsn(opcode, owner, if (OBF) "c" else "getWatchableObjectInt", "(I)I", itf)
+				else if (owner == "java/lang/Byte" && desc == "(B)Ljava/lang/Byte;")
+					super.visitMethodInsn(opcode, "java/lang/Integer", name, "(I)Ljava/lang/Integer;", itf)
+				else
+					super.visitMethodInsn(opcode, owner, name, desc, itf)
+			}
+		}
+	}
+	
+	internal class `ItemGlassBottle$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+		
+		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
+			if (name == "onItemRightClick" || name == "a" && desc == "(Ladd;Lahb;Lyz;)Ladd;") {
+				println("Visiting ItemGlassBottle#onItemRightClick: $name$desc")
+				return `ItemGlassBottle$onItemRightClick$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
+			}
+			
+			return super.visitMethod(access, name, desc, signature, exceptions)
+		}
+		
+		internal class `ItemGlassBottle$onItemRightClick$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+			
+			override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
+				if (name == "getMaterial" || name == "o" && desc == "()Lawt;") return
+				
+				super.visitMethodInsn(opcode, owner, name, desc, itf)
+			}
+			
+			override fun visitFieldInsn(opcode: Int, owner: String?, name: String?, desc: String?) {
+				if (name == "water" || name == "h")
+					super.visitFieldInsn(GETSTATIC, if (OBF) "ajn" else "net/minecraft/init/Blocks", if (OBF) "j" else "water", if (OBF) "Laji;" else "Lnet/minecraft/block/Block;")
+				else
+					super.visitFieldInsn(opcode, owner, name, desc)
 			}
 		}
 	}
@@ -435,5 +422,27 @@ class ASJClassTransformer: IClassTransformer {
 				else super.visitIntInsn(opcode, operand)
 			}
 		}
+	}
+	
+	inline fun core(frames: Int = ClassReader.EXPAND_FRAMES, lambda: (ClassVisitor) -> ClassVisitor): ByteArray {
+		println("Transforming $transformedName")
+		val cr = ClassReader(basicClass)
+		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
+		val transformer = lambda(cw)
+		cr.accept(transformer, frames)
+		return cw.toByteArray()
+	}
+	
+	inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
+		println("Transforming $transformedName")
+		val cr = ClassReader(basicClass)
+		val it = ClassWriter(ClassWriter.COMPUTE_MAXS)
+		val cn = ClassNode()
+		cr.accept(cn, ClassReader.EXPAND_FRAMES)
+		
+		lambda(cn)
+		
+		cn.accept(it)
+		return it.toByteArray()
 	}
 }

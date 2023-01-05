@@ -297,6 +297,34 @@ class Vector3: Serializable {
 		return this
 	}
 	
+	fun rotateOX(angle: Number): Vector3 {
+		val n = Math.toRadians(-angle.D)
+		val rz = z * cos(n) - y * sin(n)
+		val ry = z * sin(n) + y * cos(n)
+		z = rz
+		y = ry
+		return this
+	}
+	
+	fun rotateOY(angle: Number): Vector3 {
+		val n = Math.toRadians(-angle.D)
+		val rx = x * cos(n) - z * sin(n)
+		val rz = x * sin(n) + z * cos(n)
+		x = rx
+		z = rz
+		return this
+	}
+	
+	fun rotateOZ(angle: Number): Vector3 {
+		val n = Math.toRadians(angle.D)
+		val rx = x * cos(n) - y * sin(n)
+		val ry = x * sin(n) + y * cos(n)
+		x = rx
+		y = ry
+		return this
+	}
+	
+	
 	override fun equals(other: Any?): Boolean {
 		if (other !is Vector3) return false
 		
