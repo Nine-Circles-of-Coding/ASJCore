@@ -9,6 +9,7 @@ import cpw.mods.fml.common.Mod
 import cpw.mods.fml.common.event.*
 import cpw.mods.fml.common.registry.GameData
 import net.minecraft.block.*
+import net.minecraft.command.CommandBase
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
 import net.minecraftforge.common.MinecraftForge
@@ -44,9 +45,7 @@ object PatcherMain {
 	
 	@Mod.EventHandler
 	fun onServerStarting(e: FMLServerStartingEvent) {
-		e.registerServerCommand(CommandDimTP)
-		e.registerServerCommand(CommandExplode)
-		e.registerServerCommand(CommandHeal)
+		PatcherConfigHandler.commands.forEach { e.registerServerCommand(Commands.valueOf(it).command()) }
 		e.registerServerCommand(CommandSchema)
 		
 		if (!ASJHookLoader.OBF) e.registerServerCommand(CommandResources)
@@ -67,5 +66,9 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun onServerStopped(e: FMLServerStoppedEvent) {
 		MinecraftForge.EVENT_BUS.post(ServerStoppedEvent(e))
+	}
+	
+	enum class Commands(val command: () -> CommandBase) {
+		DIMTP({ CommandDimTP }), EXPLODE({ CommandExplode }), HEAL({ CommandHeal })
 	}
 }

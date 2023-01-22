@@ -1,19 +1,23 @@
 package alexsocol.asjlib.render
 
-import alexsocol.asjlib.I
+import alexsocol.asjlib.*
 import cpw.mods.fml.common.Loader
-import net.minecraft.client.Minecraft
+import cpw.mods.fml.common.eventhandler.SubscribeEvent
+import cpw.mods.fml.common.gameevent.TickEvent
+import cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent
 import net.minecraft.client.renderer.OpenGlHelper
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11.GL_FALSE
 import org.lwjgl.opengl.GL20.*
+import java.time.*
+import java.util.concurrent.*
 
 /**
  * Almost all code is by Vazkii - ShaderHelper, I just ported it to GL20 and made lib-style
  */
 object ASJShaderHelper {
 	
-	var crashOnError = false
+	var crashOnError = true
 	
 	private const val FRAG = GL_FRAGMENT_SHADER
 	private const val VERT = GL_VERTEX_SHADER
@@ -25,10 +29,7 @@ object ASJShaderHelper {
 		glUseProgram(shaderID)
 		
 		if (shaderID != 0) {
-			if (Minecraft.getMinecraft().theWorld != null) {
-				glUniform1i(glGetUniformLocation(shaderID, "time"), (Minecraft.getMinecraft().theWorld.totalWorldTime / 20).I)
-				glUniform1f(glGetUniformLocation(shaderID, "ftime"), Minecraft.getMinecraft().theWorld.totalWorldTime / 20f)
-			}
+			glUniform1f(glGetUniformLocation(shaderID, "ftime"), total / 20f)
 			
 			callback?.invoke(shaderID)
 		}
@@ -64,12 +65,12 @@ object ASJShaderHelper {
 		
 		if (programID == 0) return 0
 		
-		if (vertLocation != null && vertLocation.isNotEmpty()) {
+		if (!vertLocation.isNullOrEmpty()) {
 			vertID = createShader(vertLocation, VERT)
 			glAttachShader(programID, vertID)
 		}
 		
-		if (fragLocation != null && fragLocation.isNotEmpty()) {
+		if (!fragLocation.isNullOrEmpty()) {
 			fragID = createShader(fragLocation, FRAG)
 			glAttachShader(programID, fragID)
 		}
@@ -121,11 +122,21 @@ object ASJShaderHelper {
 	
 	@Throws(Exception::class)
 	private fun readFileAsString(filename: String): String {
-		return Minecraft.getMinecraft().resourceManager.getResource(ResourceLocation(Loader.instance().activeModContainer().modId, filename)).inputStream.readBytes().decodeToString()
+		return mc.resourceManager.getResource(ResourceLocation(Loader.instance().activeModContainer().modId, filename)).inputStream.readBytes().decodeToString()
 	}
 	
-	abstract class ShaderCallback {
-		
-		abstract fun call(shaderID: Int)
+	// inspired by Vazkii's ClientTickHandler:
+	
+	private var gameTicks = 0
+	private val total get() = gameTicks + mc.timer.renderPartialTicks
+	
+	init {
+		eventFML()
+	}
+	
+	@SubscribeEvent
+	fun clientTickEnd(event: ClientTickEvent) {
+		if (event.phase != TickEvent.Phase.END || mc.isGamePaused) return
+		gameTicks++
 	}
 }

@@ -38,7 +38,14 @@ object RenderPostShaders {
 		var prevShader = 0
 		val prevMaterial = -1
 		var prevObj = shaders[0]
-		if (prevObj.texture != null) Minecraft.getMinecraft().renderEngine.bindTexture(prevObj.texture)
+		
+		val pt = prevObj.texture
+		if (pt != null) {
+			if (pt is ResourceLocationAnimated)
+				pt.bind()
+			else
+				Minecraft.getMinecraft().renderEngine.bindTexture(pt)
+		}
 		
 		for (obj in shaders) {
 			if (obj.translations.isEmpty()) continue
@@ -50,7 +57,15 @@ object RenderPostShaders {
 				prevShader = obj.shaderID
 			}
 			if (obj.materialID != prevMaterial) obj.preRender()
-			if (obj.texture != null && obj.texture !== prevObj.texture) Minecraft.getMinecraft().renderEngine.bindTexture(obj.texture)
+			
+			val ot = obj.texture
+			if (ot != null && ot !== prevObj.texture) {
+				if (ot is ResourceLocationAnimated)
+					ot.bind()
+				else
+					Minecraft.getMinecraft().renderEngine.bindTexture(ot)
+			}
+			
 			obj.doRender()
 			obj.translations.clear()
 			prevObj = obj

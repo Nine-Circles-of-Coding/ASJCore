@@ -98,8 +98,12 @@ object ASJUtilities {
 		target.ridingEntity?.riddenByEntity = null
 		target.ridingEntity = null
 		
-		if (dimTo == target.dimension)
+		if (dimTo == target.dimension) {
+			if (target is EntityLivingBase)
+				return target.setPositionAndUpdate(x, y, z)
+			
 			return target.setLocationAndAngles(x, y, z, target.rotationYaw, target.rotationPitch)
+		}
 		
 		val worldTo = server.worldServerForDimension(dimTo)
 		

@@ -1,11 +1,5 @@
-Dig speed when flying like in creative (not something like jetpacks) is now normal
-Blindness can be 'blinder' depending on potion level
-Immobile tile client disappear fix
-Removed merging attribute modifiers from item itself and stack nbt
-Auto-accepted server EULA (we all already know what's in)
-Fixed NBT Byte Array to string conversion and reading from JSON
-Added PlayerEatingEvent
-All hooks are now mandatory (cause why they were not before)
-ICustomArmSwingEndEntity method name change
-Expanded entity flags limit to 32
-... maybe something else, I don't remember, sorry, just check the repository
+Render optimization for animated textures
+Config to unregister /tpdim, /heal and /explode commands
+
+Player teleportation fix (now sends packet)
+Crash on /heal command when trying to clear effects
