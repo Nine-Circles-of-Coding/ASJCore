@@ -18,10 +18,10 @@ object CommandResources: CommandBase() {
 	override fun processCommand(sender: ICommandSender, args: Array<out String>?) {
 		if (!ASJHookLoader.OBF) {
 			ASJUtilities.say(sender, "Deleting old resources...")
-			FileUtils.deleteDirectory(File("../build/classes/main/assets/"))
+			FileUtils.deleteDirectory(File("../build/classes/kotlin/main/"))
 			ASJUtilities.say(sender, "Copying resources...")
-			FileUtils.copyDirectory(File("../src/main/resources/assets/"), File("../build/classes/main/assets/"))
-			try_ { FileUtils.copyDirectory(File("../src/api/resources/assets/"), File("../build/classes/main/assets/")) }
+			FileUtils.copyDirectory(File("../src/main/resources/"), File("../build/classes/kotlin/main/"))
+			try_ { FileUtils.copyDirectory(File("../src/api/resources/"), File("../build/classes/kotlin/main/")) }
 			ASJUtilities.say(sender, "Success.")
 		} else {
 			ASJUtilities.say(sender, "Not in DEV env")

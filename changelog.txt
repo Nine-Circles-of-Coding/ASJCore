@@ -1,5 +1,1 @@
-Render optimization for animated textures
-Config to unregister /tpdim, /heal and /explode commands
-
-Player teleportation fix (now sends packet)
-Crash on /heal command when trying to clear effects
+Fix to chance function to work with chances <=0% or >=100%

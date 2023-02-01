@@ -629,7 +629,7 @@ object ASJUtilities {
 	 * @return true with [percent]% chance
 	 */
 	@JvmStatic
-	fun chance(percent: Number) = Math.random() * 100 < percent.D
+	fun chance(percent: Number) = if (percent.D <= 0.0) false else if (percent.D >= 100.0) true else Math.random() * 100 < percent.D
 	
 	/**
 	 * @return String which tolds you to hold shift-key
