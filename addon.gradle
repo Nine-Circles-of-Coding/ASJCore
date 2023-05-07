@@ -1,0 +1,18 @@
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'com.github.gmazzo.buildconfig'
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = 1.8
+    }
+}
+
+buildConfig {
+    packageName(project.modGroup)
+    className('ModTags')
+    buildConfigField('String', 'MODID', "\"${project.modId}\"")
+    buildConfigField('String', 'MODNAME', "\"${project.modName}\"")
+    buildConfigField('String', 'VERSION', "\"${project.modVersion}\"")
+    buildConfigField('String', 'GROUPNAME', "\"${project.modGroup}\"")
+    useKotlinOutput { topLevelConstants = true }
+}
