@@ -8,7 +8,6 @@ import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
 import cpw.mods.fml.common.Mod
 import cpw.mods.fml.common.event.*
-import cpw.mods.fml.common.registry.GameData
 import net.minecraft.block.*
 import net.minecraft.command.CommandBase
 import net.minecraft.init.Blocks
