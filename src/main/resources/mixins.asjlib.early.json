@@ -5,5 +5,5 @@
   "refmap": "mixins.asjlib.refmap.json",
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
-  "mixins": ["FoodStatsMixin"]
+  "mixins": ["GameDataMixin"]
 }

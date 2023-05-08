@@ -1,4 +1,4 @@
-package alexsocol.asjlib.mixins;
+package alexsocol.asjlib.mixinifaces;
 
 import net.minecraft.entity.player.EntityPlayer;
 

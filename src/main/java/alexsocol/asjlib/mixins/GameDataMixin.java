@@ -13,5 +13,5 @@ public interface GameDataMixin  {
     }
 
     @Invoker("registerItem")
-    GameData invokeRegisterItem(Item item, String name, int idHint);
+    int invokeRegisterItem(Item item, String name, int idHint);
 }

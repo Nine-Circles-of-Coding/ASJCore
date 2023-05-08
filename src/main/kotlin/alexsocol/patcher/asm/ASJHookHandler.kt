@@ -1,7 +1,7 @@
 package alexsocol.patcher.asm
 
 import alexsocol.asjlib.*
-import alexsocol.asjlib.mixins.IHostedFoodStats
+import alexsocol.asjlib.mixinifaces.IHostedFoodStats
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
