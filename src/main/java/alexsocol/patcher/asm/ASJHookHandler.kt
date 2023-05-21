@@ -252,7 +252,7 @@ object ASJHookHandler {
 		migrate(nbt)
 		
 		val id = nbt.getString("id")
-		if (id.isBlank()) return true
+		if (id.isBlank() || id.indexOf(':') == -1) return true
 		
 		val (modid, name) = id.split(':')
 		stack.func_150996_a(GameRegistry.findItem(modid, name))
@@ -268,7 +268,8 @@ object ASJHookHandler {
 	private fun migrate(nbt: NBTTagCompound) {
 		if (!nbt.hasKey("id", 2)) return
 		
-		val stack = ItemStack(Item.getItemById(nbt.getShort("id").toInt()), nbt.getByte("Count").toInt(), max(0, nbt.getShort("Damage").toInt()))
+		val item = Item.getItemById(nbt.getShort("id").toInt()) ?: Blocks.stone.toItem()
+		val stack = ItemStack(item, nbt.getByte("Count").toInt(), max(0, nbt.getShort("Damage").toInt()))
 		
 		if (nbt.hasKey("tag", 10))
 			stack.stackTagCompound = nbt.getCompoundTag("tag")

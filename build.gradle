@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.2.1.2"
+version = "1.2.1.3"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {

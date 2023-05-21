@@ -209,6 +209,11 @@ class ASJClassTransformer: IClassTransformer {
 				else
 					super.visitMethodInsn(opcode, owner, name, desc, itf)
 			}
+			
+			override fun visitInsn(opcode: Int) {
+				if (opcode != I2B)
+					super.visitInsn(opcode)
+			}
 		}
 	}
 	
