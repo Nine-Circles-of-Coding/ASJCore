@@ -95,9 +95,9 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		
 		int access = Opcodes.ACC_PUBLIC;
 		if (isStatic) {
-			access += Opcodes.ACC_STATIC;
+			access |= Opcodes.ACC_STATIC;
 		} else if (isAbstract) {
-			access += Opcodes.ACC_ABSTRACT;
+			access |= Opcodes.ACC_ABSTRACT;
 		}
 		
 		mv = classVisitor.visitMethod(access, superMethod == null ? this.targetMethodName : superMethod.name, this.targetMethodDescription, null, null);
