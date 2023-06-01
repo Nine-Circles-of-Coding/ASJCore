@@ -1,1 +1,4 @@
 Fixed entity flags
+Fixed entity gravity (by KAIIIAK)
+
+Invalid mandatory hooks now throw an exception in runtime
