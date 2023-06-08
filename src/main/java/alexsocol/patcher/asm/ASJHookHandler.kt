@@ -5,6 +5,7 @@ import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
 import cpw.mods.fml.client.FMLClientHandler
+import cpw.mods.fml.common.FMLCommonHandler
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.*
@@ -56,7 +57,7 @@ object ASJHookHandler {
 	@SideOnly(Side.SERVER)
 	@JvmStatic
 	@Hook(injectOnExit = true, targetMethod = "<init>")
-	fun ServerEula(thiz: ServerEula, p_i1227_1_: File) {
+	fun ServerEula(thiz: ServerEula, file: File) {
 		ASJReflectionHelper.setFinalValue(thiz, true, "field_154351_c")
 	}
 	
@@ -83,7 +84,7 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook
 	fun spawnEntityInWorld(world: World, target: Entity?): Boolean {
 		if (target !is EntityWeatherEffect)
 			return false
@@ -116,7 +117,7 @@ object ASJHookHandler {
 	}
 	
 	// NEI function copy, added check
-	fun addEntityEgg(entity: Class<*>, i: Int, j: Int) {
+	private fun addEntityEgg(entity: Class<*>, i: Int, j: Int) {
 		val id = EntityList.classToIDMapping[entity] as Int
 		if (EntityList.entityEggs[id] != null) return
 		EntityList.entityEggs[id] = EntityEggInfo(id, i, j)
@@ -252,7 +253,7 @@ object ASJHookHandler {
 		migrate(nbt)
 		
 		val id = nbt.getString("id")
-		if (id.isBlank()) return true
+		if (id.isBlank() || id.indexOf(':') == -1) return true
 		
 		val (modid, name) = id.split(':')
 		stack.func_150996_a(GameRegistry.findItem(modid, name))
@@ -268,7 +269,8 @@ object ASJHookHandler {
 	private fun migrate(nbt: NBTTagCompound) {
 		if (!nbt.hasKey("id", 2)) return
 		
-		val stack = ItemStack(Item.getItemById(nbt.getShort("id").toInt()), nbt.getByte("Count").toInt(), max(0, nbt.getShort("Damage").toInt()))
+		val item = Item.getItemById(nbt.getShort("id").toInt()) ?: Blocks.stone.toItem()
+		val stack = ItemStack(item, nbt.getByte("Count").toInt(), max(0, nbt.getShort("Damage").toInt()))
 		
 		if (nbt.hasKey("tag", 10))
 			stack.stackTagCompound = nbt.getCompoundTag("tag")
@@ -390,7 +392,7 @@ object ASJHookHandler {
 	
 	// Portal closes GUI fix
 	
-	var portalHook = false
+	private var portalHook = false
 	
 	@JvmStatic
 	@Hook
@@ -581,7 +583,7 @@ object ASJHookHandler {
 	
 	// Fix nbt clearing in Enchanting Table
 	
-	val mergeItemStack by lazy {
+	private val mergeItemStack by lazy {
 		ASJReflectionHelper.getMethod(Container::class.java, arrayOf("mergeItemStack", "func_75135_a"), arrayOf(ItemStack::class.java, Int::class.java, Int::class.java, Boolean::class.java))?.also {
 			it.isAccessible = true
 		}
@@ -673,9 +675,9 @@ object ASJHookHandler {
 		val entitylivingbase = renderer.mc.renderViewEntity
 		val creative = if (entitylivingbase is EntityPlayer) entitylivingbase.capabilities.isCreativeMode else false
 		
-		fun setFogColorBuffer(p_78469_1_: Float, p_78469_2_: Float, p_78469_3_: Float, p_78469_4_: Float): FloatBuffer {
+		fun setFogColorBuffer(r: Float, g: Float, b: Float, a: Float): FloatBuffer {
 			renderer.fogColorBuffer.clear()
-			renderer.fogColorBuffer.put(p_78469_1_).put(p_78469_2_).put(p_78469_3_).put(p_78469_4_)
+			renderer.fogColorBuffer.put(r).put(g).put(b).put(a)
 			renderer.fogColorBuffer.flip()
 			return renderer.fogColorBuffer
 		}
@@ -946,5 +948,24 @@ object ASJHookHandler {
 	fun getCollidingBoundingBoxes(world: World, entity: Entity?, aabb: AxisAlignedBB?, @ReturnValue result: MutableList<AxisAlignedBB?>): List<AxisAlignedBB?> {
 		result.removeAll { it == null }
 		return result
+	}
+	
+	// Entity gravity fix
+	// by KAIIIAK
+	@JvmStatic
+	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	fun moveEntityWithHeading(thiz: EntityLivingBase, moveStrafe: Float, moveForward: Float): Boolean {
+		if (!PatcherConfigHandler.entityGravityFix) return false
+		
+		if (FMLCommonHandler.instance().side != Side.CLIENT || Minecraft.getMinecraft().isSingleplayer || thiz is EntityPlayer) return false
+		
+		thiz.prevLimbSwingAmount = thiz.limbSwingAmount
+		val x = thiz.posX - thiz.prevPosX
+		val z = thiz.posZ - thiz.prevPosZ
+		val f = min(sqrt(x * x + z * z).F * 4f, 1f)
+		thiz.limbSwingAmount += (f - thiz.limbSwingAmount) * 0.4f
+		thiz.limbSwing += thiz.limbSwingAmount
+		
+		return true
 	}
 }

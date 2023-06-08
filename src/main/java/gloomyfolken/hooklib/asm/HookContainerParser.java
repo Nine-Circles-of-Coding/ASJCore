@@ -164,8 +164,8 @@ public class HookContainerParser {
 			invalidHook("Hook method must return object if returnCodition is ON_NULL or ON_NOT_NULL.");
 			return;
 		}
-		if (this.annotationValues.containsKey("isAbstract")) {
-			builder.setIsAbstract(Boolean.TRUE.equals(this.annotationValues.get("isAbstract")));
+		if (annotationValues.containsKey("isAbstract")) {
+			builder.setIsAbstract(Boolean.TRUE.equals(annotationValues.get("isAbstract")));
 		}
 		if (annotationValues.containsKey("isStatic")) {
 			builder.setIsStatic(Boolean.TRUE.equals(annotationValues.get("isStatic")));
@@ -187,8 +187,12 @@ public class HookContainerParser {
 	}
 	
 	private void invalidHook(String message) {
-		transformer.logger.warning("Found invalid hook " + currentClassName + "#" + currentMethodName);
+		String hook = currentClassName + "#" + currentMethodName;
+		transformer.logger.warning("Found invalid hook " + hook);
 		transformer.logger.warning(message);
+
+		if (!annotationValues.containsKey("isMandatory") || Boolean.TRUE.equals(annotationValues.get("isMandatory")))
+			throw new IllegalStateException("Mandatory hook " + hook + " is invalid: " + message);
 	}
 	
 	private Object getPrimitiveConstant() {
@@ -230,7 +234,7 @@ public class HookContainerParser {
 		@Override
 		public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
 			if (HOOK_DESC.equals(desc)) {
-				annotationValues = new HashMap<String, Object>();
+				annotationValues = new HashMap<>();
 				inHookAnnotation = true;
 			}
 			if (SIDEONLY_DESC.equals(desc)) {
