@@ -40,12 +40,15 @@ import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
 import net.minecraft.world.biome.BiomeGenBase
+import net.minecraft.world.chunk.Chunk
+import net.minecraft.world.chunk.storage.AnvilChunkLoader
 import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.ForgeDirection
 import org.lwjgl.opengl.*
 import org.objectweb.asm.Opcodes
+import ru.vamig.worldengine.WE_WorldProvider
 import java.io.File
 import java.nio.FloatBuffer
 import java.util.*
@@ -945,10 +948,7 @@ object ASJHookHandler {
 	// NPE fix
 	@JvmStatic
 	@Hook(injectOnExit = true)
-	fun getCollidingBoundingBoxes(world: World, entity: Entity?, aabb: AxisAlignedBB?, @ReturnValue result: MutableList<AxisAlignedBB?>): List<AxisAlignedBB?> {
-		result.removeAll { it == null }
-		return result
-	}
+	fun getCollidingBoundingBoxes(world: World, entity: Entity?, aabb: AxisAlignedBB?, @ReturnValue result: MutableList<AxisAlignedBB?>) = result.filterNotNull()
 	
 	// Entity gravity fix
 	// by KAIIIAK
@@ -967,5 +967,37 @@ object ASJHookHandler {
 		thiz.limbSwing += thiz.limbSwingAmount
 		
 		return true
+	}
+	
+	// WE SubBiome storage
+	@JvmStatic
+	@Hook(targetMethod = "<init>", injectOnExit = true)
+	fun `Chunk$init`(chunk: Chunk, world: World, x: Int, z: Int) {
+		chunk.WorldEngine_SubBiomeList = if (world.provider is WE_WorldProvider) arrayOfNulls(256) else null
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun writeChunkToNBT(acl: AnvilChunkLoader, chunk: Chunk, world: World, nbt: NBTTagCompound) {
+		val subBiomes = chunk.WorldEngine_SubBiomeList ?: return
+		
+		val subBiomesList = NBTTagList()
+		for (subBiome in subBiomes) subBiomesList.appendTag(NBTTagString(subBiome ?: "<null>"))
+		
+		nbt.setTag("WorldEngine_SubBiomeList", subBiomesList)
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun readChunkFromNBT(acl: AnvilChunkLoader, world: World, nbt: NBTTagCompound, @ReturnValue chunk: Chunk): Chunk {
+		if (!nbt.hasKey("WorldEngine_SubBiomeList", 9) || chunk.WorldEngine_SubBiomeList == null) return chunk
+		
+		val subBiomesList = nbt.getTag("WorldEngine_SubBiomeList") as NBTTagList
+		for (i in 0 until subBiomesList.tagCount()) {
+			val subBiome = subBiomesList.getStringTagAt(i)
+			chunk.WorldEngine_SubBiomeList[i] = if (subBiome == "<null>") null else subBiome
+		}
+		
+		return chunk
 	}
 }

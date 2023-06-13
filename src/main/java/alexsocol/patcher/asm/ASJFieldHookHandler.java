@@ -7,4 +7,7 @@ public class ASJFieldHookHandler {
 	
 	@HookField(targetClassName = "net.minecraft.util.FoodStats")
 	public EntityPlayer host;
+
+	@HookField(targetClassName = "net.minecraft.world.chunk.Chunk")
+	public String[] WorldEngine_SubBiomeList;
 }

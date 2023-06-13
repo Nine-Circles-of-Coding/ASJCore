@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.2.1.3"
+version = "1.2.2.0"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -59,7 +59,7 @@ sourceCompatibility = targetCompatibility = '1.8'
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
 jar {
-	duplicatesStrategy = 'include'
+	duplicatesStrategy = 'INCLUDE'
 	
 	from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
 	
@@ -71,7 +71,7 @@ jar {
 }
 
 processResources {
-	duplicatesStrategy = 'include'
+	duplicatesStrategy = 'INCLUDE'
 	
 	inputs.property "version", project.version
 	inputs.property "mcversion", project.minecraft.version
