@@ -971,12 +971,6 @@ object ASJHookHandler {
 	
 	// WE SubBiome storage
 	@JvmStatic
-	@Hook(targetMethod = "<init>", injectOnExit = true)
-	fun `Chunk$init`(chunk: Chunk, world: World, x: Int, z: Int) {
-		chunk.WorldEngine_SubBiomeList = if (world.provider is WE_WorldProvider) arrayOfNulls(256) else null
-	}
-	
-	@JvmStatic
 	@Hook(injectOnExit = true)
 	fun writeChunkToNBT(acl: AnvilChunkLoader, chunk: Chunk, world: World, nbt: NBTTagCompound) {
 		val subBiomes = chunk.WorldEngine_SubBiomeList ?: return
@@ -990,7 +984,9 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(injectOnExit = true)
 	fun readChunkFromNBT(acl: AnvilChunkLoader, world: World, nbt: NBTTagCompound, @ReturnValue chunk: Chunk): Chunk {
-		if (!nbt.hasKey("WorldEngine_SubBiomeList", 9) || chunk.WorldEngine_SubBiomeList == null) return chunk
+		if (!nbt.hasKey("WorldEngine_SubBiomeList", 9)) return chunk
+		
+		chunk.WorldEngine_SubBiomeList = arrayOfNulls(256)
 		
 		val subBiomesList = nbt.getTag("WorldEngine_SubBiomeList") as NBTTagList
 		for (i in 0 until subBiomesList.tagCount()) {

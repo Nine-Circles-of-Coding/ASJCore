@@ -8,6 +8,7 @@ import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.Loader;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.chunk.Chunk;
 import ru.vamig.worldengine.additions.*;
 import ru.vamig.worldengine.standardcustomgen.*;
 
@@ -124,8 +125,12 @@ public class WE_Biome extends BiomeGenBase {
 	}
 	
 	public static WE_Biome getBiomeAt(WE_ChunkProvider cp, int x, int z) {
-		String[] biomes = cp.world.blockExists(x, 0, z) ? cp.world.getChunkFromBlockCoords(x, z).WorldEngine_SubBiomeList : null;
+		Chunk chunk = null;
+		String[] biomes = cp.world.blockExists(x, 0, z) ? (chunk = cp.world.getChunkFromBlockCoords(x, z)).WorldEngine_SubBiomeList : null;
 		int biomeIndex = (x & 15) * 16 + (z & 15);
+		
+		if (chunk != null && biomes == null)
+			chunk.WorldEngine_SubBiomeList = new String[256];
 		
 		if (biomes != null) run: {
 			String biomeName = biomes[biomeIndex];

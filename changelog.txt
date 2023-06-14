@@ -1,2 +1,1 @@
-Optimized WorldEngine biome calculation
-Fixed NPE fix giving another NPE or IOOBE
+Fixed crash with FastCraft
