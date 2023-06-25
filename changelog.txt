@@ -1,1 +1,2 @@
-Fixed crash with FastCraft
+Fixed `java.lang.Integer cannot be cast to java.lang.Byte` crash caused by different mods not using `Entity#getFlag` method
+Another fix for collisions fix -_-

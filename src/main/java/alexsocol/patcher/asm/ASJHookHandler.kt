@@ -10,6 +10,7 @@ import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.*
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
+import gloomyfolken.hooklib.asm.ReturnCondition.*
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.client.Minecraft
@@ -48,7 +49,6 @@ import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.ForgeDirection
 import org.lwjgl.opengl.*
 import org.objectweb.asm.Opcodes
-import ru.vamig.worldengine.WE_WorldProvider
 import java.io.File
 import java.nio.FloatBuffer
 import java.util.*
@@ -66,7 +66,7 @@ object ASJHookHandler {
 	
 	// summon lightning bolt in /summon command
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, targetMethod = "<init>", createMethod = true, superClass = "net/minecraft/entity/effect/EntityWeatherEffect.${Opcodes.ALOAD}.1.(Lnet/minecraft/world/World;)V")
+	@Hook(returnCondition = ALWAYS, targetMethod = "<init>", createMethod = true, superClass = "net/minecraft/entity/effect/EntityWeatherEffect.${Opcodes.ALOAD}.1.(Lnet/minecraft/world/World;)V")
 	fun EntityLightningBolt(thiz: EntityLightningBolt, world: World) {
 		thiz.lightningState = 2
 		thiz.boltVertex = (Math.random() * Long.MAX_VALUE).toLong()
@@ -75,7 +75,7 @@ object ASJHookHandler {
 	
 	// AIOOBE 257+ crash fix
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, targetMethod = "<clinit>")
+	@Hook(returnCondition = ALWAYS, targetMethod = "<clinit>")
 	fun EntityEnderman(thiz: EntityEnderman?) {
 		val uuid = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0") // Entries in at.cfg causes gradle error
 		ASJReflectionHelper.setStaticFinalValue(EntityEnderman::class.java, uuid, "attackingSpeedBoostModifierUUID", "field_110192_bp")
@@ -128,27 +128,27 @@ object ASJHookHandler {
 	
 	// gm alias for /gamemode
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, createMethod = true)
+	@Hook(returnCondition = ALWAYS, createMethod = true)
 	fun getCommandAliases(c: CommandGameMode): List<String> {
 		return listOf("gm")
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, createMethod = true)
+	@Hook(returnCondition = ALWAYS, createMethod = true)
 	fun getCommandAliases(c: CommandDefaultGameMode): List<String>? {
 		return null
 	}
 	
 	// summon usage
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, createMethod = true)
+	@Hook(returnCondition = ALWAYS, createMethod = true)
 	fun getCommandUsage(c: CommandSummon, sender: ICommandSender?): String {
 		return "commands.summon.usage.new"
 	}
 	
 	// entity batches in /summon command
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun processCommand(c: CommandSummon, sender: ICommandSender?, args: Array<String?>): Boolean {
 		val count = args.getOrNull(1) ?: return false
 		if (!count.startsWith('x')) return false
@@ -161,13 +161,13 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun func_147182_d(c: CommandSummon): Array<String> {
 		return (EntityList.stringToClassMapping.keys as Set<String>).toTypedArray()
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun addTabCompletionOptions(c: CommandSummon, sender: ICommandSender?, args: Array<String?>): MutableList<*>? {
 		if (args.size != 1) return null
 		
@@ -234,7 +234,7 @@ object ASJHookHandler {
 	
 	// stack NBT fix
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_NOT_NULL)
+	@Hook(returnCondition = ON_NOT_NULL)
 	fun writeToNBT(stack: ItemStack, nbt: NBTTagCompound): NBTTagCompound? {
 		if (!PatcherConfigHandler.textIDs) return null
 		
@@ -248,7 +248,7 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun readFromNBT(stack: ItemStack, nbt: NBTTagCompound): Boolean {
 		if (!PatcherConfigHandler.textIDs) return false
 		if (nbt.hasNoTags()) return true
@@ -288,7 +288,7 @@ object ASJHookHandler {
 	
 	// armor can't block damage that is set to bypass armor
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE, returnType = "float", returnAnotherMethod = "armorNotApplied")
+	@Hook(returnCondition = ON_TRUE, returnType = "float", returnAnotherMethod = "armorNotApplied")
 	fun ApplyArmor(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double): Boolean {
 		return source.isUnblockable
 	}
@@ -366,17 +366,17 @@ object ASJHookHandler {
 	
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun doRenderShadowAndFire(render: Render, entity: Entity, x: Double, y: Double, z: Double, yaw: Float, ticks: Float): Boolean {
 		return MinecraftForge.EVENT_BUS.post(RenderEntityPostEvent(entity, x, y, z, yaw))
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE, targetMethod = "func_150000_e")
+	@Hook(returnCondition = ON_TRUE, targetMethod = "func_150000_e")
 	fun tryToCreatePortal(portal: BlockPortal, world: World, x: Int, y: Int, z: Int) = MinecraftForge.EVENT_BUS.post(NetherPortalActivationEvent(world, x, y, z))
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun addStats(stats: FoodStats, foodLevel: Int, foodSaturationLevel: Float) {
 		val e = PlayerEatingEvent(stats.host, foodLevel, foodSaturationLevel)
 		MinecraftForge.EVENT_BUS.post(e)
@@ -404,7 +404,7 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	@SideOnly(Side.CLIENT)
 	fun displayGuiScreen(mc: Minecraft, gui: GuiScreen?): Boolean {
 		return if (portalHook && mc.thePlayer?.inPortal == true) {
@@ -415,13 +415,13 @@ object ASJHookHandler {
 	
 	// BlockFence connection fix
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun canConnectFenceTo(fence: BlockFence, world: IBlockAccess, x: Int, y: Int, z: Int) = world.getBlock(x, y, z) is BlockFence
 	
 	// BlockWall fix
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, createMethod = true)
+	@Hook(returnCondition = ALWAYS, createMethod = true)
 	fun isSideSolid(wall: BlockWall, world: IBlockAccess, x: Int, y: Int, z: Int, side: ForgeDirection) = when (side) {
 		ForgeDirection.DOWN -> true
 		ForgeDirection.UP   -> wall.blockBoundsMaxY == 1.0
@@ -429,7 +429,7 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun renderBlockWall(render: RenderBlocks, block: BlockWall, x: Int, y: Int, z: Int): Boolean {
 		val flag = block.canConnectWallTo(render.blockAccess, x - 1, y, z)
 		val flag1 = block.canConnectWallTo(render.blockAccess, x + 1, y, z)
@@ -473,7 +473,7 @@ object ASJHookHandler {
 	
 	// potion fixes
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun updatePotionEffects(e: EntityLivingBase) {
 		try {
 			val iterator = e.activePotionsMap.keys.iterator()
@@ -556,7 +556,7 @@ object ASJHookHandler {
 	
 	// modded fire breaking in creative fix
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun extinguishFire(world: World, player: EntityPlayer?, x: Int, y: Int, z: Int, side: Int): Boolean {
 		var i = x
 		var j = y
@@ -581,7 +581,7 @@ object ASJHookHandler {
 	
 	// nightvision twinkling fix
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun getNightVisionBrightness(render: EntityRenderer, player: EntityPlayer, partialTicks: Float) = if ((player.getActivePotionEffect(Potion.nightVision.id)?.duration ?: 0) > 0) 1f else 0f
 	
 	// Fix nbt clearing in Enchanting Table
@@ -593,7 +593,7 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun transferStackInSlot(container: ContainerEnchantment, player: EntityPlayer?, slotID: Int): ItemStack? {
 		var itemstack: ItemStack? = null
 		val slot = container.inventorySlots[slotID] as Slot?
@@ -628,7 +628,7 @@ object ASJHookHandler {
 	
 	// clear entity name
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun itemInteractionForEntity(item: ItemNameTag, stack: ItemStack, player: EntityPlayer?, target: EntityLivingBase?): Boolean {
 		if (!stack.hasDisplayName() && target is EntityLiving) {
 			target.customNameTag = ""
@@ -640,7 +640,7 @@ object ASJHookHandler {
 	
 	// can't shear dead animals (dupe fix)
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_NOT_NULL)
+	@Hook(returnCondition = ON_NOT_NULL)
 	fun onSheared(entity: EntityMooshroom, item: ItemStack?, world: IBlockAccess?, x: Int, y: Int, z: Int, fortune: Int) = if (entity.isDead) ArrayList<Any?>() else null
 	
 	// invisible blocks to tabs
@@ -661,7 +661,7 @@ object ASJHookHandler {
 	// int overflow fix
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun getBurnTimeRemainingScaled(furnace: TileEntityFurnace, mod: Int): Int {
 		if (furnace.currentItemBurnTime == 0) {
 			furnace.currentItemBurnTime = 200
@@ -673,7 +673,7 @@ object ASJHookHandler {
 	// fog fixes
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun setupFog(renderer: EntityRenderer, fogMode: Int, renderPartialTicks: Float) {
 		val entitylivingbase = renderer.mc.renderViewEntity
 		val creative = if (entitylivingbase is EntityPlayer) entitylivingbase.capabilities.isCreativeMode else false
@@ -798,7 +798,7 @@ object ASJHookHandler {
 	@SideOnly(Side.CLIENT)
 	@Synchronized
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun deleteDisplayLists(gla: GLAllocation?, id: Int) {
 		if (GLAllocation.mapDisplayLists.contains(id)) GL11.glDeleteLists(id, GLAllocation.mapDisplayLists.remove(id) as Int)
 	}
@@ -813,7 +813,7 @@ object ASJHookHandler {
 	
 	// ???
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun trackBrokenTexture(handler: FMLClientHandler, resourceLocation: ResourceLocation, error: String?): Boolean {
 		if (error == null) {
 			handler.trackBrokenTexture(resourceLocation, "Unknown Error")
@@ -825,12 +825,12 @@ object ASJHookHandler {
 	
 	// custom arm swinging
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, injectOnExit = true)
+	@Hook(returnCondition = ALWAYS, injectOnExit = true)
 	fun getArmSwingAnimationEnd(e: EntityLivingBase, @ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getCustomArmSwingAnimationEnd() else result
 	
 	// NBT ByteArray to string fix -- STUPID FUCKING MOTHERFUCKERS
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun toString(tag: NBTTagByteArray): String {
 		var s = "["
 		val abyte: ByteArray = tag.func_150292_c()
@@ -925,7 +925,7 @@ object ASJHookHandler {
 	
 	// NPE fix
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
+	@Hook(returnCondition = ALWAYS)
 	fun func_151519_b(src: EntityDamageSource, victim: EntityLivingBase): IChatComponent {
 		val damageSourceEntity: Entity? = src.entity
 		val itemstack = if (damageSourceEntity is EntityLivingBase) damageSourceEntity.heldItem else null
@@ -938,7 +938,7 @@ object ASJHookHandler {
 	// disable vignette
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun renderVignette(gui: GuiIngame, vignetteBrightness: Float, width: Int, height: Int): Boolean {
 		val disable = !PatcherConfigHandler.vignette
 		if (disable) OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
@@ -948,12 +948,12 @@ object ASJHookHandler {
 	// NPE fix
 	@JvmStatic
 	@Hook(injectOnExit = true)
-	fun getCollidingBoundingBoxes(world: World, entity: Entity?, aabb: AxisAlignedBB?, @ReturnValue result: MutableList<AxisAlignedBB?>) = result.filterNotNull()
+	fun getCollidingBoundingBoxes(world: World, entity: Entity?, aabb: AxisAlignedBB?, @ReturnValue result: List<AxisAlignedBB?>) = ArrayList(result).filterNotNull()
 	
 	// Entity gravity fix
 	// by KAIIIAK
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE)
+	@Hook(returnCondition = ON_TRUE)
 	fun moveEntityWithHeading(thiz: EntityLivingBase, moveStrafe: Float, moveForward: Float): Boolean {
 		if (!PatcherConfigHandler.entityGravityFix) return false
 		
@@ -995,5 +995,18 @@ object ASJHookHandler {
 		}
 		
 		return chunk
+	}
+	
+	// Fix for invalid modders not using [Entity.getFlag]
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun getWatchableObjectByte(dw: DataWatcher, index: Int): Byte {
+		val byte = dw.getWatchedObject(index).getObject()
+		return if (index != 0) byte as Byte
+			else if (byte !is Byte) when (byte) {
+				is Number -> byte.toByte()
+				is String -> byte.toByte()
+				else      -> 0
+			} else byte
 	}
 }

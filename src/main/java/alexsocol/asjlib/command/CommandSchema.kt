@@ -10,10 +10,6 @@ import net.minecraft.command.*
 import net.minecraft.nbt.NBTTagCompound
 import org.apache.commons.lang3.tuple.MutablePair
 import java.io.*
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.component3
-import kotlin.collections.set
 import kotlin.math.abs
 
 object CommandSchema: CommandBase() {
