@@ -10,12 +10,20 @@ import cpw.mods.fml.common.event.*
 import cpw.mods.fml.common.registry.GameData
 import net.minecraft.block.*
 import net.minecraft.command.CommandBase
+import net.minecraft.enchantment.*
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
+import net.minecraft.potion.Potion
+import net.minecraft.world.biome.BiomeGenBase
 import net.minecraftforge.common.MinecraftForge
+import java.lang.StringBuilder
 
 @Mod(modid = "asjpatcher", modLanguageAdapter = KotlinAdapter.className)
 object PatcherMain {
+	
+	val duplicatedBiomes = mutableListOf<Pair<BiomeGenBase, BiomeGenBase>>()
+	val duplicatedEnchantments = mutableListOf<Pair<Enchantment, Enchantment>>()
+	val duplicatedPotions = mutableListOf<Pair<Potion, Potion>>()
 	
 	@Mod.EventHandler
 	fun preInit(e: FMLPreInitializationEvent) {
@@ -41,6 +49,49 @@ object PatcherMain {
 		
 		if (ASJUtilities.isClient)
 			PatcherEventHandlerClient.eventForge()
+	}
+	
+	private operator fun StringBuilder.plusAssign(s: String) {
+		append(s).append('\n')
+	}
+	
+	@Mod.EventHandler
+	fun onMCLoaded(event: FMLServerStartedEvent) {
+		if (duplicatedBiomes.isEmpty() && duplicatedEnchantments.isEmpty() && duplicatedPotions.isEmpty()) return
+		
+		val message = StringBuilder("Duplicated IDs were found during modded registration process:\n")
+		
+		if (duplicatedBiomes.isNotEmpty()) {
+			message += " - Duplicated Biome IDs:"
+			
+			for ((b1, b2) in duplicatedBiomes) {
+				message += "\t${b1.biomeID} - ${b1.biomeName} (${b1.biomeClass})\t\tAND\t\t${b2.biomeID} - ${b2.biomeName} (${b2.biomeClass})"
+			}
+			
+			message += "\n\tFree Biome IDs: [${BiomeGenBase.getBiomeGenArray().foldIndexed("") { id, acc, it -> acc + if (it == null) "$id," else "" } }]\n"
+		}
+		
+		if (duplicatedEnchantments.isNotEmpty()) {
+			message += " - Duplicated Enchantment IDs:"
+			
+			for ((e1, e2) in duplicatedEnchantments) {
+				message += "\t${e1.effectId} - ${e1.name} (${e1.javaClass})\t\tAND\t\t${e2.effectId} - ${e2.name} (${e2.javaClass})"
+			}
+			
+			message += "\n\tFree Enchantment IDs: [${Enchantment.enchantmentsList.foldIndexed("") { id, acc, it -> acc + if (it == null) "$id," else "" } }]\n"
+		}
+		
+		if (duplicatedPotions.isNotEmpty()) {
+			message += " - Duplicated Potion IDs:"
+			
+			for ((p1, p2) in duplicatedPotions) {
+				message += "\t${p1.id} - ${p1.name} (${p1.javaClass})\t\tAND\t\t${p2.id} - ${p2.name} (${p2.javaClass})"
+			}
+			
+			message += "\n\tFree Potion IDs: [${Potion.potionTypes.foldIndexed("") { id, acc, it -> acc + if (it == null) "$id," else "" } }]\n"
+		}
+		
+		throw IllegalArgumentException(message.toString())
 	}
 	
 	@Mod.EventHandler

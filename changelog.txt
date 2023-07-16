@@ -1,2 +1,8 @@
-Fixed `java.lang.Integer cannot be cast to java.lang.Byte` crash caused by different mods not using `Entity#getFlag` method
-Another fix for collisions fix -_-
+Improved ID validation for biomes, enchantments and potions
+Updated Kotlin to 1.9.0
+
+Fixed `java.lang.Byte cannot be cast to java.lang.Integer` crash caused by different mods not using `Entity#getFlag` method
+Disabled ender eye for WorldEngine' worlds
+Final fix for collisions fix -_-
+Fixed biome types for WE biomes
+Fixed KAIIIAKs' entity gravity fix

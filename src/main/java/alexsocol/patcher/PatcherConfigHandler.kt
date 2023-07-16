@@ -17,6 +17,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var commands = PatcherMain.Commands.values().map { it.name }.toTypedArray()
 	var creativeDamage = false
 	var damageMobArmor = true
+	var enchantmentDuplication = false
 	var entityGravityFix = true
 	var explosions = true
 	var floatingTrapDoors = true
@@ -28,7 +29,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var showOreDict = true
 	var vignette = false
 	var voidFog = true
-	var WEBiomeID = 152
+	var WEBiomeID = 150
 	
 	var blacklistWither = true
 	
@@ -46,6 +47,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		commands = loadProp(CATEGORY_GENERAL, "commands", commands, true, "List of commands. Remove any to unregister it. DO NOT add anything new", false)
 		creativeDamage = loadProp(CATEGORY_GENERAL, "creativeDamage", creativeDamage, false, "Set this to true to allow taking damage in creative")
 		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")
+		enchantmentDuplication = loadProp(CATEGORY_GENERAL, "enchantmentDuplication", enchantmentDuplication, false, "Set this to true to allow registering duplicated enchantment ids")
 		entityGravityFix = loadProp(CATEGORY_GENERAL, "entityGravityFix", entityGravityFix, false, "Set this to false to disable gravity fix")
 		explosions = loadProp(CATEGORY_GENERAL, "explosions", explosions, false, "Set this to false to disable explosions")
 		floatingTrapDoors = loadProp(CATEGORY_GENERAL, "floatingTrapDoors", floatingTrapDoors, true, "Set this to false to forbid trapdoors to remain free-floating (as in vanilla, may break some world structures)")

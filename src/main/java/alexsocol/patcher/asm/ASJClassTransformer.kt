@@ -44,6 +44,11 @@ class ASJClassTransformer: IClassTransformer {
 			"net.minecraft.client.network.NetHandlerPlayClient"        -> core { `NetHandlerPlayClient$ClassVisitor`(it) }
 			"net.minecraft.client.particle.EffectRenderer"             -> core { `EffectRenderer$ClassVisitor`(it) }
 			"net.minecraft.command.server.CommandSummon"               -> core { `CommandSummon$ClassVisitor`(it) }
+			
+			"net.minecraft.enchantment.Enchantment"                    -> tree {
+				it.methods.remove(it.methods.find { m -> m.name == "<init>" })
+			}
+			
 			"net.minecraft.entity.Entity"                              -> core { `Entity$ClassVisitor`(it) }
 			"net.minecraft.item.ItemGlassBottle"                       -> core { `ItemGlassBottle$ClassVisitor`(it) }
 			"net.minecraft.nbt.JsonToNBT"                              -> core { `JsonToNBT$ClassVisitor`(it) }
@@ -182,7 +187,6 @@ class ASJClassTransformer: IClassTransformer {
 	}
 	
 	// flag count expansion to 32
-	// set/get in ASJHookHandler
 	internal class `Entity$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {

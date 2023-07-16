@@ -9,6 +9,7 @@ import cpw.mods.fml.common.Loader;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.BiomeDictionary;
 import ru.vamig.worldengine.additions.*;
 import ru.vamig.worldengine.standardcustomgen.*;
 
@@ -39,6 +40,8 @@ public class WE_Biome extends BiomeGenBase {
 		biomeSurfaceHeight = 63,
 		biomeInterpolateQuality = 16;
 	public int grassColor = 0x91BD59;
+	
+	public EnumSet<BiomeDictionary.Type> typeList = EnumSet.noneOf(BiomeDictionary.Type.class);
 	
 	/////
 	//=//

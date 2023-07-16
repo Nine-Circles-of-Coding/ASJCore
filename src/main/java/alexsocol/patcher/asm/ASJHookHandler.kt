@@ -2,10 +2,9 @@ package alexsocol.patcher.asm
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
-import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.*
 import alexsocol.patcher.event.*
 import cpw.mods.fml.client.FMLClientHandler
-import cpw.mods.fml.common.FMLCommonHandler
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.*
@@ -21,7 +20,7 @@ import net.minecraft.client.renderer.entity.Render
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
 import net.minecraft.creativetab.CreativeTabs
-import net.minecraft.enchantment.EnchantmentHelper
+import net.minecraft.enchantment.*
 import net.minecraft.entity.*
 import net.minecraft.entity.EntityList.EntityEggInfo
 import net.minecraft.entity.ai.attributes.AttributeModifier
@@ -220,16 +219,30 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(targetMethod = "<init>")
 	fun BiomeGenBase(thiz: BiomeGenBase, id: Int, register: Boolean) {
-		if (PatcherConfigHandler.biomeDuplication && BiomeGenBase.getBiomeGenArray()[id] != null)
-			throw IllegalArgumentException("Biome with id $id is already registered!")
+		if (!PatcherConfigHandler.biomeDuplication && register && BiomeGenBase.getBiomeGenArray()[id] != null)
+			PatcherMain.duplicatedBiomes += thiz to BiomeGenBase.getBiomeGenArray()[id]
 	}
 	
 	// potion dup id fix
 	@JvmStatic
 	@Hook(targetMethod = "<init>")
 	fun Potion(thiz: Potion, id: Int, bad: Boolean, color: Int) {
-		if (PatcherConfigHandler.potionDuplication && Potion.potionTypes[id] != null)
-			throw IllegalArgumentException("Potion with id $id is already registered!")
+		if (!PatcherConfigHandler.potionDuplication && Potion.potionTypes[id] != null)
+			PatcherMain.duplicatedPotions += thiz to Potion.potionTypes[id]
+	}
+	
+	// enchantment dup id fix
+	@JvmStatic
+	@Hook(targetMethod = "<init>", createMethod = true, returnCondition = ALWAYS, superClass = "java/lang/Object")
+	fun Enchantment(thiz: Enchantment, id: Int, weight: Int, type: EnumEnchantmentType) {
+		thiz.effectId = id
+		thiz.weight = weight
+		thiz.type = type
+		
+		if (!PatcherConfigHandler.enchantmentDuplication && Enchantment.enchantmentsList[id] != null)
+			PatcherMain.duplicatedEnchantments += thiz to Enchantment.enchantmentsList[id]
+		
+		Enchantment.enchantmentsList[id] = thiz
 	}
 	
 	// stack NBT fix
@@ -905,24 +918,6 @@ object ASJHookHandler {
 		}
 	}
 	
-//	// flag count expansion to 32
-//	// Byte -> Int in ASJClassTransformer
-//	@JvmStatic
-//	@Hook(returnCondition = ReturnCondition.ALWAYS)
-//	fun getFlag(entity: Entity, id: Int) = entity.dataWatcher.getWatchableObjectInt(0) and (1 shl id) != 0
-//
-//	@JvmStatic
-//	@Hook(returnCondition = ReturnCondition.ALWAYS)
-//	fun setFlag(entity: Entity, id: Int, value: Boolean) {
-//		val allFlags = entity.dataWatcher.getWatchableObjectInt(0)
-//
-//		if (value) {
-//			entity.dataWatcher.updateObject(0, allFlags or (1 shl id))
-//		} else {
-//			entity.dataWatcher.updateObject(0, allFlags and (1 shl id).inv())
-//		}
-//	}
-	
 	// NPE fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
@@ -947,7 +942,7 @@ object ASJHookHandler {
 	
 	// NPE fix
 	@JvmStatic
-	@Hook(injectOnExit = true)
+	@Hook(injectOnExit = true, returnCondition = ALWAYS)
 	fun getCollidingBoundingBoxes(world: World, entity: Entity?, aabb: AxisAlignedBB?, @ReturnValue result: List<AxisAlignedBB?>) = ArrayList(result).filterNotNull()
 	
 	// Entity gravity fix
@@ -957,7 +952,18 @@ object ASJHookHandler {
 	fun moveEntityWithHeading(thiz: EntityLivingBase, moveStrafe: Float, moveForward: Float): Boolean {
 		if (!PatcherConfigHandler.entityGravityFix) return false
 		
-		if (FMLCommonHandler.instance().side != Side.CLIENT || Minecraft.getMinecraft().isSingleplayer || thiz is EntityPlayer) return false
+		if (ASJUtilities.isServer || thiz is EntityPlayer) return false
+		
+		var y = -0.0784000015258789
+		val d7 = y
+		val list = thiz.worldObj.getCollidingBoundingBoxes(thiz, thiz.boundingBox.addCoord(0.0, y, 0.0))
+		
+		for (i in list.indices) {
+			y = (list[i] as AxisAlignedBB).calculateYOffset(thiz.boundingBox, y)
+		}
+		
+		thiz.isCollidedVertically = d7 != y
+		thiz.onGround = d7 != y
 		
 		thiz.prevLimbSwingAmount = thiz.limbSwingAmount
 		val x = thiz.posX - thiz.prevPosX
@@ -1008,5 +1014,17 @@ object ASJHookHandler {
 				is String -> byte.toByte()
 				else      -> 0
 			} else byte
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun getWatchableObjectInt(dw: DataWatcher, index: Int): Int {
+		val int = dw.getWatchedObject(index).getObject()
+		return if (index != 0) int as Int
+		else if (int !is Int) when (int) {
+			is Number -> int.toInt()
+			is String -> int.toInt()
+			else      -> 0
+		} else int
 	}
 }

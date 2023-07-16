@@ -28,6 +28,7 @@ class ASJHookLoader: HookLoader() {
 		FMLRelaunchLog.info("[ASJLib] Loaded coremod. Registering hooks...")
 		
 		registerHookContainer("alexsocol.patcher.asm.ASJHookHandler")
+		registerHookContainer("alexsocol.patcher.asm.BiomeDictionaryForWEHooks")
 		
 		if (OBF) ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.ASJFieldHookHandler")
 	}

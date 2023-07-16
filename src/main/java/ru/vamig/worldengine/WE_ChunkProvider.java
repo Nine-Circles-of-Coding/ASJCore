@@ -7,6 +7,7 @@ import cpw.mods.fml.common.IWorldGenerator;
 import net.minecraft.block.*;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
+import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.*;
 import net.minecraft.world.gen.ChunkProviderGenerate;
@@ -167,5 +168,15 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 			return chunkBlocksMeta[(x * 16 + z) * 256 + y];
 		else
 			return 0;
+	}
+	
+	@Override
+	public ChunkPosition func_147416_a(World world, String structure, int x, int y, int z) {
+		return null;
+	}
+	
+	@Override
+	public void recreateStructures(int chunkX, int chunkZ) {
+		// NO-OP
 	}
 }
