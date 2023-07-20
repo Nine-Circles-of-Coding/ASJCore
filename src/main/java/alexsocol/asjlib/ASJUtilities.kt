@@ -867,7 +867,7 @@ object ASJUtilities {
 	@JvmStatic
 	fun sayToAllOPs(message: String) {
 		val ops = MinecraftServer.getServer().configurationManager.func_152606_n()
-		MinecraftServer.getServer().configurationManager.playerEntityList.forEach { if ((it as EntityPlayer).commandSenderName in ops)  say(it, message) }
+		MinecraftServer.getServer().configurationManager.playerEntityList.forEach { if ((it as EntityPlayer).commandSenderName in ops) say(it, message) }
 		log(message)
 	}
 	

@@ -39,7 +39,7 @@ import net.minecraft.server.ServerEula
 import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
-import net.minecraft.world.biome.BiomeGenBase
+import net.minecraft.world.biome.*
 import net.minecraft.world.chunk.Chunk
 import net.minecraft.world.chunk.storage.AnvilChunkLoader
 import net.minecraftforge.client.event.EntityViewRenderEvent
@@ -215,34 +215,12 @@ object ASJHookHandler {
 		if (arrow.canBePickedUp == 0 && player.capabilities.isCreativeMode) arrow.canBePickedUp = 2
 	}
 	
-	// biome dup id fix
+	// Adventuring Time ach. extension
 	@JvmStatic
 	@Hook(targetMethod = "<init>")
 	fun BiomeGenBase(thiz: BiomeGenBase, id: Int, register: Boolean) {
-		if (!PatcherConfigHandler.biomeDuplication && register && BiomeGenBase.getBiomeGenArray()[id] != null)
-			PatcherMain.duplicatedBiomes += thiz to BiomeGenBase.getBiomeGenArray()[id]
-	}
-	
-	// potion dup id fix
-	@JvmStatic
-	@Hook(targetMethod = "<init>")
-	fun Potion(thiz: Potion, id: Int, bad: Boolean, color: Int) {
-		if (!PatcherConfigHandler.potionDuplication && Potion.potionTypes[id] != null)
-			PatcherMain.duplicatedPotions += thiz to Potion.potionTypes[id]
-	}
-	
-	// enchantment dup id fix
-	@JvmStatic
-	@Hook(targetMethod = "<init>", createMethod = true, returnCondition = ALWAYS, superClass = "java/lang/Object")
-	fun Enchantment(thiz: Enchantment, id: Int, weight: Int, type: EnumEnchantmentType) {
-		thiz.effectId = id
-		thiz.weight = weight
-		thiz.type = type
-		
-		if (!PatcherConfigHandler.enchantmentDuplication && Enchantment.enchantmentsList[id] != null)
-			PatcherMain.duplicatedEnchantments += thiz to Enchantment.enchantmentsList[id]
-		
-		Enchantment.enchantmentsList[id] = thiz
+		if (thiz !is BiomeGenMutated)
+			BiomeGenBase.explorationBiomesList += thiz
 	}
 	
 	// stack NBT fix
