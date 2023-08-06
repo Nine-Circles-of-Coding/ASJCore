@@ -45,7 +45,7 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader
 import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
-import net.minecraftforge.common.util.ForgeDirection
+import net.minecraftforge.common.util.*
 import org.lwjgl.opengl.*
 import org.objectweb.asm.Opcodes
 import java.io.File
@@ -1004,5 +1004,46 @@ object ASJHookHandler {
 			is String -> int.toInt()
 			else      -> 0
 		} else int
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun loadWorld(static: ForgeChunkManager?, world: World) {
+		val persistentChunks = world.persistentChunks.keySet()
+		
+		ForgeChunkManager.tickets[world]?.values()?.forEach {
+			val ticketChunks = HashSet<ChunkCoordIntPair>()
+			ticketChunks.addAll(it.requestedChunks)
+			
+			ticketChunks.forEach inner@ { c ->
+				if (c in persistentChunks) return@inner
+				
+				try {
+					ForgeChunkManager.forceChunk(it, c)
+				} catch (e: Exception) {
+					ASJUtilities.error("Failed to force chunk $c requested by ${it.modId}. It won't persist until requested again.", e)
+				}
+			}
+		}
+	}
+	
+	@JvmStatic
+	fun addChunksToTicket(nbt: NBTTagCompound, ticket: ForgeChunkManager.Ticket) {
+		val list = nbt.getTagList("ChunkList", Constants.NBT.TAG_INT_ARRAY)
+		
+		for (i in 0 until list.tagCount()) {
+			val (x, z) = list.func_150306_c(i)
+			ticket.requestedChunks.add(ChunkCoordIntPair(x, z))
+		}
+	}
+	
+	@JvmStatic
+	fun storeChunksFromTicket(nbt: NBTTagCompound, ticket: ForgeChunkManager.Ticket) {
+		val list = NBTTagList()
+		nbt.setTag("ChunkList", list)
+		
+		ticket.chunkList.forEach {
+			list.appendTag(NBTTagIntArray(intArrayOf(it.chunkXPos, it.chunkZPos)))
+		}
 	}
 }

@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.2.3.1"
+version = "1.2.3.2"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -59,7 +59,7 @@ sourceCompatibility = targetCompatibility = '1.8'
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
 jar {
-	duplicatesStrategy = 'INCLUDE'
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	
 	from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
 	
@@ -71,7 +71,7 @@ jar {
 }
 
 processResources {
-	duplicatesStrategy = 'INCLUDE'
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	
 	inputs.property "version", project.version
 	inputs.property "mcversion", project.minecraft.version
@@ -97,4 +97,29 @@ idea {
 
 subprojects {
 	apply plugin: 'idea'
+}
+
+tasks.register('deobfJar', Jar) {
+	dependsOn reobf
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+	classifier 'deobf'
+
+	from sourceSets.main.output
+	manifest.attributes(jar.manifest.getAttributes())
+}
+
+tasks.register('sourcesJar', Jar) {
+	dependsOn classes
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	classifier 'deobf-sources'
+
+	from sourceSets.main.allSource
+	exclude "assets"
+	exclude "asjlib_at.cfg"
+	exclude "methods.bin"
+}
+
+artifacts {
+    archives deobfJar
+    archives sourcesJar
 }

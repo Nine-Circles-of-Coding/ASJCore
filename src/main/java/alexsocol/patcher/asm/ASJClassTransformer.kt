@@ -7,7 +7,7 @@ import alexsocol.patcher.asm.ASJHookLoader.Companion.OBF
 import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
-import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.*
 
 class ASJClassTransformer: IClassTransformer {
 	
@@ -51,6 +51,47 @@ class ASJClassTransformer: IClassTransformer {
 			"net.minecraft.server.management.ItemInWorldManager"       -> core { `ItemInWorldManager$ClassVisitor`(it) }
 			"net.minecraft.tileentity.TileEntityFurnace"               -> core { `TileEntityFurnace$ClassVisitor`(it) }
 			"net.minecraft.world.World"                                -> core { `World$ClassVisitor`(it) }
+			
+			"net.minecraftforge.common.ForgeChunkManager"              -> tree { cn ->
+				run loadWorld@ {
+					val mn = cn.methods.find { it.name == "loadWorld" } ?: return@loadWorld
+					
+					val vin = object: Iterable<AbstractInsnNode> {
+						override fun iterator() = mn.instructions.iterator()
+					}.find {
+						it is VarInsnNode && it.`var` == 17 && it.opcode == ASTORE
+					} ?: return@loadWorld
+					
+					val aload15 = VarInsnNode(ALOAD, 15)
+					mn.instructions.insert(vin, aload15)
+					
+					val aload17 = VarInsnNode(ALOAD, 17)
+					mn.instructions.insert(aload15, aload17)
+					
+					val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "addChunksToTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
+					mn.instructions.insert(aload17, invokeStatic)
+				}
+				
+				run saveWorld@ {
+					val mn = cn.methods.find { it.name == "saveWorld" } ?: return@saveWorld
+					
+					val vin = object: Iterable<AbstractInsnNode> {
+						override fun iterator() = mn.instructions.iterator()
+					}.find {
+						it is VarInsnNode && it.`var` == 13 && it.opcode == ASTORE
+					} ?: return@saveWorld
+					
+					val aload13 = VarInsnNode(ALOAD, 13)
+					mn.instructions.insert(vin, aload13)
+					
+					val aload12 = VarInsnNode(ALOAD, 12)
+					mn.instructions.insert(aload13, aload12)
+					
+					val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "storeChunksFromTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
+					mn.instructions.insert(aload12, invokeStatic)
+				}
+			}
+			
 			"thaumcraft.common.blocks.BlockCustomOre"                  -> core { `BlockCustomOre$ClassVisitor`(it) }
 			else                                                       -> returnClass
 		}
@@ -428,7 +469,7 @@ class ASJClassTransformer: IClassTransformer {
 		}
 	}
 	
-	inline fun core(frames: Int = ClassReader.EXPAND_FRAMES, lambda: (ClassVisitor) -> ClassVisitor): ByteArray {
+	private inline fun core(frames: Int = ClassReader.EXPAND_FRAMES, lambda: (ClassVisitor) -> ClassVisitor): ByteArray {
 		println("Transforming $transformedName")
 		val cr = ClassReader(basicClass)
 		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
@@ -437,7 +478,7 @@ class ASJClassTransformer: IClassTransformer {
 		return cw.toByteArray()
 	}
 	
-	inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
+	private inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
 		println("Transforming $transformedName")
 		val cr = ClassReader(basicClass)
 		val it = ClassWriter(ClassWriter.COMPUTE_MAXS)

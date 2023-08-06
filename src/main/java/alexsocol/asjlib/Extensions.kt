@@ -365,3 +365,9 @@ fun EntityLivingBase.teleportTo(x: Double, y: Double, z: Double): Boolean {
 		true
 	}
 }
+
+private const val TAG_COOLDOWN = "cooldown"
+
+var ItemStack.cooldown
+	get() = ItemNBTHelper.getInt(this, TAG_COOLDOWN, 0)
+	set(value) = ItemNBTHelper.setInt(this, TAG_COOLDOWN, value)

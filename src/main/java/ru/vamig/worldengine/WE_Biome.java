@@ -15,7 +15,7 @@ import ru.vamig.worldengine.standardcustomgen.*;
 
 import java.util.*;
 
-public class WE_Biome extends BiomeGenBase {
+public abstract class WE_Biome extends BiomeGenBase {
 	
 	// Serialization
 	public static final HashMap<String, WE_Biome> biomeList = new HashMap<>();
@@ -65,11 +65,7 @@ public class WE_Biome extends BiomeGenBase {
 	}
 	
 	public WE_Biome() {
-		this(false);
-	}
-	
-	public WE_Biome(boolean r) {
-		super(PatcherConfigHandler.INSTANCE.getWEBiomeID(), r);
+		super(PatcherConfigHandler.INSTANCE.getWEBiomeID(), false);
 		setBiomeName("-=|World-Engine|=-");
 		
 		serializationName = Loader.instance().activeModContainer().getModId() + ":" + this.getClass().getName();

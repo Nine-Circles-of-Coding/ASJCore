@@ -2,7 +2,6 @@ package alexsocol.patcher.handler
 
 import alexsocol.asjlib.*
 import alexsocol.patcher.PatcherConfigHandler
-import cpw.mods.fml.common.FMLLog
 import cpw.mods.fml.common.eventhandler.*
 import cpw.mods.fml.common.gameevent.TickEvent
 import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent
@@ -10,16 +9,10 @@ import cpw.mods.fml.relauncher.*
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.entity.SharedMonsterAttributes
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.nbt.*
-import net.minecraft.world.WorldServer
-import net.minecraftforge.common.ForgeChunkManager
-import net.minecraftforge.common.util.Constants
 import net.minecraftforge.event.entity.living.*
 import net.minecraftforge.event.entity.player.*
 import net.minecraftforge.event.world.*
 import net.minecraftforge.oredict.OreDictionary
-import org.apache.logging.log4j.Level
-import java.io.*
 
 object PatcherEventHandler {
 	
@@ -63,59 +56,6 @@ object PatcherEventHandler {
 		
 		e.player.foodStats.host = e.player
 	}
-	
-	// TODO not tested
-	// saving and loading of forced chunks so that chunkloaders will tick and force chunks again
-//	@SubscribeEvent
-//	fun saveForcedChunks(e: WorldEvent.Save) {
-//		val world = e.world as? WorldServer ?: return
-//		val ticketSet = ForgeChunkManager.tickets[world] ?: return
-//
-//		val forcedChunkData = NBTTagCompound()
-//		val chunkList = NBTTagList()
-//
-//		ticketSet.values().flatMapTo(HashSet()) { it.chunkList }.forEach {
-//			chunkList.appendTag(NBTTagIntArray(intArrayOf(it.chunkXPos, it.chunkZPos)))
-//		}
-//
-//		if (chunkList.tagCount() == 0) return
-//
-//		forcedChunkData.setTag("ForcedChunks", chunkList)
-//
-//		val file = File(world.chunkSaveLocation, "forcedchunkslist.dat")
-//
-//		try {
-//			CompressedStreamTools.write(forcedChunkData, file)
-//		} catch (e: IOException) {
-//			FMLLog.log(Level.WARN, e, "Unable to write forced chunks list to %s - chunkloading won't work", file.absolutePath)
-//			return
-//		}
-//	}
-//
-//	@SubscribeEvent
-//	fun loadForcedChunks(e: WorldEvent.Load) {
-//		val world = e.world as? WorldServer ?: return
-//
-//		val file = File(world.chunkSaveLocation, "forcedchunkslist.dat")
-//		if (!file.exists() || !file.isFile) return
-//
-//		val forcedChunkData: NBTTagCompound
-//
-//		try {
-//			forcedChunkData = CompressedStreamTools.read(file)
-//		} catch (e: IOException) {
-//			FMLLog.log(Level.WARN, e, "Unable to read forced chunks list at %s - it will be ignored", file.absolutePath)
-//			return
-//		}
-//
-//		val chunkList = forcedChunkData.getTagList("ForcedChunks", Constants.NBT.TAG_INT_ARRAY)
-//
-//		for (i in 0 until chunkList.tagCount()) {
-//			val (x, z) = chunkList.func_150306_c(i)
-//
-//			world.getChunkFromChunkCoords(x, z)
-//		}
-//	}
 }
 
 object PatcherEventHandlerClient {
