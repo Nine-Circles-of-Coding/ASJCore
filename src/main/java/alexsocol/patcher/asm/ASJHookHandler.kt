@@ -69,8 +69,43 @@ object ASJHookHandler {
 	fun EntityLightningBolt(thiz: EntityLightningBolt, world: World) {
 		thiz.lightningState = 2
 		thiz.boltVertex = (Math.random() * Long.MAX_VALUE).toLong()
-		thiz.boltLivingTime = ASJUtilities.randInBounds(1, 3)
+		thiz.boltLivingTime = ASJUtilities.randInBounds(1, 3, world.rand)
 	}
+	
+	
+	// move fire spawn from init to update
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS, targetMethod = "<init>", createMethod = true, superClass = "net/minecraft/entity/effect/EntityWeatherEffect.${Opcodes.ALOAD}.1.(Lnet/minecraft/world/World;)V")
+	fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double) {
+		thiz.setLocationAndAngles(x, y, z, 0f, 0f)
+		EntityLightningBolt(thiz, world)
+	}
+	
+	@JvmStatic
+	@Hook
+	fun onUpdate(entity: EntityLightningBolt) {
+		if (entity.lightningState != 2) return
+		
+		var i = entity.posX.mfloor()
+		var j = entity.posY.mfloor()
+		var k = entity.posZ.mfloor()
+		
+		if (entity.worldObj.isRemote || !entity.worldObj.gameRules.getGameRuleBooleanValue("doFireTick") || !(entity.worldObj.difficultySetting == EnumDifficulty.NORMAL || entity.worldObj.difficultySetting == EnumDifficulty.HARD) || !entity.worldObj.doChunksNearChunkExist(i, j, k, 10)) return
+		
+		if (entity.worldObj.getBlock(i, j, k).material === Material.air && Blocks.fire.canPlaceBlockAt(entity.worldObj, i, j, k))
+			entity.worldObj.setBlock(i, j, k, Blocks.fire)
+		
+		repeat(4) {
+			i = entity.posX.mfloor() + entity.worldObj.rand.nextInt(3) - 1
+			j = entity.posY.mfloor() + entity.worldObj.rand.nextInt(3) - 1
+			k = entity.posZ.mfloor() + entity.worldObj.rand.nextInt(3) - 1
+			
+			if (entity.worldObj.getBlock(i, j, k).material === Material.air && Blocks.fire.canPlaceBlockAt(entity.worldObj, i, j, k)) {
+				entity.worldObj.setBlock(i, j, k, Blocks.fire)
+			}
+		}
+	}
+	
 	
 	// AIOOBE 257+ crash fix
 	@JvmStatic
@@ -102,7 +137,13 @@ object ASJHookHandler {
 		if (!PatcherConfigHandler.damageMobArmor) return
 		
 		val dmg = max(damage / 4f, 1f).I
-		for (i in 1..4) entity.getEquipmentInSlot(i)?.damageItem(dmg, entity)
+		for (i in 1..4) {
+			val stack = entity.getEquipmentInSlot(i) ?: continue
+			stack.damageItem(dmg, entity)
+			
+			if (stack.stackSize <= 0)
+				entity.setCurrentItemOrArmor(i, null)
+		}
 	}
 	
 	// Adding eggs
@@ -277,15 +318,26 @@ object ASJHookHandler {
 		stack.writeToNBT(nbt)
 	}
 	
+	
 	// armor can't block damage that is set to bypass armor
+	// shitcode because LotR author don't want to fix their mistake -_-
+	
+	var originalDamage = 0f
+	
 	@JvmStatic
-	@Hook(returnCondition = ON_TRUE, returnType = "float", returnAnotherMethod = "armorNotApplied")
-	fun ApplyArmor(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double): Boolean {
-		return source.isUnblockable
+	@Hook(targetMethod = "ApplyArmor")
+	fun ApplyArmorPre(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double): Float {
+		originalDamage = damage.F
+		return originalDamage
 	}
 	
 	@JvmStatic
-	fun armorNotApplied(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource?, damage: Double) = damage.F
+	@Hook(returnCondition = ON_TRUE, returnType = "float", returnAnotherMethod = "armorNotApplied", targetMethod = "ApplyArmor", injectOnExit = true)
+	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double) = source.isUnblockable
+	
+	@JvmStatic
+	fun armorNotApplied(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource?, damage: Double) = originalDamage
+	
 	
 //	@JvmStatic
 //	@Hook(returnCondition = ReturnCondition.ON_TRUE)

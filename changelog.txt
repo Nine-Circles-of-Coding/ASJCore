@@ -1,2 +1,3 @@
-Fixed forced chunks save, load and reforce
-Little improvement to WorldEngine
+Fixed fire spawned from lightning
+Fixed mob armor remove when it is broken
+Fixed incompatibility with LotR mod

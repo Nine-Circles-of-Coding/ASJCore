@@ -70,7 +70,7 @@ fun <T> Iterable<T>.paired(last: T? = null): List<Pair<T, T>> {
 	return pairs
 }
 
-fun <T> MutableIterator<T>.onEach(action: MutableIterator<T>.(T) -> Unit): MutableIterator<T> {
+inline fun <T> MutableIterator<T>.onEach(action: MutableIterator<T>.(T) -> Unit): MutableIterator<T> {
 	return apply { for (element in this) action(element) }
 }
 
@@ -103,7 +103,7 @@ fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase
 /**
  * Tries block and ignores any thrown exceptions
  */
-fun try_(try_: () -> Any?) {
+inline fun try_(try_: () -> Any?) {
 	try {
 		try_()
 	} catch (ignore: Throwable) {}
