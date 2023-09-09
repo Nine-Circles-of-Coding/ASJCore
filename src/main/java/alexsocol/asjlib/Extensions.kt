@@ -266,10 +266,10 @@ operator fun IInventory.get(i: Int): ItemStack? = getStackInSlot(i)
 operator fun IInventory.set(i: Int, stack: ItemStack?) = setInventorySlotContents(i, stack)
 
 fun Block.toItem(): Item? = Item.getItemFromBlock(this)
-fun Item.toBlock(): Block? = Block.getBlockFromItem(this)
+fun Item.toBlock() = Block.getBlockFromItem(this)!!
 val Block.id get() = Block.getIdFromBlock(this)
 val Item.id get() = Item.getIdFromItem(this)
-val ItemStack.block: Block? get() = item.toBlock()
+val ItemStack.block get() = item.toBlock()
 
 fun PotionEffectU(id: Int, time: Int, lvl: Int = 0, ambient: Boolean = false) = PotionEffect(id, time, lvl, ambient).apply { curativeItems.clear() }
 

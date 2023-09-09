@@ -1,10 +1,15 @@
+@file:Suppress("DEPRECATION")
+
 package alexsocol.patcher.asm
 
 import alexsocol.asjlib.*
+import alexsocol.asjlib.extendables.block.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.*
 import alexsocol.patcher.event.*
+import cofh.asmhooks.HooksCore
 import cpw.mods.fml.client.FMLClientHandler
+import cpw.mods.fml.client.SplashProgress
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.*
@@ -126,8 +131,7 @@ object ASJHookHandler {
 		if (target !is EntityWeatherEffect)
 			return false
 		
-		world.addWeatherEffect(target)
-		return false
+		return world.addWeatherEffect(target)
 	}
 	
 	// damageMobArmor config prop impl
@@ -332,11 +336,9 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ON_TRUE, returnType = "float", returnAnotherMethod = "armorNotApplied", targetMethod = "ApplyArmor", injectOnExit = true)
-	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double) = source.isUnblockable
-	
-	@JvmStatic
-	fun armorNotApplied(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource?, damage: Double) = originalDamage
+	@Hook(targetMethod = "ApplyArmor", returnCondition = ALWAYS, injectOnExit = true)
+	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double, @ReturnValue result: Float) =
+		if (source.isUnblockable) originalDamage else result
 	
 	
 //	@JvmStatic
@@ -456,12 +458,43 @@ object ASJHookHandler {
 		} else false
 	}
 	
-	// BlockFence connection fix
+	
+	// BlockPane fix
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
-	fun canConnectFenceTo(fence: BlockFence, world: IBlockAccess, x: Int, y: Int, z: Int) = world.getBlock(x, y, z) is BlockFence
+	fun canPaneConnectTo(pane: BlockPane, world: IBlockAccess, x: Int, y: Int, z: Int, dir: ForgeDirection) = world.getBlock(x, y, z).let {
+		it is IPaneConnectable && it.canPaneConnectTo(world, x, y, z)
+	}
+	
+	// a hook into your hook >:D can you hook it?
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun paneConnectsTo(static: HooksCore?, world: IBlockAccess, x: Int, y: Int, z: Int, dir: ForgeDirection): Boolean {
+		if (canPaneConnectTo(Blocks.glass_pane as BlockPane, world, x, y, z, dir)) return true
+		
+		val block = world.getBlock(x, y, z)
+		return block.func_149730_j() || block.material === Material.glass || block is BlockPane || world.isSideSolid(x, y, z, dir.opposite, false)
+	}
+	
+	
+	// BlockFence fix
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun canConnectFenceTo(fence: BlockFence, world: IBlockAccess, x: Int, y: Int, z: Int) = world.getBlock(x, y, z).let {
+		it is BlockFence || it is IFenceConnectable && it.canConnectFenceTo(world, x, y, z) || it is IFenceGate && it.isGate(world, x, y, z)
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun func_149825_a(static: BlockFence?, block: Block) = block is BlockFence
+	
 	
 	// BlockWall fix
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun canConnectWallTo(wall: BlockWall, world: IBlockAccess, x: Int, y: Int, z: Int) = world.getBlock(x, y, z).let {
+		it is BlockWall || it is IWallConnectable && it.canConnectWallTo(world, x, y, z) || it is IFenceGate && it.isGate(world, x, y, z)
+	}
 	
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, createMethod = true)
@@ -513,6 +546,7 @@ object ASJHookHandler {
 		block.setBlockBoundsBasedOnState(render.blockAccess, x, y, z)
 		return true
 	}
+	
 	
 	// potion fixes
 	@JvmStatic
@@ -1097,5 +1131,18 @@ object ASJHookHandler {
 		ticket.chunkList.forEach {
 			list.appendTag(NBTTagIntArray(intArrayOf(it.chunkXPos, it.chunkZPos)))
 		}
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	@SideOnly(Side.CLIENT)
+	fun start(static: SplashProgress?) {
+		if (!PatcherConfigHandler.darkMode) return
+		
+		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x333333, "backgroundColor")
+		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0xCCCCCC, "fontColor")
+		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x111111, "barBorderColor")
+		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x2D0709, "barColor")
+		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x333333, "barBackgroundColor")
 	}
 }

@@ -93,7 +93,7 @@ class ResourceLocationAnimated: ResourceLocation {
 	
 	private fun put(frameList: ArrayList<Int>, part: BufferedImage) = frameList.add(TextureUtil.uploadTextureImageAllocate(GL11.glGenTextures(), part, false, false))
 	
-	fun getCurrentFrame() = frameList[((mc.theWorld.totalWorldTime % (framerate * frameList.size)) / framerate).I]
+	fun getCurrentFrame() = frameList[(((mc.theWorld?.totalWorldTime ?: 0L) % (framerate * frameList.size)) / framerate).I]
 	
 	fun bind() = GL11.glBindTexture(GL11.GL_TEXTURE_2D, getCurrentFrame())
 	

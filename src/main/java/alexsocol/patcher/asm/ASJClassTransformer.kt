@@ -25,14 +25,12 @@ class ASJClassTransformer: IClassTransformer {
 		this.transformedName = transformedName
 		this.basicClass = basicClass
 		
-		var returnClass = basicClass
-		
 		if (transformedName != "alexsocol.patcher.asm.ASJClassTransformer\$ClassVisitorPotionMethodPublicizer") try {
-			val cr = ClassReader(returnClass)
+			val cr = ClassReader(this.basicClass)
 			val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
 			val cv = ClassVisitorPotionMethodPublicizer(cw, "$name ($transformedName)")
 			cr.accept(cv, ClassReader.EXPAND_FRAMES)
-			returnClass = cw.toByteArray()
+			this.basicClass = cw.toByteArray()
 		} catch (e: Throwable) {
 			System.err.println("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJLib error).")
 			e.printStackTrace()
@@ -94,7 +92,7 @@ class ASJClassTransformer: IClassTransformer {
 			}
 			
 			"thaumcraft.common.blocks.BlockCustomOre"                  -> core { `BlockCustomOre$ClassVisitor`(it) }
-			else                                                       -> returnClass
+			else                                                       -> this.basicClass
 		}
 	}
 	

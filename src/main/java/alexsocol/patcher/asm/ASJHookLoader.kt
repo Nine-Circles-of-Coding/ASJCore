@@ -8,6 +8,7 @@ import gloomyfolken.hooklib.minecraft.*
 import java.io.File
 
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
+// -username=AlexSocol
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 class ASJHookLoader: HookLoader() {
 	
@@ -31,5 +32,6 @@ class ASJHookLoader: HookLoader() {
 		registerHookContainer("alexsocol.patcher.asm.BiomeDictionaryForWEHooks")
 		
 		if (OBF) ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.ASJFieldHookHandler")
+		if (OBF && PatcherConfigHandler.optifinePostTransform) MinecraftClassTransformer.registerPostTransformer(OptiFinePostTransformer())
 	}
 }

@@ -16,6 +16,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var commands = PatcherMain.Commands.entries.map { it.name }.toTypedArray()
 	var creativeDamage = false
 	var damageMobArmor = true
+	var darkMode = true
 	var entityGravityFix = true
 	var explosions = true
 	var floatingTrapDoors = true
@@ -29,6 +30,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var WEBiomeID = 150
 	
 	var blacklistWither = true
+	var optifinePostTransform = true
 	
 	override fun addCategories() {
 		addCategory(CATEGORY_DANGER, "[WARNING!] Backup your world before changing something here!")
@@ -43,6 +45,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		commands = loadProp(CATEGORY_GENERAL, "commands", commands, true, "List of commands. Remove any to unregister it. DO NOT add anything new", false)
 		creativeDamage = loadProp(CATEGORY_GENERAL, "creativeDamage", creativeDamage, false, "Set this to true to allow taking damage in creative")
 		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")
+		darkMode = loadProp(CATEGORY_GENERAL, "darkMode", darkMode, true, "Set this to false to disable dark mode on minecraft load")
 		entityGravityFix = loadProp(CATEGORY_GENERAL, "entityGravityFix", entityGravityFix, false, "Set this to false to disable gravity fix")
 		explosions = loadProp(CATEGORY_GENERAL, "explosions", explosions, false, "Set this to false to disable explosions")
 		floatingTrapDoors = loadProp(CATEGORY_GENERAL, "floatingTrapDoors", floatingTrapDoors, true, "Set this to false to forbid trapdoors to remain free-floating (as in vanilla, may break some world structures)")
@@ -56,5 +59,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		WEBiomeID = loadProp(CATEGORY_GENERAL, "WEBiomeID", WEBiomeID, true, "ID for standard WorldEngine biome")
 		
 		blacklistWither = loadProp(CATEGORY_INTEGRATION, "NEI.blacklistWither", blacklistWither, true, "Set this to false to make Wither spawner visible")
+		optifinePostTransform = loadProp(CATEGORY_INTEGRATION, "OF.optifinePostTransform", optifinePostTransform, true, "Set this to false to disable modifications to optifine some code. May break or repair render bugs.")
 	}
 }
