@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.2.3.4"
+version = "1.2.4.0"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -117,6 +117,7 @@ tasks.register('sourcesJar', Jar) {
 	exclude "assets"
 	exclude "asjlib_at.cfg"
 	exclude "methods.bin"
+	exclude "McpToSrg.csv"
 }
 
 artifacts {

@@ -3,8 +3,10 @@ package alexsocol.patcher.asm
 import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
+import com.KAIIIAK.superwrapper.SuperWrapperTransformer
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
+import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
 import java.io.File
 
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
@@ -31,7 +33,11 @@ class ASJHookLoader: HookLoader() {
 		registerHookContainer("alexsocol.patcher.asm.ASJHookHandler")
 		registerHookContainer("alexsocol.patcher.asm.BiomeDictionaryForWEHooks")
 		
+		if (PatcherConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.BlockButtonExtender")
+		
 		if (OBF) ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.ASJFieldHookHandler")
-		if (OBF && PatcherConfigHandler.optifinePostTransform) MinecraftClassTransformer.registerPostTransformer(OptiFinePostTransformer())
+		if (OBF && PatcherConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
+		
+		registerPostTransformer(SuperWrapperTransformer())
 	}
 }

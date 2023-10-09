@@ -12,8 +12,9 @@ object SchemaUtils {
 	
 	val type = object: TypeToken<List<BlockElement>>() {}.type
 	
-	fun generate(world: World, x: Int, y: Int, z: Int, schemaText: String) {
-		val arr = parse(schemaText)
+	fun generate(world: World, x: Int, y: Int, z: Int, schemaText: String) = generate(world, x, y, z, parse(schemaText))
+	
+	fun generate(world: World, x: Int, y: Int, z: Int, arr: List<BlockElement>) {
 		world.setBlock(x, y, z, Blocks.air, 0, 4)
 		
 		for (ele in arr) {
@@ -33,9 +34,9 @@ object SchemaUtils {
 		}
 	}
 	
-	fun checkStructure(world: World, x: Int, y: Int, z: Int, structure: String, onFail: ((Int, Int, Int, Int) -> Unit)? = null): Boolean {
-		val arr = parse(structure)
-		
+	fun checkStructure(world: World, x: Int, y: Int, z: Int, structure: String, onFail: ((Int, Int, Int, Int) -> Unit)? = null) = checkStructure(world, x, y, z, parse(structure), onFail)
+	
+	fun checkStructure(world: World, x: Int, y: Int, z: Int, arr: List<BlockElement>, onFail: ((Int, Int, Int, Int) -> Unit)? = null): Boolean {
 		for (ele in arr) {
 			for (loc in ele.location) {
 				val i = x + loc.x
@@ -66,6 +67,16 @@ object SchemaUtils {
 		
 		return true
 	}
+	
+	fun parseWithRotations(path: String): MutableList<List<BlockElement>> {
+		val list = mutableListOf(parse(loadStructure(path)))
+		list.add(rotate(list.last()))
+		list.add(rotate(list.last()))
+		list.add(rotate(list.last()))
+		return list
+	}
+	
+	fun rotate(schema: List<BlockElement>) = schema.map { BlockElement(it.block, it.location.map { loc -> LocationElement(loc.x, loc.y, -loc.z, loc.meta, loc.nbt) } ) }
 	
 	fun parse(schemaText: String) = Gson().fromJson<List<BlockElement>>(schemaText, type)!!
 	

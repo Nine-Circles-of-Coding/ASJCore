@@ -2,6 +2,7 @@ package alexsocol.asjlib.asm
 
 import com.google.common.collect.Lists
 import net.minecraft.launchwrapper.IClassTransformer
+import org.apache.commons.io.IOUtils
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
@@ -10,13 +11,17 @@ import java.util.*
 class ASJPacketCompleter: IClassTransformer {
 	
 	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
+		@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
+		transformedName as java.lang.String // fix of java.lang.ClassCircularityError
+		if (transformedName.startsWith("kotlin") || transformedName.startsWith("gloomyfolken")) return basicClass
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
+		
 		try {
-			val cn = ClassNode()
 			val cr = ClassReader(basicClass)
+			val cn = ClassNode()
 			cr.accept(cn, 0)
 			
-			if (cn.superName != null && cn.superName == "alexsocol/asjlib/network/ASJPacket") {
+			if (isASJPacket(mutableListOf(transformedName), basicClass)) {
 				val fs = BooleanArray(5) // <init>, fromBytes, toBytes, fromCustomBytes, toCustomBytes
 				for (mt in cn.methods) {
 					if (mt.name == "<init>" && mt.desc == "()V") {
@@ -50,14 +55,39 @@ class ASJPacketCompleter: IClassTransformer {
 				return cw.toByteArray()
 			}
 		} catch (e: Throwable) {
-			if (doLog) {
-				System.err.println("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJLib error).")
-				e.printStackTrace()
-			}
+			System.err.println("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error).")
+			e.printStackTrace()
+			
 			return basicClass
 		}
 		
 		return basicClass
+	}
+	
+	private fun isASJPacket(className: MutableList<String>, classBytes: ByteArray): Boolean {
+		try {
+			val classReader = ClassReader(classBytes)
+			val classNode = ClassNode()
+			
+			classReader.accept(classNode, 0)
+			if (classNode.superName == "alexsocol/asjlib/network/ASJPacket") return true
+			
+			val superClassName = classNode.superName
+			if (superClassName != null) return isASJPacket(mutableListOf(*className.toTypedArray(), superClassName), getClassData(superClassName))
+		} catch (e: Throwable) {
+			if (debug) {
+				System.err.println("Exception during superclass check of ${className.joinToString("->")}")
+				e.printStackTrace()
+			}
+		}
+		
+		return false
+	}
+	
+	private fun getClassData(className: String): ByteArray {
+		val classResourceName = "/${className.replace('.', '/')}.class"
+		val stream = ASJPacketCompleter::class.java.getResourceAsStream(classResourceName) ?: throw NullPointerException("Cannot read class `$className` (Path: `$classResourceName`)")
+		return IOUtils.toByteArray(stream)
 	}
 	
 	private fun makeConstructor(cl: ClassNode) {
@@ -119,6 +149,6 @@ class ASJPacketCompleter: IClassTransformer {
 	companion object {
 		
 		val descriptors: List<String> = Lists.newArrayList("Z", "B", "C", "D", "F", "I", "J", "S", "Ljava/lang/String;", "Lnet/minecraft/item/ItemStack;", "Lnet/minecraft/nbt/NBTTagCompound;")
-		val doLog = System.getProperty("asjlib.asm.errorlog", "off") == "on"
+		val debug = java.lang.Boolean.parseBoolean(System.getProperty ("asjcore.asm.debug", "false"))
 	}
 }

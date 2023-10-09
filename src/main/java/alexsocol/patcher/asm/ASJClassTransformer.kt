@@ -16,10 +16,8 @@ class ASJClassTransformer: IClassTransformer {
 	
 	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
 		@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-		transformedName as java.lang.String // fix of java.lang.ClassCircularityError: kotlin/text/StringsKt
-		
+		transformedName as java.lang.String // fix of java.lang.ClassCircularityError
 		if (transformedName.startsWith("kotlin") || transformedName.startsWith("gloomyfolken")) return basicClass
-		
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
 		
 		this.transformedName = transformedName
@@ -32,7 +30,7 @@ class ASJClassTransformer: IClassTransformer {
 			cr.accept(cv, ClassReader.EXPAND_FRAMES)
 			this.basicClass = cw.toByteArray()
 		} catch (e: Throwable) {
-			System.err.println("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJLib error).")
+			System.err.println("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error).")
 			e.printStackTrace()
 		}
 		
