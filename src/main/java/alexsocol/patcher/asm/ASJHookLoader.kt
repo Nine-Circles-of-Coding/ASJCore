@@ -12,6 +12,7 @@ import java.io.File
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
 // -username=AlexSocol
 @IFMLLoadingPlugin.MCVersion("1.7.10")
+@IFMLLoadingPlugin.TransformerExclusions("alexsocol.patcher.asm", "alexsocol.asjlib.asm", "gloomyfolken.hooklib", "kotlin")
 class ASJHookLoader: HookLoader() {
 	
 	companion object {
@@ -35,8 +36,10 @@ class ASJHookLoader: HookLoader() {
 		
 		if (PatcherConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.BlockButtonExtender")
 		
-		if (OBF) ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.ASJFieldHookHandler")
-		if (OBF && PatcherConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
+		if (OBF || System.getProperty("asjcore.fieldhooks", "false").toBoolean()) {
+			ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.ASJFieldHookHandler")
+			if (PatcherConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
+		}
 		
 		registerPostTransformer(SuperWrapperTransformer())
 	}

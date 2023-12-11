@@ -1,9 +1,13 @@
 package alexsocol.patcher.event
 
+import alexsocol.asjlib.D
 import cpw.mods.fml.common.eventhandler.*
-import net.minecraft.entity.Entity
+import net.minecraft.block.Block
+import net.minecraft.client.renderer.EntityRenderer
+import net.minecraft.entity.*
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.world.*
+import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.event.entity.player.PlayerEvent
 
 /**
@@ -47,3 +51,13 @@ class ServerWakeUpEvent(val world: WorldServer): Event()
  * If the event is canceled food stats are not added.
  */
 @Cancelable class PlayerEatingEvent(player: EntityPlayer?, val foodLevel: Int, val saturationLevel: Float, var newFoodLevel: Int = foodLevel, var newSaturationLevel: Float = saturationLevel): PlayerEvent(player)
+
+/**
+ * Fired before sky is rendered in [net.minecraft.client.renderer.RenderGlobal.renderSky]
+ *
+ * This event is fired on the [net.minecraftforge.common.MinecraftForge.EVENT_BUS]
+ *
+ * This event is [Cancelable]
+ * If the event is canceled no sky is rendered.
+ */
+@Cancelable class RenderSkyEvent(renderer: EntityRenderer?, entity: EntityLivingBase?, block: Block?, ticks: Float): EntityViewRenderEvent(renderer, entity, block, ticks.D)

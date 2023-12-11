@@ -1,2 +1,2 @@
-Added KAIIIAK's SuperWrapper transformer
-Made buttons placeable on block top and bottom
+Added /diminfo command
+Added sky render event

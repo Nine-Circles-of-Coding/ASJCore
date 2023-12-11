@@ -416,6 +416,13 @@ object ASJHookHandler {
 		return MinecraftForge.EVENT_BUS.post(RenderEntityPostEvent(entity, x, y, z, yaw))
 	}
 	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun renderSky(rg: RenderGlobal, partialTickTime: Float): Boolean {
+		return MinecraftForge.EVENT_BUS.post(RenderSkyEvent(mc.entityRenderer, mc.renderViewEntity, ActiveRenderInfo.getBlockAtEntityViewpoint(mc.theWorld, mc.renderViewEntity, partialTickTime), partialTickTime))
+	}
+	
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE, targetMethod = "func_150000_e")
 	fun tryToCreatePortal(portal: BlockPortal, world: World, x: Int, y: Int, z: Int) = MinecraftForge.EVENT_BUS.post(NetherPortalActivationEvent(world, x, y, z))
@@ -1068,30 +1075,40 @@ object ASJHookHandler {
 	}
 	
 	// Fix for invalid modders not using [Entity.getFlag]
+	// returnAnotherMethod is used so other conflicts won't show ASJCore in the stacktrace
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun getWatchableObjectByte(dw: DataWatcher, index: Int): Byte {
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "getWatchableObjectByteBody")
+	fun getWatchableObjectByte(dw: DataWatcher, index: Int) = index == 0
+	
+	@JvmStatic
+	fun getWatchableObjectByteBody(dw: DataWatcher, index: Int): Byte {
 		val byte = dw.getWatchedObject(index).getObject()
-		return if (index != 0) byte as Byte
-			else if (byte !is Byte) when (byte) {
-				is Number -> byte.toByte()
-				is String -> byte.toByte()
-				else      -> 0
-			} else byte
+		if (byte is Byte) return byte
+		
+		return when (byte) {
+			is Number -> byte.toByte()
+			is String -> byte.toByte()
+			else      -> 0
+		}
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun getWatchableObjectInt(dw: DataWatcher, index: Int): Int {
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "getWatchableObjectIntBody")
+	fun getWatchableObjectInt(dw: DataWatcher, index: Int) = index == 0
+	
+	@JvmStatic
+	fun getWatchableObjectIntBody(dw: DataWatcher, index: Int): Int {
 		val int = dw.getWatchedObject(index).getObject()
-		return if (index != 0) int as Int
-		else if (int !is Int) when (int) {
+		if (int is Int) return int
+		
+		return when (int) {
 			is Number -> int.toInt()
 			is String -> int.toInt()
 			else      -> 0
-		} else int
+		}
 	}
 	
+	// chunk reforcing after world reload
 	@JvmStatic
 	@Hook(injectOnExit = true)
 	fun loadWorld(static: ForgeChunkManager?, world: World) {
@@ -1133,6 +1150,7 @@ object ASJHookHandler {
 		}
 	}
 	
+	// dark theme for start screen
 	@JvmStatic
 	@Hook(injectOnExit = true)
 	@SideOnly(Side.CLIENT)

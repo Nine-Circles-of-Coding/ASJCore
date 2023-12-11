@@ -9,10 +9,10 @@ class ASJASM: IClassTransformer {
 	
 	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
-		if (!fieldsMap.containsKey(transformedName)) return basicClass
+		val fields = fieldsMap[transformedName] ?: return basicClass
 		val cr = ClassReader(basicClass)
 		val cw = ClassWriter(cr, ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
-		for (fd in fieldsMap[transformedName]!!) cw.visitField(fd.access, fd.name, fd.desc, null, null).visitEnd()
+		for (fd in fields) cw.visitField(fd.access, fd.name, fd.desc, null, null).visitEnd()
 		cr.accept(cw, 0)
 		return cw.toByteArray()
 	}
@@ -58,9 +58,10 @@ class ASJASM: IClassTransformer {
 				
 				if (!flag || targetClassName.isEmpty()) continue
 				
-				if (!fieldsMap.containsKey(targetClassName)) fieldsMap[targetClassName] = ArrayList()
-				fieldsMap[targetClassName]?.add(FieldData(fn.access, fn.name, fn.desc))
+				fieldsMap.computeIfAbsent(targetClassName) { ArrayList() } += FieldData(fn.access, fn.name, fn.desc)
 			}
 		}
 	}
 }
+
+data class FieldData(val access: Int, val name: String, val desc: String)

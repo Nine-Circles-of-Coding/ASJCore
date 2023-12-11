@@ -12,6 +12,10 @@ tile.endPortal.name=Портал в край
 
 
 
+asjcore.commands.diminfo.current=Текущее измерение "%s" (id '%d')
+asjcore.commands.diminfo.list=%d. "%s" с id '%d'
+asjcore.commands.diminfo.list.fail=%d. Неизвестное измерение с id '%d'
+
 asjcore.commands.tpdim.worlderr=Ошибка инициализации измерения
 
 asjcore.commands.schema.dumpOk=Схема выгружена в: %s

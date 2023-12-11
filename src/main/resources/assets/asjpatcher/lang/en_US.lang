@@ -12,6 +12,10 @@ tile.endPortal.name=End Portal
 
 
 
+asjcore.commands.diminfo.current=Current dimension is "%s" (id '%d')
+asjcore.commands.diminfo.list=%d. "%s" with id '%d'
+asjcore.commands.diminfo.list.fail=%d. Unknown dimension with id '%d'
+
 asjcore.commands.tpdim.worlderr=Dimension Initialization Error
 
 asjcore.commands.schema.dumpOk=Schema dumped to: %s

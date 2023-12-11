@@ -13,7 +13,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var textIDs = false
 	
 	var clearWater = true
-	var commands = PatcherMain.Commands.entries.map { it.name }.toTypedArray()
 	var creativeDamage = false
 	var damageMobArmor = true
 	var darkMode = true
@@ -43,7 +42,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		textIDs = loadProp(CATEGORY_DANGER, "textIDs", textIDs, false, "Set this to true to enable text item IDs instead of numeric for storing in NBT")
 		
 		clearWater = loadProp(CATEGORY_GENERAL, "clearWater", clearWater, false, "Set this to true for clear, transparent water")
-		commands = loadProp(CATEGORY_GENERAL, "commands", commands, true, "List of commands. Remove any to unregister it. DO NOT add anything new", false)
 		creativeDamage = loadProp(CATEGORY_GENERAL, "creativeDamage", creativeDamage, false, "Set this to true to allow taking damage in creative")
 		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")
 		darkMode = loadProp(CATEGORY_GENERAL, "darkMode", darkMode, true, "Set this to false to disable dark mode on minecraft load")
