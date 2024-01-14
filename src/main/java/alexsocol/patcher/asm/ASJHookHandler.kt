@@ -5,14 +5,16 @@ package alexsocol.patcher.asm
 import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
-import alexsocol.patcher.*
+import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
+import alexsocol.patcher.helper.OFHelper
+import alexsocol.patcher.helper.OFHelper.shadersmodSupport
+import alexsocol.patcher.superwrapper.ASJSuperWrapperHandler
 import cofh.asmhooks.HooksCore
-import cpw.mods.fml.client.FMLClientHandler
-import cpw.mods.fml.client.SplashProgress
+import cpw.mods.fml.client.*
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
-import gloomyfolken.hooklib.asm.*
+import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import gloomyfolken.hooklib.asm.ReturnCondition.*
 import net.minecraft.block.*
@@ -25,7 +27,7 @@ import net.minecraft.client.renderer.entity.Render
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
 import net.minecraft.creativetab.CreativeTabs
-import net.minecraft.enchantment.*
+import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.*
 import net.minecraft.entity.EntityList.EntityEggInfo
 import net.minecraft.entity.ai.attributes.AttributeModifier
@@ -52,9 +54,10 @@ import net.minecraftforge.common.*
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.*
 import org.lwjgl.opengl.*
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.NVFogDistance.*
 import org.objectweb.asm.Opcodes
 import java.io.File
-import java.nio.FloatBuffer
 import java.util.*
 import kotlin.math.*
 
@@ -759,123 +762,115 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun setupFog(renderer: EntityRenderer, fogMode: Int, renderPartialTicks: Float) {
-		val entitylivingbase = renderer.mc.renderViewEntity
-		val creative = if (entitylivingbase is EntityPlayer) entitylivingbase.capabilities.isCreativeMode else false
+		val entity = renderer.mc.renderViewEntity
+		val creative = if (entity is EntityPlayer) entity.capabilities.isCreativeMode else false
 		
-		fun setFogColorBuffer(r: Float, g: Float, b: Float, a: Float): FloatBuffer {
-			renderer.fogColorBuffer.clear()
-			renderer.fogColorBuffer.put(r).put(g).put(b).put(a)
-			renderer.fogColorBuffer.flip()
-			return renderer.fogColorBuffer
-		}
+		OFHelper.setStandardFog(renderer, false)
 		
 		if (fogMode == 999) {
-			GL11.glFog(GL11.GL_FOG_COLOR, setFogColorBuffer(0f, 0f, 0f, 1f))
-			GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR)
-			GL11.glFogf(GL11.GL_FOG_START, 0f)
-			GL11.glFogf(GL11.GL_FOG_END, 8f)
+			glFog(GL_FOG_COLOR, renderer.setFogColorBuffer(0f, 0f, 0f, 1f))
+			shadersmodSupport(GL_FOG_MODE, GL_LINEAR)
+			glFogf(GL_FOG_START, 0f)
+			glFogf(GL_FOG_END, 8f)
+			
+			if (GLContext.getCapabilities().GL_NV_fog_distance)
+				shadersmodSupport(GL_FOG_DISTANCE_MODE_NV, GL_EYE_RADIAL_NV)
+			
+			glFogf(GL_FOG_START, 0f)
+			return
+		}
+		
+		glFog(GL_FOG_COLOR, renderer.setFogColorBuffer(renderer.fogColorRed, renderer.fogColorGreen, renderer.fogColorBlue, 1f))
+		
+		glNormal3f(0f, -1f, 0f)
+		glColor4f(1f, 1f, 1f, 1f)
+		
+		val block = ActiveRenderInfo.getBlockAtEntityViewpoint(renderer.mc.theWorld, entity, renderPartialTicks)
+		val event = EntityViewRenderEvent.FogDensity(renderer, entity, block, renderPartialTicks.D, 0.1f)
+		
+		if (MinecraftForge.EVENT_BUS.post(event)) {
+			glFogf(GL_FOG_DENSITY, event.density)
+		} else if (entity.isPotionActive(Potion.blindness) && !creative) {
+			val pe = entity.getActivePotionEffect(Potion.blindness)
+			var distance = 5f / (pe.amplifier + 1)
+			
+			if (pe.duration < 20)
+				distance += (renderer.farPlaneDistance - distance) * (1f - pe.duration / 20f)
+			
+			shadersmodSupport(GL_FOG_MODE, GL_LINEAR)
+			
+			if (fogMode < 0) {
+				glFogf(GL_FOG_START, 0f)
+				glFogf(GL_FOG_END, distance * 0.8f)
+			} else {
+				glFogf(GL_FOG_START, distance * 0.25f)
+				glFogf(GL_FOG_END, distance)
+			}
+			
+			OFHelper.fancyFogCheck()
+		} else if (renderer.cloudFog) {
+			shadersmodSupport(GL_FOG_MODE, GL_EXP)
+			glFogf(GL_FOG_DENSITY, 0.1f)
+		} else if (block.material === Material.water) {
+			shadersmodSupport(GL_FOG_MODE, GL_EXP)
+			
+			if (OFHelper.isClearWater())
+				glFogf(GL_FOG_DENSITY, 0.01f)
+			else if (entity.isPotionActive(Potion.waterBreathing)) {
+				glFogf(GL_FOG_DENSITY, 0.05f)
+			} else {
+				glFogf(GL_FOG_DENSITY, 0.1f - min(3, EnchantmentHelper.getRespiration(entity)) * 0.03f)
+			}
+		} else if (block.material === Material.lava) {
+			shadersmodSupport(GL_FOG_MODE, GL_EXP)
+			glFogf(GL_FOG_DENSITY, if (creative) 0.05f else 2f)
+		} else {
+			var farPlane = renderer.farPlaneDistance
+			
+			OFHelper.setStandardFog(renderer, true)
+			
+			if (OFHelper.isVoidFog() && renderer.mc.theWorld.provider.worldHasVoidParticles && !creative) {
+				var brightness = (((entity.getBrightnessForRender(renderPartialTicks) and 0xF00000) shr 20) / 16.0 + (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks + 4.0) / 32.0).F
+				
+				if (brightness < 1f) {
+					if (brightness < 0f) brightness = 0f
+					
+					brightness *= brightness
+					
+					var newPlane = 100f * brightness
+					if (newPlane < 5f) newPlane = 5f
+					
+					if (farPlane > newPlane) farPlane = newPlane
+				}
+			}
+			
+			shadersmodSupport(GL_FOG_MODE, GL_LINEAR)
+			
+			if (fogMode < 0) {
+				glFogf(GL_FOG_START, 0f)
+				glFogf(GL_FOG_END, farPlane)
+			} else {
+				glFogf(GL_FOG_START, farPlane * OFHelper.getFogStart())
+				glFogf(GL_FOG_END, farPlane)
+			}
 			
 			if (GLContext.getCapabilities().GL_NV_fog_distance) {
-				GL11.glFogi(NVFogDistance.GL_FOG_DISTANCE_MODE_NV, NVFogDistance.GL_EYE_RADIAL_NV)
+				if (OFHelper.isFogFancy())
+					shadersmodSupport(GL_FOG_DISTANCE_MODE_NV, GL_EYE_RADIAL_NV)
+				
+				if (OFHelper.isFogFast())
+					shadersmodSupport(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV)
 			}
 			
-			GL11.glFogf(GL11.GL_FOG_START, 0f)
-		} else {
-			GL11.glFog(GL11.GL_FOG_COLOR, setFogColorBuffer(renderer.fogColorRed, renderer.fogColorGreen, renderer.fogColorBlue, 1f))
-			GL11.glNormal3f(0f, -1f, 0f)
-			GL11.glColor4f(1f, 1f, 1f, 1f)
-			val block = ActiveRenderInfo.getBlockAtEntityViewpoint(renderer.mc.theWorld, entitylivingbase, renderPartialTicks)
-			var f1: Float
-			
-			val event = EntityViewRenderEvent.FogDensity(renderer, entitylivingbase, block, renderPartialTicks.D, 0.1f)
-			
-			if (MinecraftForge.EVENT_BUS.post(event)) {
-				GL11.glFogf(GL11.GL_FOG_DENSITY, event.density)
-			} else if (entitylivingbase.isPotionActive(Potion.blindness) && !creative) {
-				val pe = entitylivingbase.getActivePotionEffect(Potion.blindness.id)!!
-				val j = pe.duration
-				f1 = 5f / (pe.amplifier + 1)
-				
-				if (j < 20) {
-					f1 += (renderer.farPlaneDistance - f1) * (1f - j.F / 20f)
-				}
-				
-				GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR)
-				
-				if (fogMode < 0) {
-					GL11.glFogf(GL11.GL_FOG_START, 0f)
-					GL11.glFogf(GL11.GL_FOG_END, f1 * 0.8f)
-				} else {
-					GL11.glFogf(GL11.GL_FOG_START, f1 * 0.25f)
-					GL11.glFogf(GL11.GL_FOG_END, f1)
-				}
-				
-				if (GLContext.getCapabilities().GL_NV_fog_distance) {
-					GL11.glFogi(NVFogDistance.GL_FOG_DISTANCE_MODE_NV, NVFogDistance.GL_EYE_RADIAL_NV)
-				}
-			} else if (renderer.cloudFog) {
-				GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_EXP)
-				GL11.glFogf(GL11.GL_FOG_DENSITY, 0.1f)
-			} else if (block.material === Material.water) {
-				GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_EXP)
-				
-				if (entitylivingbase.isPotionActive(Potion.waterBreathing)) {
-					GL11.glFogf(GL11.GL_FOG_DENSITY, if (PatcherConfigHandler.clearWater) 0.01f else 0.05f)
-				} else {
-					GL11.glFogf(GL11.GL_FOG_DENSITY, if (PatcherConfigHandler.clearWater) 0.01f else 0.1f - EnchantmentHelper.getRespiration(entitylivingbase).F * 0.03f)
-				}
-			} else if (block.material === Material.lava) {
-				GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_EXP)
-				GL11.glFogf(GL11.GL_FOG_DENSITY, 2f)
-			} else {
-				f1 = renderer.farPlaneDistance
-				
-				if (renderer.mc.theWorld.provider.worldHasVoidParticles && PatcherConfigHandler.voidFog && !creative) {
-					var d0 = (entitylivingbase.getBrightnessForRender(renderPartialTicks) and 15728640 shr 20).D / 16.0 + (entitylivingbase.lastTickPosY + (entitylivingbase.posY - entitylivingbase.lastTickPosY) * renderPartialTicks.D + 4.0) / 32.0
-					
-					if (d0 < 1.0) {
-						if (d0 < 0.0) {
-							d0 = 0.0
-						}
-						
-						d0 *= d0
-						var f2 = 100f * d0.F
-						
-						if (f2 < 5f) {
-							f2 = 5f
-						}
-						
-						if (f1 > f2) {
-							f1 = f2
-						}
-					}
-				}
-				
-				GL11.glFogi(GL11.GL_FOG_MODE, GL11.GL_LINEAR)
-				
-				if (fogMode < 0) {
-					GL11.glFogf(GL11.GL_FOG_START, 0f)
-					GL11.glFogf(GL11.GL_FOG_END, f1)
-				} else {
-					GL11.glFogf(GL11.GL_FOG_START, f1 * 0.75f)
-					GL11.glFogf(GL11.GL_FOG_END, f1)
-				}
-				
-				if (GLContext.getCapabilities().GL_NV_fog_distance) {
-					GL11.glFogi(NVFogDistance.GL_FOG_DISTANCE_MODE_NV, NVFogDistance.GL_EYE_RADIAL_NV)
-				}
-				
-				if (renderer.mc.theWorld.provider.doesXZShowFog(entitylivingbase.posX.I, entitylivingbase.posZ.I)) {
-					GL11.glFogf(GL11.GL_FOG_START, f1 * 0.05f)
-					GL11.glFogf(GL11.GL_FOG_END, min(f1, 192f) * 0.5f)
-				}
-				
-				MinecraftForge.EVENT_BUS.post(EntityViewRenderEvent.RenderFogEvent(renderer, entitylivingbase, block, renderPartialTicks.D, fogMode, f1))
+			if (renderer.mc.theWorld.provider.doesXZShowFog(entity.posX.mfloor(), entity.posZ.mfloor())) {
+				OFHelper.XZFog(renderer.farPlaneDistance)
 			}
 			
-			GL11.glEnable(GL11.GL_COLOR_MATERIAL)
-			GL11.glColorMaterial(GL11.GL_FRONT, GL11.GL_AMBIENT)
+			MinecraftForge.EVENT_BUS.post(EntityViewRenderEvent.RenderFogEvent(renderer, entity, block, renderPartialTicks.D, fogMode, farPlane))
 		}
+		
+		glEnable(GL_COLOR_MATERIAL)
+		glColorMaterial(GL_FRONT, GL_AMBIENT)
 	}
 	
 	// fixing some occasional OptiFine crashes
@@ -884,7 +879,7 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun deleteDisplayLists(gla: GLAllocation?, id: Int) {
-		if (GLAllocation.mapDisplayLists.contains(id)) GL11.glDeleteLists(id, GLAllocation.mapDisplayLists.remove(id) as Int)
+		if (GLAllocation.mapDisplayLists.contains(id)) glDeleteLists(id, GLAllocation.mapDisplayLists.remove(id) as Int)
 	}
 	
 	// file:// scheme for chat
@@ -1007,7 +1002,7 @@ object ASJHookHandler {
 	@Hook(returnCondition = ON_TRUE)
 	fun renderVignette(gui: GuiIngame, vignetteBrightness: Float, width: Int, height: Int): Boolean {
 		val disable = !PatcherConfigHandler.vignette
-		if (disable) OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0)
+		if (disable) OpenGlHelper.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, 1, 0)
 		return disable
 	}
 	
@@ -1162,5 +1157,16 @@ object ASJHookHandler {
 		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x111111, "barBorderColor")
 		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x2D0709, "barColor")
 		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x333333, "barBackgroundColor")
+	}
+	
+	// mooshrum respawn fix
+	@JvmStatic
+	@Hook(createMethod = true, returnCondition = ALWAYS)
+	fun getCanSpawnHere(entity: EntityMooshroom): Boolean {
+		val i = MathHelper.floor_double(entity.posX)
+		val j = MathHelper.floor_double(entity.boundingBox.minY)
+		val k = MathHelper.floor_double(entity.posZ)
+		
+		return entity.worldObj.getBlock(i, j - 1, k) === Blocks.mycelium && entity.worldObj.getFullBlockLightValue(i, j, k) > 8 && ASJSuperWrapperHandler.getCanSpawnHere(entity)
 	}
 }

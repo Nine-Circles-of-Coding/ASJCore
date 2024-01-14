@@ -19,7 +19,7 @@ object CommandDimInfo: CommandBase() {
 	override fun getCommandUsage(sender: ICommandSender) = "/$commandName [$ALL_TAG]"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<String>) {
-		if (args.getOrNull(0) == ALL_TAG) {
+		if (args.getOrNull(0)?.lowercase() == ALL_TAG) {
 			for ((id, it) in DimensionManager.getStaticDimensionIDs().withIndex()) {
 				val provider = MinecraftServer.getServer().worldServerForDimension(it)?.provider
 				
@@ -32,5 +32,9 @@ object CommandDimInfo: CommandBase() {
 			val provider = sender.entityWorld.provider
 			ASJUtilities.say(sender, "asjcore.commands.diminfo.current", provider.dimensionName, provider.dimensionId)
 		}
+	}
+	
+	override fun addTabCompletionOptions(sender: ICommandSender?, args: Array<out String>): List<String> {
+		return if (args.size == 1) listOf(ALL_TAG) else emptyList()
 	}
 }

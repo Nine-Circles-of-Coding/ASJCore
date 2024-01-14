@@ -4,6 +4,7 @@ import com.google.common.collect.*
 import gloomyfolken.hooklib.minecraft.HookLibPlugin
 import org.objectweb.asm.tree.MethodNode
 import java.io.IOException
+import java.io.InputStreamReader
 
 // because AlexSocol hates java :3
 object McpToSrg {
@@ -14,8 +15,8 @@ object McpToSrg {
 		val inputStream = this::class.java.getResourceAsStream("/McpToSrg.csv") ?: throw IOException("Method names map not found")
 		val map = HashMultimap.create<String, String>()
 		
-		inputStream.use { iS ->
-			String(iS.readBytes()).split("\n").forEach {
+		InputStreamReader(inputStream).use { iS ->
+			iS.readLines().forEach {
 				val (mcp, srg) = it.split(",")
 				map.put(mcp, srg)
 			}

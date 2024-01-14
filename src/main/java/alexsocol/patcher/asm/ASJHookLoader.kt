@@ -4,6 +4,7 @@ import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer
+import com.KAIIIAK.superwrapper.SuperWrapperTransformer.*
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
 import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
@@ -42,5 +43,6 @@ class ASJHookLoader: HookLoader() {
 		}
 		
 		registerPostTransformer(SuperWrapperTransformer())
+		registerSuperWrapperContainer("alexsocol.patcher.superwrapper.ASJSuperWrapperHandler")
 	}
 }

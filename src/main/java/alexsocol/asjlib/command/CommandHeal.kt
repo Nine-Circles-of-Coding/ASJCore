@@ -9,7 +9,7 @@ object CommandHeal: CommandBase() {
 	
 	override fun getCommandName() = "heal"
 	
-	override fun getCommandUsage(sender: ICommandSender?) = "/$commandName [[player]] [${EnumChatFormatting.UNDERLINE}h${EnumChatFormatting.RED}(heal player)][${EnumChatFormatting.UNDERLINE}f${EnumChatFormatting.RED}(feed player)][${EnumChatFormatting.UNDERLINE}e${EnumChatFormatting.RED}(clear debuffs)[${EnumChatFormatting.UNDERLINE}!${EnumChatFormatting.RED}(clear ALL effects)]]"
+	override fun getCommandUsage(sender: ICommandSender?) = "asjcore.commands.heal.usage"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<String>) {
 		if (args.size > 2) throw WrongUsageException(getCommandUsage(sender))

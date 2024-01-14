@@ -16,7 +16,11 @@ asjcore.commands.diminfo.current=Current dimension is "%s" (id '%d')
 asjcore.commands.diminfo.list=%d. "%s" with id '%d'
 asjcore.commands.diminfo.list.fail=%d. Unknown dimension with id '%d'
 
-asjcore.commands.tpdim.worlderr=Dimension Initialization Error
+asjcore.commands.explode.usage=/explode [size] [breakBlocks] [doFlame]
+
+asjcore.commands.heal.usage=/heal [[player]] [h (heal)][f (feed)][e (clear debuffs)[! (clear ALL effects)]]
+
+asjcore.commands.killall.counter=Killed %d entities
 
 asjcore.commands.schema.dumpOk=Schema dumped to: %s
 asjcore.commands.schema.dumpNo=Error dumping schema: %s
@@ -25,6 +29,6 @@ asjcore.commands.schema.noFile=File %s not found
 asjcore.commands.schema.noPosN=Set pos %s before saving
 asjcore.commands.schema.posSet=Pos %s set to (%s, %s, %s)
 
-commands.summon.usage.new=/summon <EntityName> [['x'count]] [x] [y] [z] [dataTag]
+asjcore.commands.tpdim.worlderr=Dimension Initialization Error
 
-explode.usage=/explode [size] [breakBlocks] [doFlame]
+commands.summon.usage.new=/summon <EntityName> [['x'count]] [x] [y] [z] [dataTag]

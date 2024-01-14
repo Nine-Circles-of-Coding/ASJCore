@@ -5,7 +5,8 @@ import alexsocol.asjlib.command.*
 import alexsocol.patcher.asm.ASJHookLoader
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
-import cpw.mods.fml.common.Mod
+import cpw.mods.fml.client.config.GuiUtils
+import cpw.mods.fml.common.*
 import cpw.mods.fml.common.event.*
 import cpw.mods.fml.common.registry.GameData
 import net.minecraft.block.*
@@ -14,11 +15,16 @@ import net.minecraft.item.ItemBlock
 import net.minecraft.world.biome.BiomeGenBase
 import net.minecraftforge.common.MinecraftForge
 
-@Mod(modid = "asjpatcher", modLanguageAdapter = KotlinAdapter.className)
+@Mod(modid = "asjpatcher", version = "1.2.4.1", useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
 object PatcherMain {
+	
+	@Mod.Metadata("asjpatcher")
+	lateinit var meta: ModMetadata
 	
 	@Mod.EventHandler
 	fun preInit(e: FMLPreInitializationEvent) {
+		fixGuiColors()
+		
 		Blocks.melon_stem.setBlockName("melonStem")
 		Blocks.piston_head.setBlockName("pistonHead")
 		Blocks.piston_extension.setBlockName("pistonExtension")
@@ -53,6 +59,7 @@ object PatcherMain {
 		e.registerServerCommand(CommandDimInfo)
 		e.registerServerCommand(CommandExplode)
 		e.registerServerCommand(CommandHeal)
+		e.registerServerCommand(CommandKillAll)
 		e.registerServerCommand(CommandSchema)
 		
 		if (!ASJHookLoader.OBF) e.registerServerCommand(CommandResources)
@@ -73,5 +80,11 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun onServerStopped(e: FMLServerStoppedEvent) {
 		MinecraftForge.EVENT_BUS.post(ServerStoppedEvent(e))
+	}
+	
+	private fun fixGuiColors() {
+		val colors: IntArray = ASJReflectionHelper.getStaticValue(GuiUtils::class.java, "colorCodes")!!
+		colors[0] = 0x010101
+		colors[16] = 0x010101
 	}
 }

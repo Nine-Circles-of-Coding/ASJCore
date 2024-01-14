@@ -9,7 +9,7 @@ object CommandExplode: CommandBase() {
 	
 	override fun getCommandName() = "explode"
 	
-	override fun getCommandUsage(sender: ICommandSender?) = "$commandName.usage"
+	override fun getCommandUsage(sender: ICommandSender?) = "asjcore.commands.explode.usage"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<out String>) {
 		val (x, y, z) = sender.playerCoordinates ?: return

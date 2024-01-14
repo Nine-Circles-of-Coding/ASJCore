@@ -5,13 +5,12 @@ import alexsocol.patcher.PatcherConfigHandler
 import cpw.mods.fml.common.eventhandler.*
 import cpw.mods.fml.common.gameevent.TickEvent
 import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent
-import cpw.mods.fml.relauncher.*
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.entity.SharedMonsterAttributes
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraftforge.event.entity.living.*
 import net.minecraftforge.event.entity.player.*
-import net.minecraftforge.event.world.*
+import net.minecraftforge.event.world.ExplosionEvent
 import net.minecraftforge.oredict.OreDictionary
 
 object PatcherEventHandler {
@@ -60,7 +59,6 @@ object PatcherEventHandler {
 
 object PatcherEventHandlerClient {
 	
-	@SideOnly(Side.CLIENT)
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	fun onItemTooltip(e: ItemTooltipEvent) {
 		if (GuiScreen.isShiftKeyDown()) {

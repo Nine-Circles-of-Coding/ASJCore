@@ -3,6 +3,7 @@
 
 package ru.vamig.worldengine;
 
+import alexsocol.patcher.PatcherConfigHandler;
 import cpw.mods.fml.common.IWorldGenerator;
 import net.minecraft.block.*;
 import net.minecraft.entity.EnumCreatureType;
@@ -112,7 +113,10 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 		//=//
 		/////
 		
-		WE_ChunkSmartLight chunk = new WE_ChunkSmartLight(world, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ);
+		Chunk chunk = PatcherConfigHandler.INSTANCE.getWECustomLighting() ?
+					  new WE_ChunkSmartLight(world, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ) :
+					  new Chunk(world, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ);
+		
 		chunk.generateSkylightMap();
 		return chunk;
 	}
