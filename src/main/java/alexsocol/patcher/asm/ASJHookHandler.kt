@@ -29,6 +29,7 @@ import net.minecraft.command.server.CommandSummon
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.*
+import net.minecraft.entity.DataWatcher.WatchableObject
 import net.minecraft.entity.EntityList.EntityEggInfo
 import net.minecraft.entity.ai.attributes.AttributeModifier
 import net.minecraft.entity.boss.*
@@ -53,8 +54,8 @@ import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.*
-import org.lwjgl.opengl.*
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GLContext
 import org.lwjgl.opengl.NVFogDistance.*
 import org.objectweb.asm.Opcodes
 import java.io.File
@@ -1101,6 +1102,20 @@ object ASJHookHandler {
 			is String -> int.toInt()
 			else      -> 0
 		}
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun setObject(wo: WatchableObject, watchedObject: Any?) {
+		if (watchedObject == null) return
+		wo.objectType = DataWatcher.dataTypes[watchedObject.javaClass] as? Int ?: return
+	}
+
+	@JvmStatic
+	@Hook(injectOnExit = true, targetMethod = "<init>")
+	fun `WatchableObject$init`(wo: WatchableObject, objectType: Int, dataValueId: Int, watchedObject: Any?) {
+		if (watchedObject == null) return
+		wo.objectType = DataWatcher.dataTypes[watchedObject.javaClass] as? Int ?: return
 	}
 	
 	// chunk reforcing after world reload
