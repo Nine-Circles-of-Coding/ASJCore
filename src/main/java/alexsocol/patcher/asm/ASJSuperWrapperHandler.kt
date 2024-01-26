@@ -1,4 +1,4 @@
-package alexsocol.patcher.superwrapper
+package alexsocol.patcher.asm
 
 import com.KAIIIAK.superwrapper.SuperWrapper
 import net.minecraft.entity.EntityCreature

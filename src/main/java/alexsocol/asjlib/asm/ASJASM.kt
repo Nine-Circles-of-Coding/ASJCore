@@ -4,7 +4,6 @@ import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.ClassNode
 
-/** Include this to your #getASMTransformerClass to make @HookField's work  */
 class ASJASM: IClassTransformer {
 	
 	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {

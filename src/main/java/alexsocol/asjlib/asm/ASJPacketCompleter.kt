@@ -11,9 +11,6 @@ import java.util.*
 class ASJPacketCompleter: IClassTransformer {
 	
 	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
-		@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-		transformedName as java.lang.String // fix of java.lang.ClassCircularityError
-		if (transformedName.startsWith("kotlin") || transformedName.startsWith("gloomyfolken")) return basicClass
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
 		
 		try {
@@ -149,6 +146,6 @@ class ASJPacketCompleter: IClassTransformer {
 	companion object {
 		
 		val descriptors: List<String> = Lists.newArrayList("Z", "B", "C", "D", "F", "I", "J", "S", "Ljava/lang/String;", "Lnet/minecraft/item/ItemStack;", "Lnet/minecraft/nbt/NBTTagCompound;")
-		val debug = java.lang.Boolean.parseBoolean(System.getProperty ("asjcore.asm.debug", "false"))
+		val debug = System.getProperty("asjcore.asm.debug", "false").toBoolean()
 	}
 }

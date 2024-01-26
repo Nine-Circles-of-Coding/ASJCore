@@ -1,1 +1,2 @@
-Fixed another Byte<->Int casting issue
+Fixed incompatibility with Lwjgl3ify
+Added ASJGoto class transformer enabling goto usage

@@ -1,4 +1,4 @@
-package alexsocol.patcher.asm
+package alexsocol.patcher.asm.transformer
 
 import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*

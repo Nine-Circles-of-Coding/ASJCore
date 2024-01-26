@@ -3,6 +3,7 @@ package alexsocol.patcher.asm
 import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.asm.transformer.*
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer.*
 import cpw.mods.fml.relauncher.*
@@ -13,7 +14,7 @@ import java.io.File
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
 // -username=AlexSocol
 @IFMLLoadingPlugin.MCVersion("1.7.10")
-@IFMLLoadingPlugin.TransformerExclusions("alexsocol.patcher.asm", "alexsocol.asjlib.asm", "gloomyfolken.hooklib", "kotlin")
+@IFMLLoadingPlugin.TransformerExclusions("alexsocol.patcher.asm.transformer", "alexsocol.asjlib.asm", "gloomyfolken.hooklib", "kotlin")
 class ASJHookLoader: HookLoader() {
 	
 	companion object {
@@ -26,7 +27,7 @@ class ASJHookLoader: HookLoader() {
 	}
 	
 	override fun getASMTransformerClass(): Array<String> {
-		return arrayOf(PrimaryClassTransformer::class.java.name, ASJASM::class.java.name, ASJClassTransformer::class.java.name, ASJPacketCompleter::class.java.name)
+		return arrayOf(PrimaryClassTransformer::class.java.name, ASJASM::class.java.name, ASJGoto::class.java.name, ASJClassTransformer::class.java.name, ASJPacketCompleter::class.java.name)
 	}
 	
 	override fun registerHooks() {
@@ -43,6 +44,6 @@ class ASJHookLoader: HookLoader() {
 		}
 		
 		registerPostTransformer(SuperWrapperTransformer())
-		registerSuperWrapperContainer("alexsocol.patcher.superwrapper.ASJSuperWrapperHandler")
+		registerSuperWrapperContainer("alexsocol.patcher.asm.ASJSuperWrapperHandler")
 	}
 }

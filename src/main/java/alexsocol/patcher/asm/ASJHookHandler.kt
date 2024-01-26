@@ -9,7 +9,6 @@ import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
 import alexsocol.patcher.helper.OFHelper
 import alexsocol.patcher.helper.OFHelper.shadersmodSupport
-import alexsocol.patcher.superwrapper.ASJSuperWrapperHandler
 import cofh.asmhooks.HooksCore
 import cpw.mods.fml.client.*
 import cpw.mods.fml.common.registry.GameRegistry

@@ -1,6 +1,6 @@
 @file:Suppress("ClassName", "unused")
 
-package alexsocol.patcher.asm
+package alexsocol.patcher.asm.transformer
 
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.asm.ASJHookLoader.Companion.OBF
@@ -475,13 +475,13 @@ class ASJClassTransformer: IClassTransformer {
 	private inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
 		println("Transforming $transformedName")
 		val cr = ClassReader(basicClass)
-		val it = ClassWriter(ClassWriter.COMPUTE_MAXS)
+		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
 		val cn = ClassNode()
 		cr.accept(cn, ClassReader.EXPAND_FRAMES)
 		
 		lambda(cn)
 		
-		cn.accept(it)
-		return it.toByteArray()
+		cn.accept(cw)
+		return cw.toByteArray()
 	}
 }
