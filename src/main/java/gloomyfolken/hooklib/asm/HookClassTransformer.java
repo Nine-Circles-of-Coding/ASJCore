@@ -7,6 +7,7 @@ import java.util.*;
 
 public class HookClassTransformer {
 	
+	public static List<AsmHook> notInjectedHooks = new ArrayList<>();
 	public HookLogger logger = new SystemOutLogger();
 	protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
 	protected ClassMetadataReader classMetadataReader = new ClassMetadataReader();
@@ -20,6 +21,7 @@ public class HookClassTransformer {
 			list.add(hook);
 			hooksMap.put(hook.getTargetClassName(), list);
 		}
+		notInjectedHooks.add(hook);
 	}
 	
 	public void registerHookContainer(String className) {
@@ -55,6 +57,7 @@ public class HookClassTransformer {
 					logger.debug("Patching method " + hook.getPatchedMethodName());
 				}
 				hooks.removeAll(hooksWriter.injectedHooks);
+				notInjectedHooks.removeAll(hooksWriter.injectedHooks);
 			} catch (Exception e) {
 				logger.severe("A problem has occurred during transformation of class " + className + ".");
 				logger.severe("Attached hooks:");

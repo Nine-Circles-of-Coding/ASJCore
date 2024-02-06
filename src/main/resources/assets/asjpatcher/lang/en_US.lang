@@ -12,13 +12,15 @@ tile.endPortal.name=End Portal
 
 
 
+asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [filler] | <load> <filename>
+asjcore.commands.explode.usage=/explode [size] [breakBlocks] [doFlame]
+asjcore.commands.heal.usage=/heal [[player]] [h (heal)][f (feed)][e (clear debuffs)[! (clear ALL effects)]]
+asjcore.commands.killall.usage=/killall [%s] [radius] [dimension id] [mod id]
+asjcore.commands.tpdim.usage=/tpdim <dimension id>
+
 asjcore.commands.diminfo.current=Current dimension is "%s" (id '%d')
 asjcore.commands.diminfo.list=%d. "%s" with id '%d'
 asjcore.commands.diminfo.list.fail=%d. Unknown dimension with id '%d'
-
-asjcore.commands.explode.usage=/explode [size] [breakBlocks] [doFlame]
-
-asjcore.commands.heal.usage=/heal [[player]] [h (heal)][f (feed)][e (clear debuffs)[! (clear ALL effects)]]
 
 asjcore.commands.killall.counter=Killed %d entities
 

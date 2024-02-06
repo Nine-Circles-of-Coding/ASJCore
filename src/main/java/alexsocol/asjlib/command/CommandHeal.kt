@@ -4,11 +4,9 @@ import net.minecraft.command.*
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.*
 
-object CommandHeal: CommandBase() {
+object CommandHeal: ASJCommandBase() {
 	
 	override fun getCommandName() = "heal"
-	
-	override fun getCommandUsage(sender: ICommandSender?) = "asjcore.commands.heal.usage"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<String>) {
 		if (args.size > 2) throw WrongUsageException(getCommandUsage(sender))

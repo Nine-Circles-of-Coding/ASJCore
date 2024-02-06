@@ -59,6 +59,7 @@ object PatcherMain {
 		e.registerServerCommand(CommandDimInfo)
 		e.registerServerCommand(CommandExplode)
 		e.registerServerCommand(CommandHeal)
+		e.registerServerCommand(CommandHookList)
 		e.registerServerCommand(CommandKillAll)
 		e.registerServerCommand(CommandSchema)
 		

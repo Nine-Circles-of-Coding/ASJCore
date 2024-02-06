@@ -5,26 +5,28 @@ import alexsocol.asjlib.math.Vector3
 import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.registry.EntityRegistry
 import net.minecraft.command.*
+import net.minecraft.command.CommandBase.getListOfStringsFromIterableMatchingLastWord
 import net.minecraft.entity.*
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.monster.IMob
 import net.minecraft.entity.passive.*
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.server.MinecraftServer
+import net.minecraft.util.StatCollector
 
-object CommandKillAll: CommandBase() {
+object CommandKillAll: ASJCommandBase() {
 	
 	override fun getRequiredPermissionLevel() = 2
 	
 	override fun getCommandName() = "killall"
 	
-	override fun getCommandUsage(sender: ICommandSender?) = "/$commandName [${names.joinToString("|")}] [radius] [dimID] [modId]"
+	override fun getCommandUsage(sender: ICommandSender?) = StatCollector.translateToLocalFormatted(super.getCommandUsage(sender), names.joinToString("|"))
 	
 	override fun processCommand(sender: ICommandSender, args: Array<out String>) {
 		val name = args.getOrNull(0)?.uppercase() ?: "ALL"
 		val matcher = EntitySelector.entries.firstOrNull { it.name == name }?.matcher
-		if (matcher == null) throw WrongUsageException(getCommandUsage(sender)
-		)
+		if (matcher == null) throw WrongUsageException(getCommandUsage(sender))
+		
 		val radius = args.getOrNull(1)?.toInt() ?: -1
 		val dimId = args.getOrNull(2)?.toInt() ?: sender.entityWorld.provider.dimensionId
 		val modId = args.getOrNull(3)

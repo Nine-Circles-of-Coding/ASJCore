@@ -32,6 +32,7 @@ class ASJHookLoader: HookLoader() {
 			PrimaryClassTransformer::class.java.name,
 			ASJASM::class.java.name,
 			ASJGoto::class.java.name,
+			ASJAccessTransformer::class.java.name,
 			ASJClassTransformer::class.java.name,
 			ASJPacketCompleter::class.java.name,
 			SpigotTransformer::class.java.name

@@ -119,11 +119,11 @@ object ASJHookHandler {
 	// AIOOBE 257+ crash fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, targetMethod = "<clinit>")
-	fun EntityEnderman(thiz: EntityEnderman?) {
-		val uuid = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0") // Entries for Enderman in at.cfg cause gradle error when setting up
-		ASJReflectionHelper.setStaticFinalValue(EntityEnderman::class.java, uuid, "attackingSpeedBoostModifierUUID", "field_110192_bp")
-		ASJReflectionHelper.setStaticFinalValue(EntityEnderman::class.java, AttributeModifier(uuid, "Attacking speed boost", 6.199999809265137, 0).setSaved(false), "attackingSpeedBoostModifier", "field_110193_bq")
-		ASJReflectionHelper.setStaticFinalValue(EntityEnderman::class.java, BooleanArray(256), "carriableBlocks", " field_70827_d")
+	fun EntityEnderman(static: EntityEnderman?) {
+		val uuid = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0")
+		EntityEnderman.attackingSpeedBoostModifierUUID = uuid
+		EntityEnderman.attackingSpeedBoostModifier = AttributeModifier(uuid, "Attacking speed boost", 6.199999809265137, 0).setSaved(false)
+		EntityEnderman.carriableBlocks = BooleanArray(256)
 		
 		arrayOf(Blocks.grass, Blocks.dirt, Blocks.sand, Blocks.gravel, Blocks.yellow_flower, Blocks.red_flower, Blocks.brown_mushroom, Blocks.red_mushroom, Blocks.tnt, Blocks.cactus, Blocks.clay, Blocks.pumpkin, Blocks.melon_block, Blocks.mycelium).forEach {
 			EntityEnderman.setCarriable(it, true)

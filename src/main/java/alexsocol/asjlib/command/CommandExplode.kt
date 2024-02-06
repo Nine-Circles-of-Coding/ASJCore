@@ -3,13 +3,11 @@ package alexsocol.asjlib.command
 import alexsocol.asjlib.*
 import net.minecraft.command.*
 
-object CommandExplode: CommandBase() {
+object CommandExplode: ASJCommandBase() {
 	
 	override fun getRequiredPermissionLevel() = 4
 	
 	override fun getCommandName() = "explode"
-	
-	override fun getCommandUsage(sender: ICommandSender?) = "asjcore.commands.explode.usage"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<out String>) {
 		val (x, y, z) = sender.playerCoordinates ?: return

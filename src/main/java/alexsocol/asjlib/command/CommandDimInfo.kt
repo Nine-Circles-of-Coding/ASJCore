@@ -16,7 +16,7 @@ object CommandDimInfo: CommandBase() {
 	
 	override fun getCommandName() = "diminfo"
 	
-	override fun getCommandUsage(sender: ICommandSender) = "/$commandName [$ALL_TAG]"
+	override fun getCommandUsage(sender: ICommandSender) = "/$commandName [$ALL_TAG?]"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<String>) {
 		if (args.getOrNull(0)?.lowercase() == ALL_TAG) {

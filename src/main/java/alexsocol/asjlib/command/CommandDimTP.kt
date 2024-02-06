@@ -6,15 +6,13 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.ChunkCoordinates
 
-object CommandDimTP: CommandBase() {
+object CommandDimTP: ASJCommandBase() {
 	
 	override fun getRequiredPermissionLevel() = 2
 	
 	override fun canCommandSenderUseCommand(sender: ICommandSender) = sender is EntityPlayer
 	
 	override fun getCommandName() = "tpdim"
-	
-	override fun getCommandUsage(sender: ICommandSender) = "/$commandName <ID>"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<String>) {
 		try {

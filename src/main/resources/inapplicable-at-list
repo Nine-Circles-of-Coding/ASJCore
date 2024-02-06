@@ -1,0 +1,11 @@
+# Entries for Enderman in at.cfg cause gradle error when setting up so forced to make this shit
+
+# obf because it is obf
+public-f net.minecraft.entity.monster.EntityEnderman bp # attackingSpeedBoostModifierUUID
+public-f net.minecraft.entity.monster.EntityEnderman bq # attackingSpeedBoostModifier
+public-f net.minecraft.entity.monster.EntityEnderman br # carriableBlocks
+
+# srg just in case
+public-f net.minecraft.entity.monster.EntityEnderman field_110192_bp # attackingSpeedBoostModifierUUID
+public-f net.minecraft.entity.monster.EntityEnderman field_110193_bq # attackingSpeedBoostModifier
+public-f net.minecraft.entity.monster.EntityEnderman field_70827_d # carriableBlocks

@@ -12,15 +12,13 @@ import org.apache.commons.lang3.tuple.MutablePair
 import java.io.*
 import kotlin.math.abs
 
-object CommandSchema: CommandBase() {
+object CommandSchema: ASJCommandBase() {
 	
 	val poses = HashMap<String, MutablePair<Vector3?, Vector3?>>()
 	
 	override fun getCommandAliases() = listOf("asjs")
 	
 	override fun getCommandName() = "asjschema"
-	
-	override fun getCommandUsage(sender: ICommandSender?) = "/$commandName <pos1> | <pos2> | <save> [filler] | <load> <filename>"
 	
 	override fun processCommand(sender: ICommandSender, args: Array<String>) {
 		val name = sender.commandSenderName
