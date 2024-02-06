@@ -83,7 +83,7 @@ object PatcherMain {
 	}
 	
 	private fun fixGuiColors() {
-		val colors: IntArray = ASJReflectionHelper.getStaticValue(GuiUtils::class.java, "colorCodes")!!
+		val colors = GuiUtils.colorCodes
 		colors[0] = 0x010101
 		colors[16] = 0x010101
 	}

@@ -1,10 +1,17 @@
 package alexsocol.asjlib;
 
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.*;
-import java.util.*;
-import java.util.logging.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The class prev named CSReflection.
@@ -13,7 +20,7 @@ import java.util.logging.*;
  *
  * @author Clashsoft; slightly improved by AlexSocol
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 public class ASJReflectionHelper {
 	
 	public static final Field modifiersField;

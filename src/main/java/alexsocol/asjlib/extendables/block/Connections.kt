@@ -1,6 +1,5 @@
 package alexsocol.asjlib.extendables.block
 
-import net.minecraft.block.*
 import net.minecraft.world.IBlockAccess
 
 interface IFenceConnectable {

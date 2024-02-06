@@ -4,26 +4,17 @@ package alexsocol.patcher.asm.transformer
 
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.asm.ASJHookLoader.Companion.OBF
-import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
 
-class ASJClassTransformer: IClassTransformer {
+class ASJClassTransformer: ASJAbstractClassTransformer() {
 	
-	var transformedName = ""
-	var basicClass = byteArrayOf()
-	
-	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
-		if (basicClass == null || basicClass.isEmpty()) return basicClass
-		
-		this.transformedName = transformedName
-		this.basicClass = basicClass
-		
+	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
 		if (transformedName != "alexsocol.patcher.asm.ASJClassTransformer\$ClassVisitorPotionMethodPublicizer") try {
 			val cr = ClassReader(this.basicClass)
 			val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-			val cv = ClassVisitorPotionMethodPublicizer(cw, "$name ($transformedName)")
+			val cv = ClassVisitorPotionMethodPublicizer(cw, transformedName)
 			cr.accept(cv, ClassReader.EXPAND_FRAMES)
 			this.basicClass = cw.toByteArray()
 		} catch (e: Throwable) {
@@ -461,27 +452,5 @@ class ASJClassTransformer: IClassTransformer {
 				else super.visitIntInsn(opcode, operand)
 			}
 		}
-	}
-	
-	private inline fun core(frames: Int = ClassReader.EXPAND_FRAMES, lambda: (ClassVisitor) -> ClassVisitor): ByteArray {
-		println("Transforming $transformedName")
-		val cr = ClassReader(basicClass)
-		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-		val transformer = lambda(cw)
-		cr.accept(transformer, frames)
-		return cw.toByteArray()
-	}
-	
-	private inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
-		println("Transforming $transformedName")
-		val cr = ClassReader(basicClass)
-		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-		val cn = ClassNode()
-		cr.accept(cn, ClassReader.EXPAND_FRAMES)
-		
-		lambda(cn)
-		
-		cn.accept(cw)
-		return cw.toByteArray()
 	}
 }

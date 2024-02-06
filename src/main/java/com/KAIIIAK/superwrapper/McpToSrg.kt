@@ -3,8 +3,7 @@ package com.KAIIIAK.superwrapper
 import com.google.common.collect.*
 import gloomyfolken.hooklib.minecraft.HookLibPlugin
 import org.objectweb.asm.tree.MethodNode
-import java.io.IOException
-import java.io.InputStreamReader
+import java.io.*
 
 // because AlexSocol hates java :3
 object McpToSrg {

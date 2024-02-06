@@ -6,6 +6,7 @@ import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.helper.FuckingSpigotFix
 import alexsocol.patcher.event.*
 import alexsocol.patcher.helper.OFHelper
 import alexsocol.patcher.helper.OFHelper.shadersmodSupport
@@ -68,7 +69,7 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(injectOnExit = true, targetMethod = "<init>")
 	fun ServerEula(thiz: ServerEula, file: File) {
-		ASJReflectionHelper.setFinalValue(thiz, true, "field_154351_c")
+		thiz.field_154351_c = true
 	}
 	
 	// summon lightning bolt in /summon command
@@ -119,9 +120,10 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, targetMethod = "<clinit>")
 	fun EntityEnderman(thiz: EntityEnderman?) {
-		val uuid = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0") // Entries in at.cfg causes gradle error
-		ASJReflectionHelper.setStaticFinalValue(EntityEnderman::class.java, uuid, "attackingSpeedBoostModifierUUID", "field_110192_bp")
-		ASJReflectionHelper.setStaticFinalValue(EntityEnderman::class.java, AttributeModifier(uuid, "Attacking speed boost", 6.199999809265137, 0).setSaved(false), "attackingSpeedBoostModifier", "field_110193_bq")
+		val uuid = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0")
+		EntityEnderman.attackingSpeedBoostModifierUUID = uuid
+		EntityEnderman.attackingSpeedBoostModifier = AttributeModifier(uuid, "Attacking speed boost", 6.199999809265137, 0).setSaved(false)
+		EntityEnderman.carriableBlocks = BooleanArray(256)
 		
 		arrayOf(Blocks.grass, Blocks.dirt, Blocks.sand, Blocks.gravel, Blocks.yellow_flower, Blocks.red_flower, Blocks.brown_mushroom, Blocks.red_mushroom, Blocks.tnt, Blocks.cactus, Blocks.clay, Blocks.pumpkin, Blocks.melon_block, Blocks.mycelium).forEach {
 			EntityEnderman.setCarriable(it, true)
@@ -673,12 +675,6 @@ object ASJHookHandler {
 	
 	// Fix nbt clearing in Enchanting Table
 	
-	private val mergeItemStack by lazy {
-		ASJReflectionHelper.getMethod(Container::class.java, arrayOf("mergeItemStack", "func_75135_a"), arrayOf(ItemStack::class.java, Int::class.java, Int::class.java, Boolean::class.java))?.also {
-			it.isAccessible = true
-		}
-	}
-	
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun transferStackInSlot(container: ContainerEnchantment, player: EntityPlayer?, slotID: Int): ItemStack? {
@@ -688,8 +684,7 @@ object ASJHookHandler {
 			val itemstack1 = slot.stack
 			itemstack = itemstack1.copy()
 			if (slotID == 0) {
-				// I'm sooo sorry but all inheritance will just fuck everything up
-				if (mergeItemStack?.invoke(container, itemstack1, 1, 37, true) == false) return null
+				if (!ASJSuperWrapperHandler.mergeItemStack(container, itemstack1, 1, 37, true)) return null
 			} else {
 				if ((container.inventorySlots[0] as Slot).hasStack || !(container.inventorySlots[0] as Slot).isItemValid(itemstack1)) return null
 				
@@ -1107,14 +1102,14 @@ object ASJHookHandler {
 	@Hook(injectOnExit = true)
 	fun setObject(wo: WatchableObject, watchedObject: Any?) {
 		if (watchedObject == null) return
-		wo.objectType = DataWatcher.dataTypes[watchedObject.javaClass] as? Int ?: return
+		wo.objectType = FuckingSpigotFix.dataWatcher_dataTypes[watchedObject.javaClass] ?: return
 	}
 
 	@JvmStatic
 	@Hook(injectOnExit = true, targetMethod = "<init>")
 	fun `WatchableObject$init`(wo: WatchableObject, objectType: Int, dataValueId: Int, watchedObject: Any?) {
 		if (watchedObject == null) return
-		wo.objectType = DataWatcher.dataTypes[watchedObject.javaClass] as? Int ?: return
+		wo.objectType = FuckingSpigotFix.dataWatcher_dataTypes[watchedObject.javaClass] ?: return
 	}
 	
 	// chunk reforcing after world reload
@@ -1166,11 +1161,11 @@ object ASJHookHandler {
 	fun start(static: SplashProgress?) {
 		if (!PatcherConfigHandler.darkMode) return
 		
-		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x333333, "backgroundColor")
-		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0xCCCCCC, "fontColor")
-		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x111111, "barBorderColor")
-		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x2D0709, "barColor")
-		ASJReflectionHelper.setStaticValue(SplashProgress::class.java, 0x333333, "barBackgroundColor")
+		SplashProgress.backgroundColor = 0x333333
+		SplashProgress.fontColor = 0xCCCCCC
+		SplashProgress.barBorderColor = 0x111111
+		SplashProgress.barColor = 0x2D0709
+		SplashProgress.barBackgroundColor = 0x333333
 	}
 	
 	// mooshrum respawn fix

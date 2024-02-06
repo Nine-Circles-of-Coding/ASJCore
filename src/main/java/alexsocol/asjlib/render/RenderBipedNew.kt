@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySkullRenderer
 import net.minecraft.entity.*
 import net.minecraft.init.Items
 import net.minecraft.item.*
-import net.minecraft.nbt.*
+import net.minecraft.nbt.NBTUtil
 import net.minecraft.util.*
 import net.minecraftforge.client.*
 import org.lwjgl.opengl.GL11.*

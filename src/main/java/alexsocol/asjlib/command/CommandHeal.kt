@@ -3,7 +3,6 @@ package alexsocol.asjlib.command
 import net.minecraft.command.*
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.*
-import net.minecraft.util.EnumChatFormatting
 
 object CommandHeal: CommandBase() {
 	

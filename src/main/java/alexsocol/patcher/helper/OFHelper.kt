@@ -1,7 +1,7 @@
 package alexsocol.patcher.helper
 
 import Config
-import alexsocol.asjlib.*
+import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.patcher.PatcherConfigHandler
 import net.minecraft.client.renderer.EntityRenderer
 import org.lwjgl.opengl.*

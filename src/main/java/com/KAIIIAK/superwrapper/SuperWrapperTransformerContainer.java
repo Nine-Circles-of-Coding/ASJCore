@@ -15,6 +15,7 @@ public class SuperWrapperTransformerContainer {
 	public String postfixForInsetMethod = "";
 	public String signatureForInsetMethod = null;
 	public String[] exceptionsForInsetMethod = null;
+	public boolean callThis = true;
 	
 	public String desc = "";
 	public String targetMethod = "";
@@ -46,6 +47,10 @@ public class SuperWrapperTransformerContainer {
 	
 	public void setExceptionsForInsetMethod(String[] exceptionsForInsetMethod) {
 		this.exceptionsForInsetMethod = exceptionsForInsetMethod;
+	}
+	
+	public void setCallThis(boolean callThis) {
+		this.callThis = callThis;
 	}
 	
 	public void setDesc(String desc) {

@@ -86,7 +86,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 					String targetMethod = McpToSrg.getTargetMethodMatchingNameAndDesc(classNode.methods, container.targetMethod, container.getInsertMethodDesc());
 					
 					instructions.add(new MethodInsnNode(
-							INVOKESPECIAL,
+							container.callThis ? INVOKESPECIAL : INVOKEVIRTUAL,
 							container.targetClass.getInternalName(),
 							targetMethod,
 							container.getInsertMethodDesc(),
@@ -163,9 +163,10 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				boolean containsAnnotation = false;
 				String signatureFromAnnotation = null;
 				String targetMethodFromAnnotation = null;
-				String[] exceptionsFromAnnotation = null;
+				List<String> exceptionsFromAnnotation = null;
 				String methodPostfixFromAnnotation = null;
 				String methodPrefixFromAnnotation = null;
+				Boolean callThis = true;
 				
 				List<AnnotationNode> annotations = new ArrayList<>();
 				if (methodNode.visibleAnnotations != null) annotations.addAll(methodNode.visibleAnnotations);
@@ -189,10 +190,13 @@ public class SuperWrapperTransformer implements IClassTransformer {
 						}
 						if (annotationArgs.containsKey("exceptions")) {
 							//noinspection unchecked
-							exceptionsFromAnnotation = ((List<String>) annotationArgs.get("exceptions")).toArray(new String[0]);
+							exceptionsFromAnnotation = (List<String>) annotationArgs.get("exceptions");
 						}
 						if (annotationArgs.containsKey("signature")) {
 							signatureFromAnnotation = (String) annotationArgs.get("signature");
+						}
+						if (annotationArgs.containsKey("callThis")) {
+							callThis = (Boolean) annotationArgs.get("callThis");
 						}
 					}
 					
@@ -217,7 +221,8 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				container.setPostfixForInsertMethod(methodPostfixFromAnnotation == null ? "__Wrapper" : methodPostfixFromAnnotation);
 				
 				container.setSignatureForInsertMethod(signatureFromAnnotation != null ? signatureFromAnnotation : methodNode.signature == null ? null : methodNode.signature.replaceFirst("\\(L" + container.targetClass.getInternalName() + ";", "("));
-				container.setExceptionsForInsetMethod(exceptionsFromAnnotation != null ? exceptionsFromAnnotation : methodNode.exceptions.toArray(new String[0]));
+				container.setExceptionsForInsetMethod(exceptionsFromAnnotation != null ? exceptionsFromAnnotation : methodNode.exceptions);
+				container.setCallThis(callThis);
 				container.setDesc(methodNode.desc);
 				container.setTargetMethod(targetMethodFromAnnotation != null ? targetMethodFromAnnotation : methodNode.name);
 				

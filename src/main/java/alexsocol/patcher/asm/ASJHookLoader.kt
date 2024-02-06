@@ -1,11 +1,10 @@
 package alexsocol.patcher.asm
 
-import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.asm.transformer.*
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer
-import com.KAIIIAK.superwrapper.SuperWrapperTransformer.*
+import com.KAIIIAK.superwrapper.SuperWrapperTransformer.registerSuperWrapperContainer
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
 import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
@@ -19,7 +18,8 @@ class ASJHookLoader: HookLoader() {
 	
 	companion object {
 		
-		val OBF = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true
+		var OBF: Boolean = false
+		private set
 		
 		init {
 			PatcherConfigHandler.loadConfig(File("config/ASJCore.cfg"))
@@ -27,7 +27,19 @@ class ASJHookLoader: HookLoader() {
 	}
 	
 	override fun getASMTransformerClass(): Array<String> {
-		return arrayOf(PrimaryClassTransformer::class.java.name, ASJASM::class.java.name, ASJGoto::class.java.name, ASJClassTransformer::class.java.name, ASJPacketCompleter::class.java.name)
+		return arrayOf(
+			PrimaryClassTransformer::class.java.name,
+			ASJASM::class.java.name,
+			ASJGoto::class.java.name,
+			ASJClassTransformer::class.java.name,
+			ASJPacketCompleter::class.java.name,
+			SpigotTransformer::class.java.name
+		)
+	}
+	
+	override fun injectData(data: MutableMap<String, Any>) {
+		OBF = data["runtimeDeobfuscationEnabled"] as Boolean
+		super.injectData(data)
 	}
 	
 	override fun registerHooks() {

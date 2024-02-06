@@ -6,7 +6,6 @@ import org.apache.commons.io.IOUtils
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
-import java.util.*
 
 class ASJPacketCompleter: IClassTransformer {
 	

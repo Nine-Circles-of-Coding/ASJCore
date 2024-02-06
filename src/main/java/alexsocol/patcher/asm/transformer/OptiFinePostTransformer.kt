@@ -1,21 +1,11 @@
 package alexsocol.patcher.asm.transformer
 
-import net.minecraft.launchwrapper.IClassTransformer
-import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
 
-class OptiFinePostTransformer: IClassTransformer {
+class OptiFinePostTransformer: ASJAbstractClassTransformer() {
 	
-	var transformedName = ""
-	var basicClass = byteArrayOf()
-	
-	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
-		if (basicClass == null || basicClass.isEmpty()) return basicClass
-		
-		this.transformedName = transformedName
-		this.basicClass = basicClass
-		
+	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
 		return when (transformedName) {
 			"net.minecraft.client.renderer.RenderBlocks" -> tree { cn ->
 				fun patch(mn: MethodNode?) {
@@ -73,18 +63,5 @@ class OptiFinePostTransformer: IClassTransformer {
 			
 			else                                         -> this.basicClass
 		}
-	}
-	
-	private inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
-		println("Transforming $transformedName")
-		val cr = ClassReader(basicClass)
-		val it = ClassWriter(ClassWriter.COMPUTE_MAXS)
-		val cn = ClassNode()
-		cr.accept(cn, ClassReader.EXPAND_FRAMES)
-		
-		lambda(cn)
-		
-		cn.accept(it)
-		return it.toByteArray()
 	}
 }

@@ -1,8 +1,7 @@
 package alexsocol.patcher.asm
 
 import alexsocol.asjlib.I
-import codechicken.lib.vec.BlockCoord
-import codechicken.lib.vec.Cuboid6
+import codechicken.lib.vec.*
 import codechicken.multipart.minecraft.*
 import gloomyfolken.hooklib.asm.*
 import net.minecraft.block.*

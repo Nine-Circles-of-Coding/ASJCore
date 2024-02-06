@@ -1,2 +1,3 @@
-Fixed incompatibility with Lwjgl3ify
-Added ASJGoto class transformer enabling goto usage
+Fixed recent incompatibility with Spigot-fixed servers
+Added callThis argument to @SuperWrapper - if false wrappers won't ignore method override
+Reduced reflection usage
