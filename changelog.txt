@@ -1,3 +1,2 @@
-Fixed recent incompatibility with Spigot-fixed servers
-Added callThis argument to @SuperWrapper - if false wrappers won't ignore method override
-Reduced reflection usage
+Fixed issue causing crash with Alfheim 
+Added debug for field hooks

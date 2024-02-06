@@ -1,5 +1,6 @@
 package alexsocol.patcher.asm
 
+import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.asm.transformer.*
@@ -18,7 +19,7 @@ class ASJHookLoader: HookLoader() {
 	
 	companion object {
 		
-		var OBF: Boolean = false
+		var OBF: Boolean = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true // TODO remove it in 1.3.0.0
 		private set
 		
 		init {

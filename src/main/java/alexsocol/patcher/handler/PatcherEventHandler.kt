@@ -53,7 +53,7 @@ object PatcherEventHandler {
 	fun onPlayerPreTick(e: PlayerTickEvent) {
 		if (e.phase != TickEvent.Phase.START) return
 		
-		e.player.foodStats.host = e.player
+		e.player.foodStats.ASJCore_host = e.player
 	}
 }
 
