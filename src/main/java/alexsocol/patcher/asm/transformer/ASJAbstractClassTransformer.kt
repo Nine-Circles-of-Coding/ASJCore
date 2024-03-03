@@ -32,7 +32,7 @@ abstract class ASJAbstractClassTransformer: IClassTransformer {
 	protected inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
 		println("Transforming $transformedName")
 		val cr = ClassReader(basicClass)
-		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
+		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
 		val cn = ClassNode()
 		cr.accept(cn, ClassReader.EXPAND_FRAMES)
 		

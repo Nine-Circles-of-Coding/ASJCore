@@ -12,6 +12,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var addBlocks = false
 	var textIDs = false
 	
+	var cacheSchemas = true
 	var clearWater = true
 	var creativeDamage = false
 	var damageMobArmor = true
@@ -42,6 +43,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		addBlocks = loadProp(CATEGORY_DANGER, "addBlocks", addBlocks, true, "Set this to true to add items for technical blocks")
 		textIDs = loadProp(CATEGORY_DANGER, "textIDs", textIDs, false, "Set this to true to enable text item IDs instead of numeric for storing in NBT")
 		
+		cacheSchemas = loadProp(CATEGORY_GENERAL, "cacheSchemas", cacheSchemas, false, "Set this to false to disable schemas caching - it will save your RAM but worldgen will take longer")
 		clearWater = loadProp(CATEGORY_GENERAL, "clearWater", clearWater, false, "Set this to true for clear, transparent water (will be overridden by OptiFine setting)")
 		creativeDamage = loadProp(CATEGORY_GENERAL, "creativeDamage", creativeDamage, false, "Set this to true to allow taking damage in creative")
 		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")

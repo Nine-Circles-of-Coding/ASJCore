@@ -1,3 +1,2 @@
-Fixed crash with JRE 9+
-Added /hooklist command to print all uninjected hooks
-Added l10n for commands
+Optimized schematics
+[TC] Fixed Infusion Matrix symmetry calculation

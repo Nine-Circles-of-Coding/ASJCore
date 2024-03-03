@@ -12,7 +12,7 @@ tile.endPortal.name=Портал в край
 
 
 
-asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [фильтр] | <load> <имя файла>
+asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [фильтр] | <load> <имя файла> | <clearCache>
 asjcore.commands.explode.usage=/explode [размер] [разрушения] [огонь]
 asjcore.commands.heal.usage=/heal [[игрок]] [h (вылечить)][f (накормить)][e (очистить дебаффы)[! (очистить все эффекты)]]
 asjcore.commands.killall.usage=/killall [%s] [радиус] [id измерения] [id мода]

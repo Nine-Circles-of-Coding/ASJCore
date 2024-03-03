@@ -3,11 +3,13 @@ package alexsocol.patcher.asm
 import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.asm.ASJHookLoader.Companion.OBF
 import alexsocol.patcher.asm.transformer.*
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer.registerSuperWrapperContainer
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
+import gloomyfolken.hooklib.minecraft.HookLoader.registerHookContainer
 import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
 import java.io.File
 
@@ -19,7 +21,8 @@ class ASJHookLoader: HookLoader() {
 	
 	companion object {
 		
-		var OBF: Boolean = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true // TODO remove it in 1.3.0.0
+		// may be used before #injectData so reflection -_-
+		var OBF: Boolean = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true
 		private set
 		
 		init {
@@ -37,11 +40,6 @@ class ASJHookLoader: HookLoader() {
 			ASJPacketCompleter::class.java.name,
 			SpigotTransformer::class.java.name
 		)
-	}
-	
-	override fun injectData(data: MutableMap<String, Any>) {
-		OBF = data["runtimeDeobfuscationEnabled"] as Boolean
-		super.injectData(data)
 	}
 	
 	override fun registerHooks() {

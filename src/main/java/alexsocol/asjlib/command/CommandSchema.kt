@@ -4,10 +4,11 @@ import alexsocol.asjlib.*
 import alexsocol.asjlib.math.Vector3
 import com.google.gson.*
 import cpw.mods.fml.common.registry.GameRegistry
-import cpw.mods.fml.relauncher.FMLInjectionData
 import net.minecraft.block.Block
 import net.minecraft.command.*
+import net.minecraft.event.ClickEvent
 import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.util.*
 import org.apache.commons.lang3.tuple.MutablePair
 import java.io.*
 import kotlin.math.abs
@@ -45,8 +46,11 @@ object CommandSchema: ASJCommandBase() {
 				"load" -> {
 					val file = File(args[1])
 					if (!file.exists()) throw CommandException("asjcore.commands.schema.noFile", args[1])
-					SchemaUtils.generate(sender.entityWorld, x, y, z, file.readText())
+					UnsafeSchemaUtils.generate(sender.entityWorld, x, y, z, file)
 					ASJUtilities.say(sender, "asjcore.commands.schema.loadOk")
+				}
+				"clearCache" -> {
+					SchemaUtils.clearCache()
 				}
 				else -> {
 					throw WrongUsageException(getCommandUsage(sender))
@@ -60,7 +64,7 @@ object CommandSchema: ASJCommandBase() {
 	
 	override fun addTabCompletionOptions(sender: ICommandSender?, args: Array<String>): MutableList<Any?>? {
 		return when (args.size) {
-			1    -> getListOfStringsMatchingLastWord(args, "pos1", "pos2", "save", "load")
+			1    -> getListOfStringsMatchingLastWord(args, "pos1", "pos2", "save", "load", "clearCache")
 			2    -> if (args[0] == "save") getListOfStringsFromIterableMatchingLastWord(args, Block.blockRegistry.keys) else null
 			else -> null
 		}
@@ -70,7 +74,7 @@ object CommandSchema: ASJCommandBase() {
 	
 	fun dumpFile(sender: ICommandSender, filler: String?) {
 		try {
-			val e = getNewFile()
+			val file = getNewFile()
 			var name = filler
 			
 			if (name != null) try {
@@ -79,9 +83,12 @@ object CommandSchema: ASJCommandBase() {
 			} catch (ignore: NumberFormatException) {
 			}
 			
-			dumpTo(e, sender, name)
+			dumpTo(file, sender, name)
 			
-			ASJUtilities.say(sender, "asjcore.commands.schema.dumpOk", e.path)
+			val link = ChatComponentText(file.path)
+			link.getChatStyle().setChatClickEvent(ClickEvent(ClickEvent.Action.OPEN_FILE, file.parentFile.absolutePath))
+			link.getChatStyle().setUnderlined(true)
+			sender.addChatMessage(ChatComponentTranslation("asjcore.commands.schema.dumpOk", link))
 		} catch (e: Exception) {
 			ASJUtilities.say(sender, "asjcore.commands.schema.dumpNo", e.message ?: "")
 			ASJUtilities.error("Error dumping schema: ${e.message}")
@@ -90,7 +97,7 @@ object CommandSchema: ASJCommandBase() {
 	}
 	
 	fun getNewFile(file: Int = 0): File {
-		val e = File(FMLInjectionData.data()[6] as File, "dumps/" + getFileName("schema_dump_$file"))
+		val e = File("dumps/" + getFileName("schema_dump_$file"))
 		if (!e.parentFile.exists()) e.parentFile.mkdirs()
 		
 		if (!e.exists()) e.createNewFile()

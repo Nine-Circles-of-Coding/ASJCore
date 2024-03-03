@@ -36,48 +36,9 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.server.management.ItemInWorldManager"       -> core { `ItemInWorldManager$ClassVisitor`(it) }
 			"net.minecraft.tileentity.TileEntityFurnace"               -> core { `TileEntityFurnace$ClassVisitor`(it) }
 			"net.minecraft.world.World"                                -> core { `World$ClassVisitor`(it) }
-			
-			"net.minecraftforge.common.ForgeChunkManager"              -> tree { cn ->
-				run loadWorld@ {
-					val mn = cn.methods.find { it.name == "loadWorld" } ?: return@loadWorld
-					
-					val vin = object: Iterable<AbstractInsnNode> {
-						override fun iterator() = mn.instructions.iterator()
-					}.find {
-						it is VarInsnNode && it.`var` == 17 && it.opcode == ASTORE
-					} ?: return@loadWorld
-					
-					val aload15 = VarInsnNode(ALOAD, 15)
-					mn.instructions.insert(vin, aload15)
-					
-					val aload17 = VarInsnNode(ALOAD, 17)
-					mn.instructions.insert(aload15, aload17)
-					
-					val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "addChunksToTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
-					mn.instructions.insert(aload17, invokeStatic)
-				}
-				
-				run saveWorld@ {
-					val mn = cn.methods.find { it.name == "saveWorld" } ?: return@saveWorld
-					
-					val vin = object: Iterable<AbstractInsnNode> {
-						override fun iterator() = mn.instructions.iterator()
-					}.find {
-						it is VarInsnNode && it.`var` == 13 && it.opcode == ASTORE
-					} ?: return@saveWorld
-					
-					val aload13 = VarInsnNode(ALOAD, 13)
-					mn.instructions.insert(vin, aload13)
-					
-					val aload12 = VarInsnNode(ALOAD, 12)
-					mn.instructions.insert(aload13, aload12)
-					
-					val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "storeChunksFromTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
-					mn.instructions.insert(aload12, invokeStatic)
-				}
-			}
-			
+			"net.minecraftforge.common.ForgeChunkManager"              -> fixChunkloading()
 			"thaumcraft.common.blocks.BlockCustomOre"                  -> core { `BlockCustomOre$ClassVisitor`(it) }
+			"thaumcraft.common.tiles.TileInfusionMatrix"               -> fixInfusionMatrix()
 			else                                                       -> this.basicClass
 		}
 	}
@@ -452,5 +413,60 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 				else super.visitIntInsn(opcode, operand)
 			}
 		}
+	}
+	
+	fun fixChunkloading() = tree { cn ->
+		run loadWorld@ {
+			val mn = cn.methods.find { it.name == "loadWorld" } ?: return@loadWorld
+			
+			val vin = object: Iterable<AbstractInsnNode> {
+				override fun iterator() = mn.instructions.iterator()
+			}.find {
+				it is VarInsnNode && it.`var` == 17 && it.opcode == ASTORE
+			} ?: return@loadWorld
+			
+			val aload15 = VarInsnNode(ALOAD, 15)
+			mn.instructions.insert(vin, aload15)
+			
+			val aload17 = VarInsnNode(ALOAD, 17)
+			mn.instructions.insert(aload15, aload17)
+			
+			val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "addChunksToTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
+			mn.instructions.insert(aload17, invokeStatic)
+		}
+		
+		run saveWorld@ {
+			val mn = cn.methods.find { it.name == "saveWorld" } ?: return@saveWorld
+			
+			val vin = object: Iterable<AbstractInsnNode> {
+				override fun iterator() = mn.instructions.iterator()
+			}.find {
+				it is VarInsnNode && it.`var` == 13 && it.opcode == ASTORE
+			} ?: return@saveWorld
+			
+			val aload13 = VarInsnNode(ALOAD, 13)
+			mn.instructions.insert(vin, aload13)
+			
+			val aload12 = VarInsnNode(ALOAD, 12)
+			mn.instructions.insert(aload13, aload12)
+			
+			val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "storeChunksFromTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
+			mn.instructions.insert(aload12, invokeStatic)
+		}
+	}
+	
+	fun fixInfusionMatrix() = tree { cn ->
+		val mn = cn.methods.find { it.name == "getSurroundings" } ?: return@tree
+		
+		val i = object: Iterable<AbstractInsnNode> {
+			override fun iterator() = mn.instructions.iterator()
+		}
+		
+		mn.instructions.set(i.find { it is LdcInsnNode && it.cst == 0.1f }, LdcInsnNode(1f))
+		mn.instructions.set(i.find { it is LdcInsnNode && it.cst == 0.2f }, LdcInsnNode(2f))
+		
+		val loc = i.find { it is InsnNode && it.opcode == I2F }?.next
+		mn.instructions.insert(loc, LdcInsnNode(10f))
+		mn.instructions.insert(loc?.next, InsnNode(FDIV))
 	}
 }

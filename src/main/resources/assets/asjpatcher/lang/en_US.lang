@@ -12,7 +12,7 @@ tile.endPortal.name=End Portal
 
 
 
-asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [filler] | <load> <filename>
+asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [filler] | <load> <filename> | <clearCache>
 asjcore.commands.explode.usage=/explode [size] [breakBlocks] [doFlame]
 asjcore.commands.heal.usage=/heal [[player]] [h (heal)][f (feed)][e (clear debuffs)[! (clear ALL effects)]]
 asjcore.commands.killall.usage=/killall [%s] [radius] [dimension id] [mod id]
