@@ -29,7 +29,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 		ClassReader classReader = new ClassReader(basicClass);
 		ClassNode classNode = new ClassNode();
 		classReader.accept(classNode, 0);
-		ClassWriter classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+		ClassWriter classWriter = new ClassWriter(classReader, 0);
 		long cng = 0;
 		
 		for (SuperWrapperTransformerContainer container : registeredContainers) {
@@ -110,8 +110,13 @@ public class SuperWrapperTransformer implements IClassTransformer {
 		if (cng > 0) {
 			logger.debug("Trying to make " + cng + " changes in " + name + "(" + transformedName + ")");
 			
-			classNode.accept(classWriter);
-			return classWriter.toByteArray();
+			try {
+				classNode.accept(classWriter);
+				return classWriter.toByteArray();
+			} catch (Exception e) {
+				logger.severe("Exception while making changes in class " + transformedName, e);
+				throw e;
+			}
 		}
 		
 		return basicClass;

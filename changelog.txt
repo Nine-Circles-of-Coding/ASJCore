@@ -1,2 +1,1 @@
-Optimized schematics
-[TC] Fixed Infusion Matrix symmetry calculation
+Fixed SuperWrappers crash on Crucible
