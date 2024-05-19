@@ -4,7 +4,7 @@ import cpw.mods.fml.common.registry.GameRegistry
 import net.minecraft.block.*
 import net.minecraft.item.ItemBlock
 
-class BlockModFenceGate(val src: Block, val meta: Int): BlockFenceGate() {
+open class BlockModFenceGate(val src: Block, val meta: Int): BlockFenceGate() {
 	
 	init {
 		setCreativeTab(null)

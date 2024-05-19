@@ -1,7 +1,7 @@
-package alexsocol.patcher.asm
+package alexsocol.patcher.asm.hook
 
 import com.KAIIIAK.superwrapper.SuperWrapper
-import net.minecraft.entity.EntityCreature
+import net.minecraft.entity.*
 import net.minecraft.inventory.Container
 import net.minecraft.item.ItemStack
 
@@ -17,6 +17,18 @@ object ASJSuperWrapperHandler {
 	@JvmStatic
 	@SuperWrapper(callThis = false)
 	fun mergeItemStack(container: Container, stack: ItemStack?, wtfI1: Int, wtfI2: Int, wtfFlag: Boolean): Boolean {
+		throw NotImplementedError()
+	}
+	
+	@JvmStatic
+	@SuperWrapper(callThis = false)
+	fun setFlag(entity: Entity, id: Int, flag: Boolean) {
+		throw NotImplementedError()
+	}
+	
+	@JvmStatic
+	@SuperWrapper(callThis = false)
+	fun getFlag(entity: Entity, id: Int): Boolean {
 		throw NotImplementedError()
 	}
 }

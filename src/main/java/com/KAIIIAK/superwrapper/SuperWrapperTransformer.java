@@ -1,25 +1,22 @@
 package com.KAIIIAK.superwrapper;
 
+import com.KAIIIAK.classManipulators.SomeUtil;
 import gloomyfolken.hooklib.asm.HookLogger;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.commons.io.IOUtils;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.logging.Logger;
 
 import static org.objectweb.asm.Opcodes.*;
 
 public class SuperWrapperTransformer implements IClassTransformer {
 	
 	public static final String SUPERWRAPPER_DESC = Type.getDescriptor(SuperWrapper.class);
-	public static HookLogger logger = new HookLogger.SystemOutLogger();
+	public static HookLogger logger = new HookLogger.SystemOutLogger("SuperWrapper");
 	public static List<SuperWrapperTransformerContainer> registeredContainers = new ArrayList<>();
 	
 	@Override
@@ -102,7 +99,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 					cng++;
 				}
 			} catch (Exception e) {
-				logger.severe("Exception while transforming class " + transformedName, e);
+				logger.error("Exception while transforming class " + transformedName, e);
 				throw e;
 			}
 		}
@@ -114,7 +111,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				classNode.accept(classWriter);
 				return classWriter.toByteArray();
 			} catch (Exception e) {
-				logger.severe("Exception while making changes in class " + transformedName, e);
+				logger.error("Exception while making changes in class " + transformedName, e);
 				throw e;
 			}
 		}
@@ -149,7 +146,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 		try {
 			registerSuperWrapperContainer(IOUtils.toByteArray(SuperWrapperTransformer.class.getResourceAsStream('/' + clazz.replace('.', '/') + ".class")));
 		} catch (IOException e) {
-			logger.severe("Cannot parse SuperWrappers container " + clazz, e);
+			logger.error("Cannot parse SuperWrappers container " + clazz, e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -183,7 +180,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 					if ((methodNode.access & ACC_STATIC) != ACC_STATIC) throw new IllegalArgumentException(String.format("SuperWrapper method %s$%s must be static!", classNode.name, methodNode.name));
 					
 					if (annotationNode.values != null) {
-						Map<String, Object> annotationArgs = convertListToMap(annotationNode.values);
+						Map<String, Object> annotationArgs = SomeUtil.convertListToMap(annotationNode.values);
 						if (annotationArgs.containsKey("targetMethod")) {
 							targetMethodFromAnnotation = (String) annotationArgs.get("targetMethod");
 						}
@@ -237,27 +234,8 @@ public class SuperWrapperTransformer implements IClassTransformer {
 			
 			if (!found) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", classNode.name));
 		} catch (Exception e) {
-			logger.severe("Cannot parse SuperWrappers container's bytes", e);
+			logger.error("Cannot parse SuperWrappers container's bytes", e);
 			throw e;
 		}
-	}
-	
-	public static Map<String, Object> convertListToMap(List<Object> list) {
-		Map<String, Object> map = new HashMap<>();
-		String currentKey = null;
-		
-		for (Object item : list) {
-			if (currentKey == null) {
-				if (item instanceof String) {
-					currentKey = (String) item;
-				} else {
-					throw new IllegalArgumentException("Expected a key (String), but found: " + item);
-				}
-			} else {
-				map.put(currentKey, item);
-				currentKey = null;
-			}
-		}
-		return map;
 	}
 }

@@ -47,16 +47,17 @@ object ASJShaderHelper {
 	 * @param vertLocation Vertex shader location
 	 * @param fragLocation Fragment shader location
 	 */
-	fun createProgram(vertLocation: String?, fragLocation: String?): Int {
+	@JvmOverloads
+	fun createProgram(vertLocation: String?, fragLocation: String?, modid: String = Loader.instance().activeModContainer().modId): Int {
 		return try {
-			createProgramInner(vertLocation, fragLocation)
+			createProgramInner(vertLocation, fragLocation, modid)
 		} catch (e: Throwable) {
 			if (crashOnError) throw e
 			else 0
 		}
 	}
 	
-	private fun createProgramInner(vertLocation: String?, fragLocation: String?): Int {
+	private fun createProgramInner(vertLocation: String?, fragLocation: String?, modid: String): Int {
 		if (!OpenGlHelper.shadersSupported) return 0
 		
 		val vertID: Int
@@ -66,12 +67,12 @@ object ASJShaderHelper {
 		if (programID == 0) return 0
 		
 		if (!vertLocation.isNullOrEmpty()) {
-			vertID = createShader(vertLocation, VERT)
+			vertID = createShader(vertLocation, VERT, modid)
 			glAttachShader(programID, vertID)
 		}
 		
 		if (!fragLocation.isNullOrEmpty()) {
-			fragID = createShader(fragLocation, FRAG)
+			fragID = createShader(fragLocation, FRAG, modid)
 			glAttachShader(programID, fragID)
 		}
 		
@@ -92,14 +93,14 @@ object ASJShaderHelper {
 		return programID
 	}
 	
-	private fun createShader(filename: String, shaderType: Int): Int {
+	private fun createShader(filename: String, shaderType: Int, modid: String): Int {
 		var shaderID = 0
 		try {
 			shaderID = glCreateShader(shaderType)
 			
 			if (shaderID == 0) return 0
 			
-			glShaderSource(shaderID, readFileAsString(filename))
+			glShaderSource(shaderID, readFileAsString(filename, modid))
 			glCompileShader(shaderID)
 			
 			if (glGetShaderi(shaderID, GL_COMPILE_STATUS) == GL_FALSE) throw RuntimeException("Error Compiling shader [$filename]: " + getShaderLogInfo(shaderID))
@@ -121,8 +122,8 @@ object ASJShaderHelper {
 	}
 	
 	@Throws(Exception::class)
-	private fun readFileAsString(filename: String): String {
-		return mc.resourceManager.getResource(ResourceLocation(Loader.instance().activeModContainer().modId, filename)).inputStream.readBytes().decodeToString()
+	private fun readFileAsString(filename: String, modid: String): String {
+		return mc.resourceManager.getResource(ResourceLocation(modid, filename)).inputStream.readBytes().decodeToString()
 	}
 	
 	// inspired by Vazkii's ClientTickHandler:

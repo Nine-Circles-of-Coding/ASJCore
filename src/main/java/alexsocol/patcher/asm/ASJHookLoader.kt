@@ -3,20 +3,32 @@ package alexsocol.patcher.asm
 import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
-import alexsocol.patcher.asm.ASJHookLoader.Companion.OBF
 import alexsocol.patcher.asm.transformer.*
+import com.KAIIIAK.KASMLib.*
+import com.KAIIIAK.KASMLib.workers.ReflectionLikeWorker
+import com.KAIIIAK.classManipulators.HookReplacerWorker
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer.registerSuperWrapperContainer
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
-import gloomyfolken.hooklib.minecraft.HookLoader.registerHookContainer
 import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
 import java.io.File
 
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
 // -username=AlexSocol
 @IFMLLoadingPlugin.MCVersion("1.7.10")
-@IFMLLoadingPlugin.TransformerExclusions("alexsocol.patcher.asm.transformer", "alexsocol.asjlib.asm", "gloomyfolken.hooklib", "kotlin")
+@IFMLLoadingPlugin.TransformerExclusions(
+	"alexsocol.patcher.asm.transformer",
+	"alexsocol.asjlib.asm",
+	"alexsocol.patcher.asm.transformer",
+	"com.KAIIIAK.classManipulators",
+	"com.KAIIIAK.ignorer",
+	"com.KAIIIAK.KASMLib",
+	"com.KAIIIAK.nullsafety",
+	"com.KAIIIAK.superwrapper",
+	"gloomyfolken.hooklib",
+	"kotlin",
+)
 class ASJHookLoader: HookLoader() {
 	
 	companion object {
@@ -45,17 +57,24 @@ class ASJHookLoader: HookLoader() {
 	override fun registerHooks() {
 		FMLRelaunchLog.info("[ASJLib] Loaded coremod. Registering hooks...")
 		
-		registerHookContainer("alexsocol.patcher.asm.ASJHookHandler")
-		registerHookContainer("alexsocol.patcher.asm.BiomeDictionaryForWEHooks")
+		registerHookContainer("alexsocol.patcher.asm.hook.ASJHookHandler")
+		registerHookContainer("alexsocol.patcher.asm.hook.BiomeDictionaryForWEHooks")
 		
-		if (PatcherConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.BlockButtonExtender")
+		if (PatcherConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.hook.BlockButtonExtender")
 		
 		if (OBF || System.getProperty("asjcore.fieldhooks", "false").toBoolean()) {
-			ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.ASJFieldHookHandler")
+			ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.hook.ASJFieldHookHandler")
 			if (PatcherConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
 		}
 		
+		registerPostTransformer(KASMLib(false))
+		registerPostTransformer(KASMLib(true))
 		registerPostTransformer(SuperWrapperTransformer())
-		registerSuperWrapperContainer("alexsocol.patcher.asm.ASJSuperWrapperHandler")
+		registerSuperWrapperContainer("alexsocol.patcher.asm.hook.ASJSuperWrapperHandler")
+		
+		KASMLib.register(ReflectionLikeWorker.inst)
+		KASMLib.register(HookReplacerWorker.inst)
+		
+		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler")
 	}
 }

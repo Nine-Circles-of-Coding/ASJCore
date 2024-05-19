@@ -8,7 +8,7 @@ import java.util.*;
 public class HookClassTransformer {
 	
 	public static List<AsmHook> notInjectedHooks = new ArrayList<>();
-	public HookLogger logger = new SystemOutLogger();
+	public HookLogger logger = new SystemOutLogger("Hooklib");
 	protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
 	protected ClassMetadataReader classMetadataReader = new ClassMetadataReader();
 	private HookContainerParser containerParser = new HookContainerParser(this);
@@ -59,12 +59,12 @@ public class HookClassTransformer {
 				hooks.removeAll(hooksWriter.injectedHooks);
 				notInjectedHooks.removeAll(hooksWriter.injectedHooks);
 			} catch (Exception e) {
-				logger.severe("A problem has occurred during transformation of class " + className + ".");
-				logger.severe("Attached hooks:");
+				logger.error("A problem has occurred during transformation of class " + className + ".");
+				logger.error("Attached hooks:");
 				for (AsmHook hook : hooks) {
-					logger.severe(hook.toString());
+					logger.error(hook.toString());
 				}
-				logger.severe("Stack trace:", e);
+				logger.error("Stack trace:", e);
 			}
 			
 			for (AsmHook notInjected : hooks) {

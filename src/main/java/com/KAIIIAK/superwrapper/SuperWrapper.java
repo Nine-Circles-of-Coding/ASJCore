@@ -1,9 +1,6 @@
 package com.KAIIIAK.superwrapper;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Эта аннотация сгенерирует новый метод в целевом классе, который будет вызывать

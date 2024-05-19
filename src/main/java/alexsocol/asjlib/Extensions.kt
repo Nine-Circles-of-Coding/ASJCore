@@ -103,7 +103,7 @@ fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase
 /**
  * Tries block and ignores any thrown exceptions
  */
-inline fun try_(try_: () -> Any?) {
+inline fun try_(try_: () -> Unit) {
 	try {
 		try_()
 	} catch (ignore: Throwable) {}
@@ -371,3 +371,5 @@ private const val TAG_COOLDOWN = "cooldown"
 var ItemStack.cooldown
 	get() = ItemNBTHelper.getInt(this, TAG_COOLDOWN, 0)
 	set(value) = ItemNBTHelper.setInt(this, TAG_COOLDOWN, value)
+
+fun String.trimAtMostLength(maxLength: Int, postfix: String = "...") = if (this.length > maxLength) "${this.take(maxLength)}$postfix" else this

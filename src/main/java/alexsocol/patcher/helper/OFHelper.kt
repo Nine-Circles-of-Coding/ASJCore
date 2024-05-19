@@ -15,7 +15,7 @@ object OFHelper {
 		try {
 			Class.forName("Config")
 			true
-		} catch (e: ClassNotFoundException) {
+		} catch (e: Throwable) {
 			false
 		}
 	}
@@ -24,7 +24,7 @@ object OFHelper {
 		try {
 			Class.forName("shadersmod.client.Shaders")
 			true
-		} catch (e: ClassNotFoundException) {
+		} catch (e: Throwable) {
 			false
 		}
 	}

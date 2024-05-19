@@ -14,7 +14,7 @@ import java.util.*;
 public class MinecraftClassTransformer extends HookClassTransformer implements IClassTransformer {
 	
 	public static MinecraftClassTransformer instance;
-	private static List<IClassTransformer> postTransformers = new ArrayList<IClassTransformer>();
+	private static List<IClassTransformer> postTransformers = new ArrayList<>();
 	private Map<Integer, String> methodNames;
 	
 	public MinecraftClassTransformer() {
@@ -27,7 +27,7 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
 				long time = System.currentTimeMillis() - timeStart;
 				logger.debug("Methods dictionary loaded in " + time + " ms");
 			} catch (IOException e) {
-				logger.severe("Can not load obfuscated method names", e);
+				logger.error("Can not load obfuscated method names", e);
 			}
 		}
 		
@@ -43,7 +43,7 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
 		if (resourceStream == null) throw new IOException("Methods dictionary not found");
 		DataInputStream input = new DataInputStream(new BufferedInputStream(resourceStream));
 		int numMethods = input.readInt();
-		HashMap<Integer, String> map = new HashMap<Integer, String>(numMethods);
+		HashMap<Integer, String> map = new HashMap<>(numMethods);
 		for (int i = 0; i < numMethods; i++) {
 			map.put(input.readInt(), input.readUTF());
 		}
@@ -61,8 +61,8 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
 	@Override
 	public byte[] transform(String oldName, String newName, byte[] bytecode) {
 		bytecode = transform(newName, bytecode);
-		for (int i = 0; i < postTransformers.size(); i++) {
-			bytecode = postTransformers.get(i).transform(oldName, newName, bytecode);
+		for (IClassTransformer postTransformer : postTransformers) {
+			bytecode = postTransformer.transform(oldName, newName, bytecode);
 		}
 		return bytecode;
 	}
@@ -87,7 +87,7 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
 		if (srgName.startsWith("func_")) {
 			int first = srgName.indexOf('_');
 			int second = srgName.indexOf('_', first + 1);
-			return Integer.valueOf(srgName.substring(first + 1, second));
+			return Integer.parseInt(srgName.substring(first + 1, second));
 		} else {
 			return -1;
 		}

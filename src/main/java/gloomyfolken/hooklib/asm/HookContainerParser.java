@@ -46,7 +46,7 @@ public class HookContainerParser {
 		try {
 			transformer.classMetadataReader.acceptVisitor(className, new HookClassVisitor());
 		} catch (IOException e) {
-			transformer.logger.severe("Can not parse hooks container " + className, e);
+			transformer.logger.error("Can not parse hooks container " + className, e);
 		}
 	}
 	

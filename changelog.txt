@@ -1,1 +1,3 @@
-Fixed SuperWrappers crash on Crucible
+Added DerKaterCore
+Fixed crash with too strong potions
+Fixed crash with broken pistons

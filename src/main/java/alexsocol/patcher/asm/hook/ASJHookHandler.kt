@@ -1,14 +1,11 @@
-@file:Suppress("DEPRECATION")
-
-package alexsocol.patcher.asm
+package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
-import alexsocol.patcher.helper.FuckingSpigotFix
 import alexsocol.patcher.event.*
-import alexsocol.patcher.helper.OFHelper
+import alexsocol.patcher.helper.*
 import alexsocol.patcher.helper.OFHelper.shadersmodSupport
 import cofh.asmhooks.HooksCore
 import cpw.mods.fml.client.*
@@ -22,6 +19,7 @@ import net.minecraft.block.material.Material
 import net.minecraft.client.Minecraft
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.client.gui.*
+import net.minecraft.client.multiplayer.PlayerControllerMP
 import net.minecraft.client.renderer.*
 import net.minecraft.client.renderer.entity.Render
 import net.minecraft.command.*
@@ -42,6 +40,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.inventory.*
 import net.minecraft.item.*
 import net.minecraft.nbt.*
+import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.*
 import net.minecraft.server.ServerEula
 import net.minecraft.tileentity.TileEntityFurnace
@@ -62,7 +61,7 @@ import java.io.File
 import java.util.*
 import kotlin.math.*
 
-@Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST")
+@Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST", "DEPRECATION")
 object ASJHookHandler {
 	
 	@SideOnly(Side.SERVER)
@@ -279,7 +278,7 @@ object ASJHookHandler {
 	fun writeToNBT(stack: ItemStack, nbt: NBTTagCompound): NBTTagCompound? {
 		if (!PatcherConfigHandler.textIDs) return null
 		
-		nbt.setString("id", GameRegistry.findUniqueIdentifierFor(stack.field_151002_e).toString())
+		nbt.setString("id", GameRegistry.findUniqueIdentifierFor(stack.field_151002_e)?.toString() ?: return null)
 		nbt.setInteger("Count", stack.stackSize)
 		nbt.setInteger("Damage", stack.itemDamage)
 		
@@ -1178,4 +1177,58 @@ object ASJHookHandler {
 		
 		return entity.worldObj.getBlock(i, j - 1, k) === Blocks.mycelium && entity.worldObj.getFullBlockLightValue(i, j, k) > 8 && ASJSuperWrapperHandler.getCanSpawnHere(entity)
 	}
+	
+	// overflow fix
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun calcPotionLiquidColor(potions: Collection<PotionEffect>?): Int {
+		val i = 0x3883DE
+		
+		if (potions.isNullOrEmpty()) return i
+		
+		var f = 0f
+		var f1 = 0f
+		var f2 = 0f
+		var f3 = 0f
+		
+		for (pe in potions) {
+			val j = Potion.potionTypes[pe.getPotionID()].getLiquidColor()
+			
+			val amp = min(pe.getAmplifier(), 255)
+			
+			for (k in 0..amp)  {
+				f += (j shr 16 and 255).F / 255f
+				f1 += (j shr 8 and 255).F / 255f
+				f2 += (j shr 0 and 255).F / 255f
+				++f3
+			}
+		}
+		
+		f = f / f3 * 255f
+		f1 = f1 / f3 * 255f
+		f2 = f2 / f3 * 255f
+		return f.I shl 16 or (f1.I shl 8) or f2.I
+	}
+	
+	@JvmStatic
+	@Hook(targetMethod = "<init>", injectOnExit = true)
+	fun PotionEffect(effect: PotionEffect, potionID: Int, duration: Int, amplifier: Int, isAmbient: Boolean) {
+		if (PatcherConfigHandler.clampPotionLevel) effect.amplifier = MathHelper.clamp_int(effect.amplifier, 0, 255)
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun getAmplifier(effect: PotionEffect): Int {
+		if (PatcherConfigHandler.clampPotionLevel) effect.amplifier = MathHelper.clamp_int(effect.amplifier, 0, 255)
+		return effect.amplifier
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	@SideOnly(Side.CLIENT)
+	fun enableEverythingIsScrewedUpMode(pcmp: PlayerControllerMP) = PatcherConfigHandler.everythingIsScrewedUpMode
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS, targetMethod = "func_149466_j", injectOnExit = true)
+	fun ignoreIllegalStances(c03: C03PacketPlayer, @ReturnValue original: Boolean) = if (PatcherConfigHandler.ignoreIllegalStates) false else original
 }

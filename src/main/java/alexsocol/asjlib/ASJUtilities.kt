@@ -833,7 +833,7 @@ object ASJUtilities {
 	}
 	
 	private fun moddedLog(level: Level, message: String, e: Throwable? = null) {
-		val modid = Loader.instance().activeModContainer().modId.uppercase()
+		val modid = Loader.instance().activeModContainer()?.modId?.uppercase() ?: "UNKNOWN SOURCE"
 		
 		if (e == null)
 			FMLRelaunchLog.log(modid, level, message)

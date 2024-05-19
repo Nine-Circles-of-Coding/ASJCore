@@ -1,4 +1,4 @@
-package alexsocol.patcher.asm
+package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.I
 import codechicken.lib.vec.*

@@ -431,7 +431,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			val aload17 = VarInsnNode(ALOAD, 17)
 			mn.instructions.insert(aload15, aload17)
 			
-			val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "addChunksToTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
+			val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/hook/ASJHookHandler", "addChunksToTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
 			mn.instructions.insert(aload17, invokeStatic)
 		}
 		
@@ -450,7 +450,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			val aload12 = VarInsnNode(ALOAD, 12)
 			mn.instructions.insert(aload13, aload12)
 			
-			val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/ASJHookHandler", "storeChunksFromTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
+			val invokeStatic = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/hook/ASJHookHandler", "storeChunksFromTicket", "(L${if (OBF) "dh" else "net/minecraft/nbt/NBTTagCompound"};Lnet/minecraftforge/common/ForgeChunkManager\$Ticket;)V", false)
 			mn.instructions.insert(aload12, invokeStatic)
 		}
 	}

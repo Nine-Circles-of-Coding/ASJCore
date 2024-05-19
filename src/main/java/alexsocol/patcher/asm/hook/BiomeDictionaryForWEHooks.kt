@@ -1,4 +1,4 @@
-package alexsocol.patcher.asm
+package alexsocol.patcher.asm.hook
 
 import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue

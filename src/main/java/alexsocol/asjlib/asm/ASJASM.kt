@@ -11,12 +11,12 @@ class ASJASM: IClassTransformer {
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
 		val fields = fieldsMap[transformedName] ?: return basicClass
 		
-		logger.debug("[ASJASM] Injecting hook fields into class $transformedName")
+		logger.debug("Injecting hook fields into class $transformedName")
 		
 		val cr = ClassReader(basicClass)
 		val cw = ClassWriter(cr, ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
 		for (fd in fields) {
-			logger.debug("[ASJASM] Injecting field $name")
+			logger.debug("Injecting field $name")
 			cw.visitField(fd.access, fd.name, fd.desc, null, null).visitEnd()
 		}
 		cr.accept(cw, 0)
@@ -25,17 +25,17 @@ class ASJASM: IClassTransformer {
 	
 	companion object {
 		
-		var logger = SystemOutLogger()
+		var logger = SystemOutLogger("ASJASM")
 		
 		val fieldsMap = HashMap<String, ArrayList<FieldData>>()
 		
 		fun registerFieldHookContainer(className: String) {
 			try {
-				logger.debug("[ASJASM] Parsing field hooks container $className")
+				logger.debug("Parsing field hooks container $className")
 				parseFieldHookContainer(ASJASM::class.java.getResourceAsStream("/${className.replace('.', '/')}.class")?.readBytes() ?: throw NullPointerException("Can't read data from ${className}.class"))
 			} catch (e: Exception) {
-				System.err.println("[ASJASM] Can not parse field hooks container $className")
-				e.printStackTrace()
+				logger.error("Can not parse field hooks container $className", e)
+				throw e
 			}
 		}
 		

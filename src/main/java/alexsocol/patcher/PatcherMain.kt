@@ -12,14 +12,24 @@ import cpw.mods.fml.common.registry.GameData
 import net.minecraft.block.*
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
+import net.minecraft.util.Facing
 import net.minecraft.world.biome.BiomeGenBase
 import net.minecraftforge.common.MinecraftForge
 
-@Mod(modid = "asjpatcher", version = "1.2.4.1", useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
+@Mod(modid = PatcherMain.MODID, version = "1.3.1.0", useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
 object PatcherMain {
 	
-	@Mod.Metadata("asjpatcher")
+	const val MODID = "asjpatcher"
+	
+	@Mod.Metadata(MODID)
 	lateinit var meta: ModMetadata
+	
+	@Mod.EventHandler
+	fun construct(e: FMLConstructionEvent) {
+		PatcherConfigHandler.registerChangeHandler(MODID)
+		
+		fixPistonsCrash()
+	}
 	
 	@Mod.EventHandler
 	fun preInit(e: FMLPreInitializationEvent) {
@@ -87,5 +97,12 @@ object PatcherMain {
 		val colors = GuiUtils.colorCodes
 		colors[0] = 0x010101
 		colors[16] = 0x010101
+	}
+	
+	private fun fixPistonsCrash() {
+		Facing.oppositeSide    += IntArray(10) { 0 }
+		Facing.offsetsXForSide += IntArray(10) { 0 }
+		Facing.offsetsYForSide += IntArray(10) { 0 }
+		Facing.offsetsZForSide += IntArray(10) { 0 }
 	}
 }
