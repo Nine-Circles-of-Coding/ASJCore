@@ -3,6 +3,9 @@ Innovations:
  Removed TCP delay for MP connections
  Throwable ender pearls for creative
  Adventure game mode in world creation screen
+ Shaders runtime reload with other resources
+ Endless sprint config
+ Config to disable debug logging
 
 Fixes: 
  Crash with too strong potions
@@ -12,3 +15,6 @@ Fixes:
  Ender Dragin damaging
  Egg particles were snowball particles
  Material level check for BlockLiquid
+ Removed ability for entities to attack if they are dead
+ XP sync on dimensions switch
+ /tpdim command permissions
