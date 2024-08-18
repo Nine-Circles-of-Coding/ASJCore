@@ -1,3 +1,14 @@
-Added DerKaterCore
-Fixed crash with too strong potions
-Fixed crash with broken pistons
+Innovations:
+ Added DerKaterCore
+ Removed TCP delay for MP connections
+ Throwable ender pearls for creative
+ Adventure game mode in world creation screen
+
+Fixes: 
+ Crash with too strong potions
+ Crash with broken pistons
+ Problem with Void Sigil
+ Piercing damage for Cauldron
+ Ender Dragin damaging
+ Egg particles were snowball particles
+ Material level check for BlockLiquid

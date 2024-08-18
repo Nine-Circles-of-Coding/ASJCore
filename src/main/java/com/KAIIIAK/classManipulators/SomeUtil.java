@@ -5,7 +5,10 @@ import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 
 public class SomeUtil {
 	
@@ -223,11 +226,13 @@ public class SomeUtil {
 			MethodInsnNode firstMethodInsn = (MethodInsnNode) first;
 			MethodInsnNode secondMethodInsn = (MethodInsnNode) second;
 			
-			return firstMethodInsn.getOpcode() == secondMethodInsn.getOpcode() &&
-						   Objects.equals(firstMethodInsn.owner, secondMethodInsn.owner) &&
-						   Objects.equals(firstMethodInsn.name, secondMethodInsn.name) &&
-						   Objects.equals(firstMethodInsn.desc, secondMethodInsn.desc) &&
-						   firstMethodInsn.itf == secondMethodInsn.itf;
+			return (firstMethodInsn.getOpcode() == secondMethodInsn.getOpcode() ||
+					firstMethodInsn.getOpcode() == INVOKESPECIAL ||
+					secondMethodInsn.getOpcode() == INVOKESPECIAL) &&
+					Objects.equals(firstMethodInsn.owner, secondMethodInsn.owner) &&
+					Objects.equals(firstMethodInsn.name, secondMethodInsn.name) &&
+					Objects.equals(firstMethodInsn.desc, secondMethodInsn.desc) &&
+					firstMethodInsn.itf == secondMethodInsn.itf;
 		} else if (first instanceof InsnNode) {
 			// For InsnNode subclasses, compare the opcode
 			return first.getOpcode() == second.getOpcode();

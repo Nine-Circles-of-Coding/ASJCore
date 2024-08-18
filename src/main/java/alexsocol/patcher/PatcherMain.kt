@@ -2,6 +2,7 @@ package alexsocol.patcher
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.command.*
+import alexsocol.asjlib.render.ASJShaderHelper
 import alexsocol.patcher.asm.ASJHookLoader
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
@@ -14,6 +15,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
 import net.minecraft.util.Facing
 import net.minecraft.world.biome.BiomeGenBase
+import net.minecraftforge.client.ClientCommandHandler
 import net.minecraftforge.common.MinecraftForge
 
 @Mod(modid = PatcherMain.MODID, version = "1.3.1.0", useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
@@ -55,8 +57,11 @@ object PatcherMain {
 		
 		BlockTrapDoor.disableValidation = PatcherConfigHandler.floatingTrapDoors
 		
-		if (ASJUtilities.isClient)
+		if (ASJUtilities.isClient) {
 			PatcherEventHandlerClient.eventForge()
+			ASJShaderHelper.registerHandlers()
+			if (!ASJHookLoader.OBF) ClientCommandHandler.instance.registerCommand(CommandResources)
+		}
 	}
 	
 	@Mod.EventHandler
@@ -72,8 +77,6 @@ object PatcherMain {
 		e.registerServerCommand(CommandHookList)
 		e.registerServerCommand(CommandKillAll)
 		e.registerServerCommand(CommandSchema)
-		
-		if (!ASJHookLoader.OBF) e.registerServerCommand(CommandResources)
 		
 		MinecraftForge.EVENT_BUS.post(ServerStartingEvent(e))
 	}

@@ -5,14 +5,14 @@ public class ReflectionLikeUtil {
 	/**
 	 * example GETFIELD(obj, "tek/Gde.tut.Ljava/lang/Object;");
 	 */
-	public static Object GETFIELD(Object o, String ownerDOTnameDOTdesc) {
+	public static <T> T GETFIELD(Object o, String ownerDOTnameDOTdesc) {
 		throw new RuntimeException("ReflectionLikeWorker did not replace this method!");
 	}
 	
 	/**
 	 * example GETSTATICFIELD("tek/Gde.zdes.Ljava/lang/Object;");
 	 */
-	public static Object GETSTATICFIELD(String ownerDOTnameDOTdesc) {
+	public static <T> T GETSTATICFIELD(String ownerDOTnameDOTdesc) {
 		throw new RuntimeException("ReflectionLikeWorker did not replace this method!");
 	}
 	

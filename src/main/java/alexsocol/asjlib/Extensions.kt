@@ -373,3 +373,15 @@ var ItemStack.cooldown
 	set(value) = ItemNBTHelper.setInt(this, TAG_COOLDOWN, value)
 
 fun String.trimAtMostLength(maxLength: Int, postfix: String = "...") = if (this.length > maxLength) "${this.take(maxLength)}$postfix" else this
+
+fun NBTTagCompound.setChunkCoords(tag: String, coords: ChunkCoordinates) {
+	val (x, y, z) = coords
+	setIntArray(tag, intArrayOf(x, y, z))
+}
+
+fun NBTTagCompound.getChunkCoords(tag: String): ChunkCoordinates {
+	val ints = getIntArray(tag)
+	if (ints.size != 3) return ChunkCoordinates(0, -1, 0)
+	val (x, y, z) = ints
+	return ChunkCoordinates(x, y, z)
+}

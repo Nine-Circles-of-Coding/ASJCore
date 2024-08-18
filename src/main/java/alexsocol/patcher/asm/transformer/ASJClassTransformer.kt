@@ -32,6 +32,8 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.entity.effect.EntityLightningBolt"          -> tree { it.methods.removeIf { m -> m.name == "<init>" } }
 			"net.minecraft.item.ItemGlassBottle"                       -> core { `ItemGlassBottle$ClassVisitor`(it) }
 			"net.minecraft.nbt.JsonToNBT"                              -> core { `JsonToNBT$ClassVisitor`(it) }
+			"net.minecraft.network.NetworkManager$2",
+			"net.minecraft.network.NetworkSystem$1"                    -> core { `Network_$_$ClassVisitor`(it) }
 			"net.minecraft.network.play.client.C17PacketCustomPayload" -> core { `C17PacketCustomPayload$ClassVisitor`(it) }
 			"net.minecraft.server.management.ItemInWorldManager"       -> core { `ItemInWorldManager$ClassVisitor`(it) }
 			"net.minecraft.tileentity.TileEntityFurnace"               -> core { `TileEntityFurnace$ClassVisitor`(it) }
@@ -246,6 +248,36 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			
 			override fun visitLdcInsn(cst: Any?) {
 				super.visitLdcInsn(if (cst == "\\[[-\\d|,\\s]+\\]") "\\[[-\\db,\\s]+]" else cst)
+			}
+		}
+	}
+	
+	// TCP no delay (other part in PatcherEventHandler)
+	internal class `Network_$_$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+		
+		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
+			if (name == "initChannel") {
+				println("Visiting Network%$%#initChannel: $name$desc")
+				return `Network_$_$initChannel$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
+			}
+			
+			return super.visitMethod(access, name, desc, signature, exceptions)
+		}
+		
+		internal class `Network_$_$initChannel$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+			
+			var changed = false
+			
+			override fun visitInsn(opcode: Int) {
+				super.visitInsn(
+					if (changed)
+						opcode
+					else if (opcode == ICONST_0) run {
+						changed = true
+						ICONST_1
+					} else
+						opcode
+				)
 			}
 		}
 	}

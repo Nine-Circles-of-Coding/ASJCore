@@ -16,7 +16,7 @@ asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [filler] | 
 asjcore.commands.explode.usage=/explode [size] [breakBlocks] [doFlame]
 asjcore.commands.heal.usage=/heal [[player]] [h (heal)][f (feed)][e (clear debuffs)[! (clear ALL effects)]]
 asjcore.commands.killall.usage=/killall [%s] [radius] [dimension id] [mod id]
-asjcore.commands.tpdim.usage=/tpdim <dimension id>
+asjcore.commands.tpdim.usage=/tpdim <dimension id> [player]
 
 asjcore.commands.diminfo.current=Current dimension is "%s" (id '%d')
 asjcore.commands.diminfo.list=%d. "%s" with id '%d'

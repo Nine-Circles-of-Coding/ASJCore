@@ -32,10 +32,11 @@ import net.minecraft.entity.EntityList.EntityEggInfo
 import net.minecraft.entity.ai.attributes.AttributeModifier
 import net.minecraft.entity.boss.*
 import net.minecraft.entity.effect.*
+import net.minecraft.entity.item.EntityEnderPearl
 import net.minecraft.entity.monster.*
 import net.minecraft.entity.passive.EntityMooshroom
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.entity.projectile.EntityArrow
+import net.minecraft.entity.player.*
+import net.minecraft.entity.projectile.*
 import net.minecraft.init.Blocks
 import net.minecraft.inventory.*
 import net.minecraft.item.*
@@ -53,6 +54,7 @@ import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.*
+import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GLContext
 import org.lwjgl.opengl.NVFogDistance.*
@@ -333,17 +335,37 @@ object ASJHookHandler {
 	var originalDamage = 0f
 	
 	@JvmStatic
-	@Hook(targetMethod = "ApplyArmor")
-	fun ApplyArmorPre(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double): Float {
+	@Hook(targetMethod = "ApplyArmor", returnCondition = NEVER)
+	fun ApplyArmorPre(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double): Float {
 		originalDamage = damage.F
 		return originalDamage
 	}
 	
 	@JvmStatic
 	@Hook(targetMethod = "ApplyArmor", returnCondition = ALWAYS, injectOnExit = true)
-	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>?, source: DamageSource, damage: Double, @ReturnValue result: Float) =
-		if (source.isUnblockable) originalDamage else result
+	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double, @ReturnValue result: Float): Float {
+		val newDamage = if (source.isUnblockable && !AlchemicalWizardryIntegration.hasVoidSigil(inventory, source)) originalDamage else result
+		originalDamage = 0f
+		return newDamage
+	}
 	
+	// same fix but for Cauldron -_-
+	var originalDamageC = 0f
+	
+	@JvmStatic
+	@Hook(targetMethod = "ApplyArmor", returnCondition = NEVER, isMandatory = false)
+	fun ApplyArmorPre(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double, damageArmor: Boolean): Float {
+		originalDamageC = damage.F
+		return originalDamageC
+	}
+	
+	@JvmStatic
+	@Hook(targetMethod = "ApplyArmor", returnCondition = ALWAYS, isMandatory = false, injectOnExit = true)
+	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double, damageArmor: Boolean, @ReturnValue result: Float): Float {
+		val newDamage = if (source.isUnblockable && !AlchemicalWizardryIntegration.hasVoidSigil(inventory, source)) originalDamageC else result
+		originalDamageC = 0f
+		return newDamage
+	}
 	
 //	@JvmStatic
 //	@Hook(returnCondition = ReturnCondition.ON_TRUE)
@@ -1103,7 +1125,7 @@ object ASJHookHandler {
 		if (watchedObject == null) return
 		wo.objectType = FuckingSpigotFix.dataWatcher_dataTypes[watchedObject.javaClass] ?: return
 	}
-
+	
 	@JvmStatic
 	@Hook(injectOnExit = true, targetMethod = "<init>")
 	fun `WatchableObject$init`(wo: WatchableObject, objectType: Int, dataValueId: Int, watchedObject: Any?) {
@@ -1196,7 +1218,7 @@ object ASJHookHandler {
 			
 			val amp = min(pe.getAmplifier(), 255)
 			
-			for (k in 0..amp)  {
+			for (k in 0..amp) {
 				f += (j shr 16 and 255).F / 255f
 				f1 += (j shr 8 and 255).F / 255f
 				f2 += (j shr 0 and 255).F / 255f
@@ -1223,6 +1245,7 @@ object ASJHookHandler {
 		return effect.amplifier
 	}
 	
+	// memes
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	@SideOnly(Side.CLIENT)
@@ -1231,4 +1254,97 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, targetMethod = "func_149466_j", injectOnExit = true)
 	fun ignoreIllegalStances(c03: C03PacketPlayer, @ReturnValue original: Boolean) = if (PatcherConfigHandler.ignoreIllegalStates) false else original
+	
+	// dragon damaging fix
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun attackEntityFrom(dragon: EntityDragon, source: DamageSource?, amount: Float) = dragon.attackEntityFromPart(dragon.dragonPartHead, source, amount)
+	
+	// egg particles fix
+	var eggHook = false
+	
+	@JvmStatic
+	@Hook(targetMethod = "onImpact")
+	fun onImpactPre(egg: EntityEgg, mop: MovingObjectPosition?) {
+		eggHook = true
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun spawnParticle(world: World, name: String?, x: Double, y: Double, z: Double, mx: Double, my: Double, mz: Double): Boolean {
+		if (!eggHook || name != "snowballpoof") return false
+		var motionX = (Math.random() * 2 - 1) * 0.4
+		var motionY = (Math.random() * 2 - 1) * 0.4
+		var motionZ = (Math.random() * 2 - 1) * 0.4
+		val f = (Math.random() + Math.random() + 1) * 0.15
+		val f1 = MathHelper.sqrt_double(motionX * motionX + (motionY * motionY) + (motionZ * motionZ))
+		motionX = motionX / f1 * f * 0.4000000059604645
+		motionY = motionY / f1 * f * 0.4000000059604645 + 0.10000000149011612
+		motionZ = motionZ / f1 * f * 0.4000000059604645
+		
+		world.spawnParticle("iconcrack_344", x, y, z, motionX, motionY, motionZ)
+		
+		return true
+	}
+	
+	@JvmStatic
+	@Hook(targetMethod = "onImpact", injectOnExit = true)
+	fun onImpactPost(egg: EntityEgg, mop: MovingObjectPosition?) {
+		eggHook = false
+	}
+	
+	// fix for material check for BlockLiquid
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun isInsideOfMaterial(entity: Entity, material: Material): Boolean {
+		val d0 = entity.posY + entity.eyeHeight.D + if (entity is EntityPlayerMP) 0.12 else 0.0 // WHY THE FUCK server foot-eye diff is 1.62, and client one - 1.74 ??? 
+		val i = MathHelper.floor_double(entity.posX)
+		val j = MathHelper.floor_float(MathHelper.floor_double(d0).F) // wtf two floor why?
+		val k = MathHelper.floor_double(entity.posZ)
+		val block = entity.worldObj.getBlock(i, j, k)
+		
+		if (block.material !== material) return false
+		var filled = 1f //If it's not a liquid assume it's a solid block
+		
+		if (block is IFluidBlock) {
+			filled = block.getFilledPercentage(entity.worldObj, i, j, k)
+		} else if (block is BlockLiquid) {
+			filled = 1 - BlockLiquid.getLiquidHeightPercent(entity.worldObj.getBlockMetadata(i, j, k) - 1)
+		}
+		
+		if (filled >= 0) return d0 < (j + filled)
+		
+		filled *= -1
+		//filled -= 0.11111111F; //Why this is needed.. not sure...
+		return d0 > (j + (1 - filled))
+	}
+	
+	// throw pearls in creative
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun onItemRightClick(item: ItemEnderPearl, stack: ItemStack, world: World, player: EntityPlayer): ItemStack {
+		if (!player.capabilities.isCreativeMode) --stack.stackSize
+		world.playSoundAtEntity(player, "random.bow", 0.5f, 0.4f / (Item.itemRand.nextFloat() * 0.4f + 0.8f))
+		if (!world.isRemote) world.spawnEntityInWorld(EntityEnderPearl(world, player))
+		return stack
+	}
+	
+	// adventure game mode
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun actionPerformed(gui: GuiCreateWorld, button: GuiButton): Boolean {
+		if (!button.enabled || button.id != 2) return false
+		
+		if (gui.field_146342_r != "creative") return false
+		
+		if (!gui.field_146339_u) gui.field_146340_t = false
+		
+		gui.field_146337_w = false
+		gui.field_146342_r = "adventure"
+		gui.field_146321_E.enabled = true
+		gui.field_146326_C.enabled = true
+		gui.func_146319_h()
+		
+		return true
+	}
 }

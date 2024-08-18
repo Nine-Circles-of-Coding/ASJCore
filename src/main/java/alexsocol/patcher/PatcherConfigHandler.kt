@@ -19,6 +19,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var creativeDamage = false
 	var damageMobArmor = true
 	var darkMode = true
+	var endlessSprint = true
 	var entityGravityFix = true
 	var everythingIsScrewedUpMode = false
 	var explosions = true
@@ -36,8 +37,10 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var WEBiomeID = 150
 	var WECustomLighting = true
 	
-	var allPublic = true
-	var ignoredClasses = emptyArray<String>()
+	var allPublic = false
+	var ignoredClasses = arrayOf(
+		"org.spigotmc.SpigotConfig" // motherfucking shit eaters (c) KAIIIAK
+	)
 	
 	var blacklistWither = true
 	var optifinePostTransform = true
@@ -57,6 +60,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		creativeDamage = loadProp(CATEGORY_GENERAL, "creativeDamage", creativeDamage, false, "Set this to true to allow taking damage in creative")
 		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")
 		darkMode = loadProp(CATEGORY_GENERAL, "darkMode", darkMode, true, "Set this to false to disable dark mode on minecraft load")
+		endlessSprint = loadProp(CATEGORY_GENERAL, "endlessSprint", endlessSprint, false, "Set this to true to remove sprinting cancellation after 30 seconds")
 		entityGravityFix = loadProp(CATEGORY_GENERAL, "entityGravityFix", entityGravityFix, false, "Set this to false to disable gravity fix")
 		everythingIsScrewedUpMode = loadProp(CATEGORY_GENERAL, "everythingIsScrewedUpMode", everythingIsScrewedUpMode, false, "Set this to true to enable: the player spins around slowly around (0, 68.5, 0). The GUI is disabled, the view is set to first person, and both chat and menu are disabled. Unless the server is configured to ignore illegal stances, attempting to enter a world at all will result in an immediate kick due to an illegal stance.")
 		explosions = loadProp(CATEGORY_GENERAL, "explosions", explosions, false, "Set this to false to disable explosions")
@@ -74,8 +78,8 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		WEBiomeID = loadProp(CATEGORY_GENERAL, "WEBiomeID", WEBiomeID, true, "ID for standard WorldEngine biome")
 		WECustomLighting = loadProp(CATEGORY_GENERAL, "WECustomLighting", WECustomLighting, false, "Set this to false to use default lighting calculation for WE worlds")
 		
-		allPublic = loadProp(CATEGORY_DKC, "allPublic", allPublic, true, "Set this to false to completely disable 'everything public' option")
-		ignoredClasses = loadProp(CATEGORY_DKC, "ignoredClasses", ignoredClasses, true, "Array of classes (full.class.Names) to be ignored by 'everything public' option", false)
+		allPublic = loadProp(CATEGORY_DKC, "allPublic", allPublic, true, "Set this to true to make all fields and functions public")
+		ignoredClasses = loadProp(CATEGORY_DKC, "ignoredClasses", ignoredClasses, true, "Array of classes or packages (or just parts) that won't be touched when making everything public", false)
 		
 		blacklistWither = loadProp(CATEGORY_INTEGRATION, "NEI.blacklistWither", blacklistWither, true, "Set this to false to make Wither spawner visible")
 		optifinePostTransform = loadProp(CATEGORY_INTEGRATION, "OF.optifinePostTransform", optifinePostTransform, true, "Set this to false to disable modifications to optifine some code. May break or repair render bugs.")

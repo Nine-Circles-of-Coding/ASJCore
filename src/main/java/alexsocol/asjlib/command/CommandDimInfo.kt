@@ -2,7 +2,6 @@ package alexsocol.asjlib.command
 
 import alexsocol.asjlib.ASJUtilities
 import net.minecraft.command.*
-import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.server.MinecraftServer
 import net.minecraftforge.common.DimensionManager
 
@@ -10,9 +9,7 @@ object CommandDimInfo: CommandBase() {
 	
 	const val ALL_TAG = "all"
 	
-	override fun getRequiredPermissionLevel() = 2
-	
-	override fun canCommandSenderUseCommand(sender: ICommandSender) = sender is EntityPlayer
+	override fun getRequiredPermissionLevel() = 0
 	
 	override fun getCommandName() = "diminfo"
 	

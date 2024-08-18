@@ -28,17 +28,17 @@ public interface HookLogger {
 		@Override
 		public void debug(String message) {
 			if (PatcherConfigHandler.INSTANCE.getLogDebug())
-				System.out.printf("[%s] [%s/DEBUG] [%s]: %s%n", sdf.format(new Date()), thread(), tag, message);
+				System.out.println("[" + sdf.format(new Date()) + "] [" + thread() + "/DEBUG] [" + tag + "]: " + message);
 		}
 		
 		@Override
 		public void warning(String message) {
-			System.out.printf("[%s] [%s/WARNING] [%s]: %s%n", sdf.format(new Date()), thread(), tag, message);
+			System.out.println("[" + sdf.format(new Date()) + "] [" + thread() + "/WARNING] [" + tag + "]: " + message);
 		}
 		
 		@Override
 		public void error(String message) {
-			System.err.printf("[%s] [%s/ERROR] [%s]: %s%n", sdf.format(new Date()), thread(), tag, message);
+			System.err.println("[" + sdf.format(new Date()) + "] [" + thread() + "/ERROR] [" + tag + "]: " + message);
 		}
 		
 		@Override

@@ -16,7 +16,7 @@ asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [фильт
 asjcore.commands.explode.usage=/explode [размер] [разрушения] [огонь]
 asjcore.commands.heal.usage=/heal [[игрок]] [h (вылечить)][f (накормить)][e (очистить дебаффы)[! (очистить все эффекты)]]
 asjcore.commands.killall.usage=/killall [%s] [радиус] [id измерения] [id мода]
-asjcore.commands.tpdim.usage=/tpdim <id измерения>
+asjcore.commands.tpdim.usage=/tpdim <id измерения> [игрок]
 
 asjcore.commands.diminfo.current=Текущее измерение "%s" (id '%d')
 asjcore.commands.diminfo.list=%d. "%s" с id '%d'
