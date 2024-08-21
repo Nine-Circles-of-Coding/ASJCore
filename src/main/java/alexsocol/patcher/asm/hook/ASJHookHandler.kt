@@ -7,6 +7,7 @@ import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
 import alexsocol.patcher.helper.*
 import alexsocol.patcher.helper.OFHelper.shadersmodSupport
+import alexsocol.patcher.network.*
 import cofh.asmhooks.HooksCore
 import cpw.mods.fml.client.*
 import cpw.mods.fml.common.registry.GameRegistry
@@ -43,7 +44,7 @@ import net.minecraft.item.*
 import net.minecraft.nbt.*
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.*
-import net.minecraft.server.ServerEula
+import net.minecraft.server.*
 import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
@@ -55,10 +56,13 @@ import net.minecraftforge.common.*
 import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.*
 import net.minecraftforge.fluids.IFluidBlock
+import org.lwjgl.opengl.*
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GLContext
 import org.lwjgl.opengl.NVFogDistance.*
 import org.objectweb.asm.Opcodes
+import java.awt.Desktop
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.io.File
 import java.util.*
 import kotlin.math.*
@@ -131,6 +135,7 @@ object ASJHookHandler {
 		}
 	}
 	
+	// invisible lightnings fix
 	@JvmStatic
 	@Hook
 	fun spawnEntityInWorld(world: World, target: Entity?): Boolean {
@@ -156,6 +161,7 @@ object ASJHookHandler {
 		}
 	}
 	
+	
 	// Adding eggs
 	@JvmStatic
 	@Hook(targetMethod = "<clinit>", injectOnExit = true)
@@ -176,6 +182,7 @@ object ASJHookHandler {
 		EntityList.entityEggs[id] = EntityEggInfo(id, i, j)
 	}
 	
+	
 	// gm alias for /gamemode
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, createMethod = true)
@@ -188,6 +195,7 @@ object ASJHookHandler {
 	fun getCommandAliases(c: CommandDefaultGameMode): List<String>? {
 		return null
 	}
+	
 	
 	// summon usage
 	@JvmStatic
@@ -210,6 +218,7 @@ object ASJHookHandler {
 		return true
 	}
 	
+	// all entity names for tab
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun func_147182_d(c: CommandSummon): Array<String> {
@@ -259,6 +268,7 @@ object ASJHookHandler {
 		}
 	}
 	
+	
 	// clear skeleton (and other) arrows in creative
 	@JvmStatic
 	@Hook
@@ -266,13 +276,14 @@ object ASJHookHandler {
 		if (arrow.canBePickedUp == 0 && player.capabilities.isCreativeMode) arrow.canBePickedUp = 2
 	}
 	
-	// Adventuring Time ach. extension
+	// Adventuring Time achievement extension
 	@JvmStatic
 	@Hook(targetMethod = "<init>")
 	fun BiomeGenBase(thiz: BiomeGenBase, id: Int, register: Boolean) {
 		if (thiz !is BiomeGenMutated)
 			BiomeGenBase.explorationBiomesList += thiz
 	}
+	
 	
 	// stack NBT fix
 	@JvmStatic
@@ -367,48 +378,6 @@ object ASJHookHandler {
 		return newDamage
 	}
 	
-//	@JvmStatic
-//	@Hook(returnCondition = ReturnCondition.ON_TRUE)
-//	fun writeItemStackToBuffer(buf: PacketBuffer, stack: ItemStack?): Boolean {
-//		if (!PatcherConfigHandler.textIDs) return false
-//
-//		if (stack == null) {
-//			buf.writeStringToBuffer("")
-//			return true
-//		}
-//
-//		val name = GameRegistry.findUniqueIdentifierFor(stack.item).toString()
-//		buf.writeInt(name.length)
-//		buf.writeStringToBuffer(name)
-//		buf.writeInt(stack.stackSize)
-//		buf.writeInt(stack.itemDamage)
-//		var nbt: NBTTagCompound? = null
-//		if (stack.item.isDamageable || stack.item.shareTag)
-//			nbt = stack.stackTagCompound
-//
-//		buf.writeNBTTagCompoundToBuffer(nbt)
-//
-//		return true
-//	}
-//
-//	@JvmStatic
-//	@Hook(returnCondition = ReturnCondition.ON_NOT_NULL)
-//	fun readItemStackFromBuffer(buf: PacketBuffer): ItemStack? {
-//		if (!PatcherConfigHandler.textIDs) return null
-//
-//		val id = buf.readStringFromBuffer(buf.readInt())
-//		if (id.isEmpty())
-//			return null
-//
-//		val (modid, name) = id.split(':')
-//		val item = GameRegistry.findItem(modid, name) ?: return null
-//		val count = buf.readInt()
-//		val meta = buf.readInt()
-//		val stack = ItemStack(item, count, meta)
-//		stack.stackTagCompound = buf.readNBTTagCompoundFromBuffer()
-//
-//		return stack
-//	}
 	
 	// events
 	@JvmStatic
@@ -438,20 +407,19 @@ object ASJHookHandler {
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
-	fun doRenderShadowAndFire(render: Render, entity: Entity, x: Double, y: Double, z: Double, yaw: Float, ticks: Float): Boolean {
-		return MinecraftForge.EVENT_BUS.post(RenderEntityPostEvent(entity, x, y, z, yaw))
-	}
+	fun doRenderShadowAndFire(render: Render, entity: Entity, x: Double, y: Double, z: Double, yaw: Float, ticks: Float): Boolean =
+		MinecraftForge.EVENT_BUS.post(RenderEntityPostEvent(entity, x, y, z, yaw))
 	
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
-	fun renderSky(rg: RenderGlobal, partialTickTime: Float): Boolean {
-		return MinecraftForge.EVENT_BUS.post(RenderSkyEvent(mc.entityRenderer, mc.renderViewEntity, ActiveRenderInfo.getBlockAtEntityViewpoint(mc.theWorld, mc.renderViewEntity, partialTickTime), partialTickTime))
-	}
+	fun renderSky(rg: RenderGlobal, partialTickTime: Float): Boolean =
+		MinecraftForge.EVENT_BUS.post(RenderSkyEvent(mc.entityRenderer, mc.renderViewEntity, ActiveRenderInfo.getBlockAtEntityViewpoint(mc.theWorld, mc.renderViewEntity, partialTickTime), partialTickTime))
 	
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE, targetMethod = "func_150000_e")
-	fun tryToCreatePortal(portal: BlockPortal, world: World, x: Int, y: Int, z: Int) = MinecraftForge.EVENT_BUS.post(NetherPortalActivationEvent(world, x, y, z))
+	fun tryToCreatePortal(portal: BlockPortal, world: World, x: Int, y: Int, z: Int) =
+		MinecraftForge.EVENT_BUS.post(NetherPortalActivationEvent(world, x, y, z))
 	
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
@@ -471,8 +439,8 @@ object ASJHookHandler {
 		stats.readNBT(nbt)
 	}
 	
-	// Portal closes GUI fix
 	
+	// Portal closes GUI fix
 	private var portalHook = false
 	
 	@JvmStatic
@@ -664,6 +632,7 @@ object ASJHookHandler {
 	private val message_f = ASJReflectionHelper.getField(java.lang.Throwable::class.java, "detailMessage")
 	private val stackTrace_f = ASJReflectionHelper.getField(java.lang.Throwable::class.java, "stackTrace")
 	
+	
 	// modded fire breaking in creative fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
@@ -671,12 +640,14 @@ object ASJHookHandler {
 		var i = x
 		var j = y
 		var k = z
+		
 		if (side == 0) --j
 		if (side == 1) ++j
 		if (side == 2) --k
 		if (side == 3) ++k
 		if (side == 4) --i
 		if (side == 5) ++i
+		
 		val block = world.getBlock(i, j, k)
 		
 		val breakable = if (player != null) block.getPlayerRelativeBlockHardness(player, world, i, j, k) > 0f || player.capabilities.isCreativeMode else true
@@ -695,7 +666,6 @@ object ASJHookHandler {
 	fun getNightVisionBrightness(render: EntityRenderer, player: EntityPlayer, partialTicks: Float) = if ((player.getActivePotionEffect(Potion.nightVision.id)?.duration ?: 0) > 0) 1f else 0f
 	
 	// Fix nbt clearing in Enchanting Table
-	
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun transferStackInSlot(container: ContainerEnchantment, player: EntityPlayer?, slotID: Int): ItemStack? {
@@ -746,6 +716,7 @@ object ASJHookHandler {
 	@Hook(returnCondition = ON_NOT_NULL)
 	fun onSheared(entity: EntityMooshroom, item: ItemStack?, world: IBlockAccess?, x: Int, y: Int, z: Int, fortune: Int) = if (entity.isDead) ArrayList<Any?>() else null
 	
+	
 	// invisible blocks to tabs
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
@@ -760,6 +731,7 @@ object ASJHookHandler {
 	fun getSubBlocks(block: BlockDirt, item: Item?, tab: CreativeTabs?, list: MutableList<ItemStack?>) {
 		list.add(list.size - 1, ItemStack(item, 1, 1))
 	}
+	
 	
 	// int overflow fix
 	@SideOnly(Side.CLIENT)
@@ -923,6 +895,7 @@ object ASJHookHandler {
 	@Hook(returnCondition = ALWAYS, injectOnExit = true)
 	fun getArmSwingAnimationEnd(e: EntityLivingBase, @ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getCustomArmSwingAnimationEnd() else result
 	
+	
 	// NBT ByteArray to string fix -- STUPID FUCKING MOTHERFUCKERS
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
@@ -1000,6 +973,7 @@ object ASJHookHandler {
 		}
 	}
 	
+	
 	// NPE fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
@@ -1057,6 +1031,7 @@ object ASJHookHandler {
 		return true
 	}
 	
+	
 	// WE SubBiome storage
 	@JvmStatic
 	@Hook(injectOnExit = true)
@@ -1075,7 +1050,6 @@ object ASJHookHandler {
 		if (!nbt.hasKey("WorldEngine_SubBiomeList", 9)) return chunk
 		
 		chunk.WorldEngine_SubBiomeList = arrayOfNulls(256)
-		
 		val subBiomesList = nbt.getTag("WorldEngine_SubBiomeList") as NBTTagList
 		for (i in 0 until subBiomesList.tagCount()) {
 			val subBiome = subBiomesList.getStringTagAt(i)
@@ -1084,6 +1058,7 @@ object ASJHookHandler {
 		
 		return chunk
 	}
+	
 	
 	// Fix for invalid modders not using [Entity.getFlag]
 	// returnAnotherMethod is used so other conflicts won't show ASJCore in the stacktrace
@@ -1133,6 +1108,7 @@ object ASJHookHandler {
 		wo.objectType = FuckingSpigotFix.dataWatcher_dataTypes[watchedObject.javaClass] ?: return
 	}
 	
+	
 	// chunk reforcing after world reload
 	@JvmStatic
 	@Hook(injectOnExit = true)
@@ -1174,6 +1150,7 @@ object ASJHookHandler {
 			list.appendTag(NBTTagIntArray(intArrayOf(it.chunkXPos, it.chunkZPos)))
 		}
 	}
+	
 	
 	// dark theme for start screen
 	@JvmStatic
@@ -1245,6 +1222,7 @@ object ASJHookHandler {
 		return effect.amplifier
 	}
 	
+	
 	// memes
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
@@ -1255,10 +1233,12 @@ object ASJHookHandler {
 	@Hook(returnCondition = ALWAYS, targetMethod = "func_149466_j", injectOnExit = true)
 	fun ignoreIllegalStances(c03: C03PacketPlayer, @ReturnValue original: Boolean) = if (PatcherConfigHandler.ignoreIllegalStates) false else original
 	
+	
 	// dragon damaging fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun attackEntityFrom(dragon: EntityDragon, source: DamageSource?, amount: Float) = dragon.attackEntityFromPart(dragon.dragonPartHead, source, amount)
+	
 	
 	// egg particles fix
 	var eggHook = false
@@ -1292,6 +1272,7 @@ object ASJHookHandler {
 	fun onImpactPost(egg: EntityEgg, mop: MovingObjectPosition?) {
 		eggHook = false
 	}
+	
 	
 	// fix for material check for BlockLiquid
 	@JvmStatic
@@ -1347,4 +1328,69 @@ object ASJHookHandler {
 		
 		return true
 	}
+	
+	
+	// fix for potion ui transparency
+	@JvmStatic
+	@Hook(targetMethod = "func_147044_g")
+	fun drawActivePotionEffectsPre(gui: InventoryEffectRenderer) {
+		glEnable(GL_BLEND)
+		OpenGlHelper.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+	}
+	
+	@JvmStatic
+	@Hook(targetMethod = "func_147044_g", injectOnExit = true)
+	fun drawActivePotionEffectsPost(gui: InventoryEffectRenderer) {
+		glDisable(GL_BLEND)
+	}
+	
+	
+	// iron golem attack cooldown
+	private var EntityIronGolem.attackCd
+		get() = dataWatcher.getWatchableObjectInt(2)
+		set(value) = dataWatcher.updateObject(2, value)
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun entityInit(golem: EntityIronGolem) {
+		golem.dataWatcher.addObject(2, 0)
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun onLivingUpdate(golem: EntityIronGolem) {
+		if (golem.attackCd > 0) --golem.attackCd
+	}
+	
+	@JvmStatic
+	@Hook(targetMethod = "attackEntityAsMob", returnCondition = ON_TRUE, booleanReturnConstant = false)
+	fun attackEntityAsMobPre(golem: EntityIronGolem, target: Entity?) = golem.attackCd > 0
+	
+	@JvmStatic
+	@Hook(targetMethod = "attackEntityAsMob", injectOnExit = true)
+	fun attackEntityAsMobPost(golem: EntityIronGolem, target: Entity?) {
+		golem.attackCd = 20
+	}
+	
+	
+	// copy seed to clipboard
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun processCommand(command: CommandShowSeed, sender: ICommandSender, args: Array<String?>?) {
+		val seed = sender.entityWorld.seed.toString()
+		
+		if (sender is EntityPlayerMP)
+			NetworkHandler.network.sendTo(MessageClipboard(seed), sender)
+		else if (Desktop.isDesktopSupported()) // for console execution
+			Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(seed), null)
+	}
+	
+	
+	// allow allsided rotateable blocks placement
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "placeAllsided")
+	fun onBlockPlaced(block: BlockRotatedPillar, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta and 0b1100 == 0b1100
+	
+	@JvmStatic
+	fun placeAllsided(block: BlockRotatedPillar, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta
 }

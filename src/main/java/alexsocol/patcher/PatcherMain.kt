@@ -4,8 +4,10 @@ import alexsocol.asjlib.*
 import alexsocol.asjlib.command.*
 import alexsocol.asjlib.render.ASJShaderHelper
 import alexsocol.patcher.asm.ASJHookLoader
+import alexsocol.patcher.crafting.CraftingHandler
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
+import alexsocol.patcher.network.NetworkHandler
 import cpw.mods.fml.client.config.GuiUtils
 import cpw.mods.fml.common.*
 import cpw.mods.fml.common.event.*
@@ -55,6 +57,8 @@ object PatcherMain {
 	fun init(e: FMLInitializationEvent) {
 		PatcherEventHandler.eventForge().eventFML()
 		
+		NetworkHandler
+		
 		BlockTrapDoor.disableValidation = PatcherConfigHandler.floatingTrapDoors
 		
 		if (ASJUtilities.isClient) {
@@ -62,6 +66,11 @@ object PatcherMain {
 			ASJShaderHelper.registerHandlers()
 			if (!ASJHookLoader.OBF) ClientCommandHandler.instance.registerCommand(CommandResources)
 		}
+	}
+	
+	@Mod.EventHandler
+	fun postInit(e: FMLPostInitializationEvent) {
+		CraftingHandler
 	}
 	
 	@Mod.EventHandler
