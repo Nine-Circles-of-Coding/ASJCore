@@ -58,7 +58,7 @@ object PatcherEventHandler {
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	fun onBreakingInAir(e: PlayerEvent.BreakSpeed) {
+	fun flyingBreakingSpeed(e: PlayerEvent.BreakSpeed) {
 		if (!PatcherConfigHandler.flyFastDig || e.entityPlayer.onGround || !(e.entityPlayer.capabilities.isFlying || e.entityPlayer.isOnLadder)) return
 		e.newSpeed *= 5f
 	}
@@ -71,9 +71,10 @@ object PatcherEventHandler {
 	}
 	
 	@SubscribeEvent
-	fun syncXp(e: PlayerChangedDimensionEvent) {
+	fun syncXpAndAbsorption(e: PlayerChangedDimensionEvent) {
 		val player = e.player as? EntityPlayerMP ?: return
 		player.playerNetServerHandler.sendPacket(S1FPacketSetExperience(player.experience, player.experienceTotal, player.experienceLevel))
+		player.dataWatcher.setObjectWatched(17)
 	}
 	
 	@SubscribeEvent

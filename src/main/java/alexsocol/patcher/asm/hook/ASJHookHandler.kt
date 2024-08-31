@@ -8,6 +8,8 @@ import alexsocol.patcher.event.*
 import alexsocol.patcher.helper.*
 import alexsocol.patcher.helper.OFHelper.shadersmodSupport
 import alexsocol.patcher.network.*
+import biomesoplenty.common.blocks.BlockBOPLog
+import biomesoplenty.common.itemblocks.ItemBlockLog
 import cofh.asmhooks.HooksCore
 import cpw.mods.fml.client.*
 import cpw.mods.fml.common.registry.GameRegistry
@@ -663,7 +665,10 @@ object ASJHookHandler {
 	// nightvision twinkling fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
-	fun getNightVisionBrightness(render: EntityRenderer, player: EntityPlayer, partialTicks: Float) = if ((player.getActivePotionEffect(Potion.nightVision.id)?.duration ?: 0) > 0) 1f else 0f
+	fun getNightVisionBrightness(render: EntityRenderer, player: EntityPlayer, partialTicks: Float): Float {
+		val duration = player.getActivePotionEffect(Potion.nightVision.id)?.duration ?: 0
+		return if (duration >= 20) 1f else (duration + (1 - partialTicks)) * 0.05f
+	}
 	
 	// Fix nbt clearing in Enchanting Table
 	@JvmStatic
@@ -1329,19 +1334,12 @@ object ASJHookHandler {
 		return true
 	}
 	
-	
 	// fix for potion ui transparency
 	@JvmStatic
 	@Hook(targetMethod = "func_147044_g")
 	fun drawActivePotionEffectsPre(gui: InventoryEffectRenderer) {
 		glEnable(GL_BLEND)
 		OpenGlHelper.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
-	}
-	
-	@JvmStatic
-	@Hook(targetMethod = "func_147044_g", injectOnExit = true)
-	fun drawActivePotionEffectsPost(gui: InventoryEffectRenderer) {
-		glDisable(GL_BLEND)
 	}
 	
 	
@@ -1393,4 +1391,18 @@ object ASJHookHandler {
 	
 	@JvmStatic
 	fun placeAllsided(block: BlockRotatedPillar, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "placeAllsided")
+	fun onBlockPlaced(block: BlockBOPLog, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta and 0b1100 == 0b1100
+	
+	@JvmStatic
+	fun placeAllsided(block: BlockBOPLog, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "allsidedMeta")
+	fun getMetadata(ib: ItemBlockLog, meta: Int) = meta and 0b1100 == 0b1100
+	
+	@JvmStatic
+	fun allsidedMeta(ib: ItemBlockLog, meta: Int) = meta
 }
