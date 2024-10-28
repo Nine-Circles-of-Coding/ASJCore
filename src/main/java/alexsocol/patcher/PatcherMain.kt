@@ -76,7 +76,7 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun onServerStarting(e: FMLServerStartingEvent) {
 		BiomeGenBase.getBiome(PatcherConfigHandler.WEBiomeID)?.let {
-			throw IllegalArgumentException("WEBiomeID is set to ${PatcherConfigHandler.WEBiomeID} - this ID is occupied with ${it.biomeName} (${it::class.java.name}). Change that in configs!")
+			throw IllegalArgumentException("[$MODID] WEBiomeID is set to ${PatcherConfigHandler.WEBiomeID} - this ID is occupied with ${it.biomeName} (${it::class.java.name}). Change that in configs!")
 		}
 		
 		e.registerServerCommand(CommandDimTP)

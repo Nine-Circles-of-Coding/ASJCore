@@ -55,15 +55,13 @@ import net.minecraft.world.chunk.Chunk
 import net.minecraft.world.chunk.storage.AnvilChunkLoader
 import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
-import net.minecraftforge.common.ISpecialArmor.ArmorProperties
 import net.minecraftforge.common.util.*
 import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.*
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.NVFogDistance.*
 import org.objectweb.asm.Opcodes
-import java.awt.Desktop
-import java.awt.Toolkit
+import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.io.File
 import java.util.*
@@ -293,7 +291,8 @@ object ASJHookHandler {
 	fun writeToNBT(stack: ItemStack, nbt: NBTTagCompound): NBTTagCompound? {
 		if (!PatcherConfigHandler.textIDs) return null
 		
-		nbt.setString("id", GameRegistry.findUniqueIdentifierFor(stack.field_151002_e)?.toString() ?: return null)
+		nbt.setString("uId", GameRegistry.findUniqueIdentifierFor(stack.field_151002_e)?.toString() ?: return null)
+		nbt.setInteger("id", Item.getIdFromItem(stack.field_151002_e))
 		nbt.setInteger("Count", stack.stackSize)
 		nbt.setInteger("Damage", stack.itemDamage)
 		
@@ -310,7 +309,7 @@ object ASJHookHandler {
 		
 		migrate(nbt)
 		
-		val id = nbt.getString("id")
+		val id = nbt.getString("uId")
 		if (id.isBlank() || id.indexOf(':') == -1) return true
 		
 		val (modid, name) = id.split(':')
@@ -325,6 +324,15 @@ object ASJHookHandler {
 	}
 	
 	private fun migrate(nbt: NBTTagCompound) {
+		// already migrated
+		if (nbt.hasKey("uId", 8)) return
+		
+		// from prev version with same key for string id
+		if (nbt.hasKey("id", 8)) {
+			nbt.setString("uId", nbt.getString("id"))
+			return
+		}
+		
 		if (!nbt.hasKey("id", 2)) return
 		
 		val item = Item.getItemById(nbt.getShort("id").toInt()) ?: Blocks.stone.toItem()
@@ -339,45 +347,6 @@ object ASJHookHandler {
 		nbt.removeTag("tag")
 		
 		stack.writeToNBT(nbt)
-	}
-	
-	
-	// armor can't block damage that is set to bypass armor
-	// shitcode because LotR author don't want to fix their mistake -_-
-	
-	var originalDamage = 0f
-	
-	@JvmStatic
-	@Hook(targetMethod = "ApplyArmor", returnCondition = NEVER)
-	fun ApplyArmorPre(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double): Float {
-		originalDamage = damage.F
-		return originalDamage
-	}
-	
-	@JvmStatic
-	@Hook(targetMethod = "ApplyArmor", returnCondition = ALWAYS, injectOnExit = true)
-	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double, @ReturnValue result: Float): Float {
-		val newDamage = if (source.isUnblockable && !AlchemicalWizardryIntegration.hasVoidSigil(inventory, source)) originalDamage else result
-		originalDamage = 0f
-		return newDamage
-	}
-	
-	// same fix but for Cauldron -_-
-	var originalDamageC = 0f
-	
-	@JvmStatic
-	@Hook(targetMethod = "ApplyArmor", returnCondition = NEVER, isMandatory = false)
-	fun ApplyArmorPre(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double, damageArmor: Boolean): Float {
-		originalDamageC = damage.F
-		return originalDamageC
-	}
-	
-	@JvmStatic
-	@Hook(targetMethod = "ApplyArmor", returnCondition = ALWAYS, isMandatory = false, injectOnExit = true)
-	fun ApplyArmorPost(props: ArmorProperties?, entity: EntityLivingBase?, inventory: Array<ItemStack?>, source: DamageSource, damage: Double, damageArmor: Boolean, @ReturnValue result: Float): Float {
-		val newDamage = if (source.isUnblockable && !AlchemicalWizardryIntegration.hasVoidSigil(inventory, source)) originalDamageC else result
-		originalDamageC = 0f
-		return newDamage
 	}
 	
 	

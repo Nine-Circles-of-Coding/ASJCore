@@ -4,6 +4,7 @@ import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.asm.transformer.*
+import alexsocol.patcher.asm.worker.InterfaceAppenderWorker
 import com.KAIIIAK.KASMLib.*
 import com.KAIIIAK.KASMLib.workers.ReflectionLikeWorker
 import com.KAIIIAK.classManipulators.HookReplacerWorker
@@ -62,6 +63,8 @@ class ASJHookLoader: HookLoader() {
 		
 		if (PatcherConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.hook.BlockButtonExtender")
 		
+		registerHookContainer("alexsocol.patcher.asm.hook.ArmorFixes")
+		
 		if (OBF || System.getProperty("asjcore.fieldhooks", "false").toBoolean()) {
 			ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.hook.ASJFieldHookHandler")
 			if (PatcherConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
@@ -72,8 +75,9 @@ class ASJHookLoader: HookLoader() {
 		registerPostTransformer(SuperWrapperTransformer())
 		registerSuperWrapperContainer("alexsocol.patcher.asm.hook.ASJSuperWrapperHandler")
 		
-		KASMLib.register(ReflectionLikeWorker.inst)
 		KASMLib.register(HookReplacerWorker.inst)
+		KASMLib.register(InterfaceAppenderWorker)
+		KASMLib.register(ReflectionLikeWorker.inst)
 		
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler")
 	}

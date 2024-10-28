@@ -32,6 +32,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.entity.effect.EntityLightningBolt"          -> tree { it.methods.removeIf { m -> m.name == "<init>" } }
 			"net.minecraft.item.ItemGlassBottle"                       -> core { `ItemGlassBottle$ClassVisitor`(it) }
 			"net.minecraft.nbt.JsonToNBT"                              -> core { `JsonToNBT$ClassVisitor`(it) }
+			"net.minecraft.client.network.OldServerPinger$2",
 			"net.minecraft.network.NetworkManager$2",
 			"net.minecraft.network.NetworkSystem$1"                    -> core { `Network_$_$ClassVisitor`(it) }
 			"net.minecraft.network.play.client.C17PacketCustomPayload" -> core { `C17PacketCustomPayload$ClassVisitor`(it) }

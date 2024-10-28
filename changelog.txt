@@ -2,7 +2,9 @@ Innovations:
  Recipe for allsided wood (2x2 logs of same type)
  1s cooldown for iron golem attack
  Copy seed to clipboard for /seed
- Updated kotlin to 2.0.10
+ Updated kotlin to 2.0.21
 
 Fixes: 
- 
+ Armor piercing fix is now applied to individual pieces only
+ Made Text item IDs revertable (hopefully)
+ Muted TCP NODELAY crash on Ultramine

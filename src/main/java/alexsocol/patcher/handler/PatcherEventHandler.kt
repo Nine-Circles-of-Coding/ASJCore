@@ -80,7 +80,9 @@ object PatcherEventHandler {
 	@SubscribeEvent
 	fun setNoTcpDelay(e: PlayerLoggedInEvent) {
 		val player = e.player as? EntityPlayerMP ?: return
-		player.playerNetServerHandler.netManager.channel().config().setOption(ChannelOption.TCP_NODELAY, true)
+		try_ { // ignore errors on ultramine servers
+			player.playerNetServerHandler.netManager.channel().config().setOption(ChannelOption.TCP_NODELAY, true)
+		}
 	}
 }
 
