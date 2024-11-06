@@ -1154,7 +1154,7 @@ object ASJHookHandler {
 	// overflow fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
-	fun calcPotionLiquidColor(potions: Collection<PotionEffect>?): Int {
+	fun calcPotionLiquidColor(static: PotionHelper?, potions: Collection<PotionEffect>?): Int {
 		val i = 0x3883DE
 		
 		if (potions.isNullOrEmpty()) return i

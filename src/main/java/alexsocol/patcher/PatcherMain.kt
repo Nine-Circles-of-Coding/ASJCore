@@ -75,10 +75,6 @@ object PatcherMain {
 	
 	@Mod.EventHandler
 	fun onServerStarting(e: FMLServerStartingEvent) {
-		BiomeGenBase.getBiome(PatcherConfigHandler.WEBiomeID)?.let {
-			throw IllegalArgumentException("[$MODID] WEBiomeID is set to ${PatcherConfigHandler.WEBiomeID} - this ID is occupied with ${it.biomeName} (${it::class.java.name}). Change that in configs!")
-		}
-		
 		e.registerServerCommand(CommandDimTP)
 		e.registerServerCommand(CommandDimInfo)
 		e.registerServerCommand(CommandExplode)
@@ -93,6 +89,10 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun onServerStarted(e: FMLServerStartedEvent) {
 		MinecraftForge.EVENT_BUS.post(ServerStartedEvent(e))
+		
+		BiomeGenBase.getBiome(PatcherConfigHandler.WEBiomeID)?.let {
+			throw IllegalArgumentException("[$MODID] WEBiomeID is set to ${PatcherConfigHandler.WEBiomeID} - this ID is occupied with ${it.biomeName} (${it::class.java.name}). Change that in configs!")
+		}
 	}
 	
 	@Mod.EventHandler

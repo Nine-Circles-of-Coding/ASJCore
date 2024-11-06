@@ -257,7 +257,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	internal class `Network_$_$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-			if (name == "initChannel") {
+			if (PatcherConfigHandler.tcpNoDelay && name == "initChannel") {
 				println("Visiting Network%$%#initChannel: $name$desc")
 				return `Network_$_$initChannel$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
@@ -287,10 +287,11 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	internal class `C17PacketCustomPayload$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-			if ((name == "<init>" && desc == "(Ljava/lang/String;[B)V") || (name == "readPacketData" || name == "a" && desc == "(Let;)V") || (name == "writePacketData" || name == "b" && desc == "(Let;)V")) {
-				println("Visiting C17PacketCustomPayload methods: $name$desc")
-				return `C17PacketCustomPayload$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
-			}
+			if (PatcherConfigHandler.c17PacketCustomPayloadUnlimit)
+				if ((name == "<init>" && desc == "(Ljava/lang/String;[B)V") || (name == "readPacketData" || name == "a" && desc == "(Let;)V") || (name == "writePacketData" || name == "b" && desc == "(Let;)V")) {
+					println("Visiting C17PacketCustomPayload methods: $name$desc")
+					return `C17PacketCustomPayload$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
+				}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
