@@ -220,7 +220,7 @@ public class ASJReflectionHelper {
 		try {
 			return clazz.getDeclaredMethod(methodName, parameterTypes);
 		} catch (NoSuchMethodException | SecurityException ex) {
-			ex.printStackTrace();
+			CSLog.error(ex);
 		}
 		return null;
 	}

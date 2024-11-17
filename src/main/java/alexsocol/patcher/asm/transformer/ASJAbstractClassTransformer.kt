@@ -1,15 +1,17 @@
 package alexsocol.patcher.asm.transformer
 
+import gloomyfolken.hooklib.asm.HookLogger
 import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.ClassNode
 
 abstract class ASJAbstractClassTransformer: IClassTransformer {
 	
-	var transformedName = ""
-	var basicClass = byteArrayOf()
+	protected var transformedName = ""
+	protected var basicClass = byteArrayOf()
+	protected open val logger = HookLogger.Log4JLogger("ASJCore")
 	
-	override fun transform(name: String?, transformedName: String, basicClass: ByteArray?): ByteArray? {
+	final override fun transform(name: String?, transformedName: String, basicClass: ByteArray?): ByteArray? {
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
 		
 		this.transformedName = transformedName
@@ -21,7 +23,7 @@ abstract class ASJAbstractClassTransformer: IClassTransformer {
 	abstract fun transform(transformedName: String, basicClass: ByteArray): ByteArray
 	
 	protected inline fun core(frames: Int = ClassReader.EXPAND_FRAMES, lambda: (ClassVisitor) -> ClassVisitor): ByteArray {
-		println("Transforming $transformedName")
+		logger.debug("Transforming $transformedName")
 		val cr = ClassReader(basicClass)
 		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
 		val transformer = lambda(cw)
@@ -30,7 +32,7 @@ abstract class ASJAbstractClassTransformer: IClassTransformer {
 	}
 	
 	protected inline fun tree(lambda: (ClassNode) -> Unit): ByteArray {
-		println("Transforming $transformedName")
+		logger.debug("Transforming $transformedName")
 		val cr = ClassReader(basicClass)
 		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
 		val cn = ClassNode()

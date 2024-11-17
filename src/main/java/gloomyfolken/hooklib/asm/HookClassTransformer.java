@@ -1,6 +1,5 @@
 package gloomyfolken.hooklib.asm;
 
-import gloomyfolken.hooklib.asm.HookLogger.SystemOutLogger;
 import org.objectweb.asm.*;
 
 import java.util.*;
@@ -8,7 +7,7 @@ import java.util.*;
 public class HookClassTransformer {
 	
 	public static List<AsmHook> notInjectedHooks = new ArrayList<>();
-	public HookLogger logger = new SystemOutLogger("Hooklib");
+	public static HookLogger logger = new HookLogger.Log4JLogger("Hooklib");
 	protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
 	protected ClassMetadataReader classMetadataReader = new ClassMetadataReader();
 	private HookContainerParser containerParser = new HookContainerParser(this);
@@ -53,9 +52,6 @@ public class HookClassTransformer {
 				HookInjectorClassVisitor hooksWriter = createInjectorClassVisitor(cw, hooks);
 				cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 				bytecode = cw.toByteArray();
-				for (AsmHook hook : hooksWriter.injectedHooks) {
-					logger.debug("Patching method " + hook.getPatchedMethodName());
-				}
 				hooks.removeAll(hooksWriter.injectedHooks);
 				notInjectedHooks.removeAll(hooksWriter.injectedHooks);
 			} catch (Exception e) {

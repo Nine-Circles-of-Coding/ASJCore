@@ -103,7 +103,7 @@ class ResourceLocationAnimated: ResourceLocation {
 		return try {
 			mc.resourceManager.getResource(loc)
 		} catch (e: Throwable) {
-			e.printStackTrace()
+			ASJUtilities.error("Error loading $loc", e)
 			null
 		}
 	}

@@ -1,41 +1,36 @@
 package alexsocol.asjlib.asm
 
+import alexsocol.patcher.asm.transformer.*
 import com.google.common.collect.Lists
-import net.minecraft.launchwrapper.IClassTransformer
 import org.apache.commons.io.IOUtils
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
 
-class ASJPacketCompleter: IClassTransformer {
+class ASJPacketCompleter: ASJAbstractClassTransformer() {
 	
-	override fun transform(name: String, transformedName: String, basicClass: ByteArray?): ByteArray? {
-		if (basicClass == null || basicClass.isEmpty()) return basicClass
-		
+	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
 		try {
 			val cr = ClassReader(basicClass)
 			val cn = ClassNode()
 			cr.accept(cn, 0)
 			
 			if (isASJPacket(mutableListOf(transformedName), basicClass)) {
+				logger.debug("Expanding ASJPacket $transformedName")
 				val fs = BooleanArray(5) // <init>, fromBytes, toBytes, fromCustomBytes, toCustomBytes
 				for (mt in cn.methods) {
 					if (mt.name == "<init>" && mt.desc == "()V") {
 						fs[0] = true
-						continue
-					}
+					} else
 					if (mt.name == "fromBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
 						fs[1] = true
-						continue
-					}
+					} else
 					if (mt.name == "toBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
 						fs[2] = true
-						continue
-					}
+					} else
 					if (mt.name == "fromCustomBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
 						fs[3] = true
-						continue
-					}
+					} else
 					if (mt.name == "toCustomBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
 						fs[4] = true
 					}
@@ -51,8 +46,7 @@ class ASJPacketCompleter: IClassTransformer {
 				return cw.toByteArray()
 			}
 		} catch (e: Throwable) {
-			System.err.println("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error).")
-			e.printStackTrace()
+			logger.error("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error):", e)
 			
 			return basicClass
 		}
@@ -60,7 +54,7 @@ class ASJPacketCompleter: IClassTransformer {
 		return basicClass
 	}
 	
-	private fun isASJPacket(className: MutableList<String>, classBytes: ByteArray): Boolean {
+	private fun isASJPacket(classNames: MutableList<String>, classBytes: ByteArray): Boolean {
 		try {
 			val classReader = ClassReader(classBytes)
 			val classNode = ClassNode()
@@ -69,13 +63,11 @@ class ASJPacketCompleter: IClassTransformer {
 			if (classNode.superName == "alexsocol/asjlib/network/ASJPacket") return true
 			
 			val superClassName = classNode.superName
-			if (superClassName != null) return isASJPacket(mutableListOf(*className.toTypedArray(), superClassName), getClassData(superClassName))
-		} catch (e: Throwable) {
-			if (debug) {
-				System.err.println("Exception during superclass check of ${className.joinToString("->")}")
-				e.printStackTrace()
+			if (superClassName != null) {
+				classNames.add(superClassName)
+				return isASJPacket(classNames, getClassData(superClassName))
 			}
-		}
+		} catch (ignore: Throwable) {}
 		
 		return false
 	}
@@ -145,6 +137,5 @@ class ASJPacketCompleter: IClassTransformer {
 	companion object {
 		
 		val descriptors: List<String> = Lists.newArrayList("Z", "B", "C", "D", "F", "I", "J", "S", "Ljava/lang/String;", "Lnet/minecraft/item/ItemStack;", "Lnet/minecraft/nbt/NBTTagCompound;")
-		val debug = System.getProperty("asjcore.asm.debug", "false").toBoolean()
 	}
 }

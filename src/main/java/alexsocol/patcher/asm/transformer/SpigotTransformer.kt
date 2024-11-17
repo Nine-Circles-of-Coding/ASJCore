@@ -15,7 +15,7 @@ class SpigotTransformer: ASJAbstractClassTransformer() {
 					spigotShitDetected = fn?.desc == "Ljava/util/Map;" == true
 				}
 				
-				println("DataWatcher parsed, fucking Spigot shit ${
+				logger.debug("DataWatcher parsed, fucking Spigot shit ${
 					if (spigotShitDetected) "" else "not "
 				}detected.${
 					if (spigotShitDetected) "" else " Thank God!"
@@ -26,7 +26,7 @@ class SpigotTransformer: ASJAbstractClassTransformer() {
 			
 			"alexsocol.patcher.helper.FuckingSpigotFix" -> {
 				if (spigotShitDetected) {
-					println("Applying fix for fucking Spigot shit")
+					logger.debug("Applying fix for fucking Spigot shit")
 					
 					tree { cn ->
 						val mn = cn.methods.first { it.name == "getDataWatcher_dataTypes" }

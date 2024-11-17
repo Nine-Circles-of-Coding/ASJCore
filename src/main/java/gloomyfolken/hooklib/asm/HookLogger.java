@@ -1,68 +1,78 @@
 package gloomyfolken.hooklib.asm;
 
 import alexsocol.patcher.PatcherConfigHandler;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.logging.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public interface HookLogger {
+	
+	void trace(String message);
 	
 	void debug(String message);
 	
 	void warning(String message);
 	
-	void error(String message);
+	void severe(String message);
 	
-	void error(String message, Throwable cause);
+	void severe(String message, Throwable cause);
+	
+	default void error(String message) {
+		severe(message);
+	}
+	
+	default void error(String message, Throwable cause) {
+		severe(message, cause);
+	}
 	
 	class SystemOutLogger implements HookLogger {
 		
-		private String tag;
-		private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-		
-		public SystemOutLogger(String tag) {
-			this.tag = tag;
+		@Override
+		public void trace(String message) {
+			if (PatcherConfigHandler.INSTANCE.getLogTrace())
+				System.out.println("[TRACE] " + message);
 		}
 		
 		@Override
 		public void debug(String message) {
 			if (PatcherConfigHandler.INSTANCE.getLogDebug())
-				System.out.println("[" + sdf.format(new Date()) + "] [" + thread() + "/DEBUG] [" + tag + "]: " + message);
+				System.out.println("[DEBUG] " + message);
 		}
 		
 		@Override
 		public void warning(String message) {
-			System.out.println("[" + sdf.format(new Date()) + "] [" + thread() + "/WARNING] [" + tag + "]: " + message);
+			System.out.println("[WARNING] " + message);
 		}
 		
 		@Override
-		public void error(String message) {
-			System.err.println("[" + sdf.format(new Date()) + "] [" + thread() + "/ERROR] [" + tag + "]: " + message);
+		public void severe(String message) {
+			System.out.println("[SEVERE] " + message);
 		}
 		
 		@Override
-		public void error(String message, Throwable cause) {
-			error(message);
+		public void severe(String message, Throwable cause) {
+			severe(message);
 			cause.printStackTrace();
-		}
-		
-		private String thread() {
-			return Thread.currentThread().getName();
 		}
 	}
 	
 	class VanillaLogger implements HookLogger {
 		
-		private Logger logger;
+		private java.util.logging.Logger logger;
 		
-		public VanillaLogger(Logger logger) {
+		public VanillaLogger(java.util.logging.Logger logger) {
 			this.logger = logger;
 		}
 		
 		@Override
+		public void trace(String message) {
+			if (PatcherConfigHandler.INSTANCE.getLogDebug())
+				logger.finest(message);
+		}
+		
+		@Override
 		public void debug(String message) {
-			logger.fine(message);
+			if (PatcherConfigHandler.INSTANCE.getLogDebug())
+				logger.fine(message);
 		}
 		
 		@Override
@@ -71,13 +81,51 @@ public interface HookLogger {
 		}
 		
 		@Override
-		public void error(String message) {
+		public void severe(String message) {
 			logger.severe(message);
 		}
 		
 		@Override
-		public void error(String message, Throwable cause) {
-			logger.log(Level.SEVERE, message, cause);
+		public void severe(String message, Throwable cause) {
+			logger.log(java.util.logging.Level.SEVERE, message, cause);
+		}
+	}
+	
+	class Log4JLogger implements HookLogger {
+		
+		private final Logger logger;
+		
+		public Log4JLogger(String loggerName) {
+			logger = LogManager.getLogger(loggerName);
+		}
+		
+		@Override
+		public void trace(String message) {
+			if (PatcherConfigHandler.INSTANCE.getLogTrace())
+				// piece of inconfigurable shit
+				logger.info(message);
+		}
+		
+		@Override
+		public void debug(String message) {
+			if (PatcherConfigHandler.INSTANCE.getLogDebug())
+				// piece of inconfigurable shit
+				logger.info(message);
+		}
+		
+		@Override
+		public void warning(String message) {
+			logger.warn(message);
+		}
+		
+		@Override
+		public void severe(String message) {
+			logger.error(message);
+		}
+		
+		@Override
+		public void severe(String message, Throwable cause) {
+			logger.error(message, cause);
 		}
 	}
 }

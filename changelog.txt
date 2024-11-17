@@ -1,3 +1,7 @@
 Innovations:
- Stack registry name display in tooltip when holding SHIFT 
- Configs to not show stack NBT/registry name
+ Added sounds to buckets (+config)
+ Improved logging
+
+Fixes:
+ Replaced oak leaves to jungle leaves on jungle shrubs
+ Schemas entirely breaking on single invalid tile entity load

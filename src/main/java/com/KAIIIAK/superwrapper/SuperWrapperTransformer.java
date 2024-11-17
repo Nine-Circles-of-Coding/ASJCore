@@ -16,7 +16,7 @@ import static org.objectweb.asm.Opcodes.*;
 public class SuperWrapperTransformer implements IClassTransformer {
 	
 	public static final String SUPERWRAPPER_DESC = Type.getDescriptor(SuperWrapper.class);
-	public static HookLogger logger = new HookLogger.SystemOutLogger("SuperWrapper");
+	public static HookLogger logger = new HookLogger.Log4JLogger("SuperWrapper");
 	public static List<SuperWrapperTransformerContainer> registeredContainers = new ArrayList<>();
 	
 	@Override

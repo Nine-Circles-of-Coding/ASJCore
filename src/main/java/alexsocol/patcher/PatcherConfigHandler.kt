@@ -13,6 +13,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var addBlocks = false
 	var textIDs = false
 	
+	var bucketSounds = true
 	var c17PacketCustomPayloadUnlimit = true
 	var cacheSchemas = true
 	var clampPotionLevel = true
@@ -29,6 +30,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var ignoreIllegalStates = false
 	var lightningID = 150
 	var logDebug = true
+	var logTrace = false
 	var maxParticles = 4000
 	var portalHook = true
 	var showNbt = true
@@ -58,6 +60,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		addBlocks = loadProp(CATEGORY_DANGER, "addBlocks", addBlocks, true, "Set this to true to add items for technical blocks")
 		textIDs = loadProp(CATEGORY_DANGER, "textIDs", textIDs, false, "Set this to true to enable text item IDs instead of numeric for storing in NBT")
 		
+		bucketSounds = loadProp(CATEGORY_GENERAL, "bucketSounds", bucketSounds, false, "Set this to false to disable sounds from buckets")
 		c17PacketCustomPayloadUnlimit = loadProp(CATEGORY_GENERAL, "c17PacketCustomPayloadUnlimit", c17PacketCustomPayloadUnlimit, true, "Set this to false to disable C17PacketCustomPayload expansion")
 		cacheSchemas = loadProp(CATEGORY_GENERAL, "cacheSchemas", cacheSchemas, false, "Set this to false to disable schemas caching - it will save your RAM but worldgen will take longer")
 		clampPotionLevel = loadProp(CATEGORY_GENERAL, "clampPotionLevel", clampPotionLevel, false, "Set this to false to disable potion level clamping to 0..255 (you almost never want this disabled)")
@@ -73,7 +76,8 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		flyFastDig = loadProp(CATEGORY_GENERAL, "flyFastDig", flyFastDig, false, "Set this to false to make block break speed 5 times slower when flying with creative-like flight not in creative")
 		ignoreIllegalStates = loadProp(CATEGORY_GENERAL, "ignoreIllegalStates", ignoreIllegalStates, false, "Set this to true to ignore illegal player states (players won't be kicked)")
 		lightningID = loadProp(CATEGORY_GENERAL, "lightningID", lightningID, true, "ID for lightning bolt entity")
-		logDebug = loadProp(CATEGORY_GENERAL, "logDebug", logDebug, true, "Set this to false to disable debug logging")
+		logDebug = loadProp(CATEGORY_GENERAL, "logDebug", logDebug, false, "Set this to false to disable debug logging")
+		logTrace = loadProp(CATEGORY_GENERAL, "logTrace", logTrace, false, "Set this to true to enable thorough logging")
 		maxParticles = loadProp(CATEGORY_GENERAL, "maxParticles", maxParticles, true, "How many [any] particles can there be at one time (defaults to vanilla value)")
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
 		showNbt = loadProp(CATEGORY_GENERAL, "showNbt", showNbt, false, "Set this to false to not show stack NBT in item tooltip when holding SHIFT AND when advanced tooltips are enabled (F3+H)")
@@ -90,6 +94,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		ignoredClasses = loadProp(CATEGORY_DKC, "ignoredClasses", ignoredClasses, true, "Array of classes or packages (or just parts) that won't be touched when making everything public", false)
 		
 		blacklistWither = loadProp(CATEGORY_INTEGRATION, "NEI.blacklistWither", blacklistWither, true, "Set this to false to make Wither spawner visible")
-		optifinePostTransform = loadProp(CATEGORY_INTEGRATION, "OF.optifinePostTransform", optifinePostTransform, true, "Set this to false to disable modifications to optifine some code. May break or repair render bugs.")
+		optifinePostTransform = loadProp(CATEGORY_INTEGRATION, "OF.optifinePostTransform", optifinePostTransform, true, "Set this to false to disable modifications to glass panes visual connections to other blocks changes made by optifine. May break or fix render bugs.")
 	}
 }

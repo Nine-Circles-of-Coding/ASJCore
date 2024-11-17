@@ -1,9 +1,11 @@
 package com.KAIIIAK.classManipulators;
 
+import com.KAIIIAK.KASMLib.KASMLib;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -96,7 +98,7 @@ public class SomeUtil {
 				Object value = field.get(insnNode);
 				stringBuilder.append(field.getName()).append("=").append(value).append(", ");
 			} catch (IllegalAccessException e) {
-				e.printStackTrace();
+				KASMLib.logger.error("Error:", e);
 			}
 		}
 		
@@ -113,14 +115,14 @@ public class SomeUtil {
 	static {
 		try {
 			for (Field field : Opcodes.class.getDeclaredFields()) {
-				if (java.lang.reflect.Modifier.isStatic(field.getModifiers()) && field.getType() == int.class) {
+				if (Modifier.isStatic(field.getModifiers()) && field.getType() == int.class) {
 					int fieldValue = field.getInt(null);
 					String fieldName = field.getName();
 					opcodeNames.put(fieldValue, fieldName);
 				}
 			}
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			KASMLib.logger.error("Error:", e);
 		}
 	}
 	

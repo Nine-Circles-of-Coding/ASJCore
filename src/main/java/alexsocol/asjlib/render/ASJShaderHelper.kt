@@ -125,7 +125,7 @@ object ASJShaderHelper: IResourceManagerReloadListener {
 			return shaderID
 		} catch (e: Exception) {
 			glDeleteShader(shaderID)
-			e.printStackTrace()
+			ASJUtilities.error("Error creating shader.", e)
 			return -1
 		}
 	}

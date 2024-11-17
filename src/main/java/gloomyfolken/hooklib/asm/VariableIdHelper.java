@@ -49,7 +49,7 @@ public class VariableIdHelper {
 	public static void printLocalVariables(byte[] classData, String methodName, Type... argTypes) {
 		List<String> locals = listLocalVariables(classData, methodName, argTypes);
 		for (String str : locals) {
-			System.out.println(str);
+			HookClassTransformer.logger.debug(str);
 		}
 	}
 }

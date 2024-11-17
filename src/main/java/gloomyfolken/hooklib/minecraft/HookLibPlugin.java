@@ -1,6 +1,7 @@
 package gloomyfolken.hooklib.minecraft;
 
 import cpw.mods.fml.relauncher.*;
+import org.apache.logging.log4j.Level;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -16,9 +17,9 @@ public class HookLibPlugin implements IFMLLoadingPlugin {
 				Field deobfField = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
 				deobfField.setAccessible(true);
 				obf = !deobfField.getBoolean(null);
-				FMLRelaunchLog.info("[HOOKLIB] " + " Obfuscated: " + obf);
+				FMLRelaunchLog.info("[HOOKLIB] Obfuscated: " + obf);
 			} catch (Exception e) {
-				e.printStackTrace();
+				FMLRelaunchLog.log(Level.ERROR, e, "Error");
 			}
 			checked = true;
 		}

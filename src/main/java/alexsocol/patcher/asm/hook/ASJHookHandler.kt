@@ -12,9 +12,10 @@ import biomesoplenty.common.blocks.BlockBOPLog
 import biomesoplenty.common.itemblocks.ItemBlockLog
 import cofh.asmhooks.HooksCore
 import cpw.mods.fml.client.*
+import cpw.mods.fml.common.TracingPrintStream
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
-import gloomyfolken.hooklib.asm.Hook
+import gloomyfolken.hooklib.asm.*
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import gloomyfolken.hooklib.asm.ReturnCondition.*
 import net.minecraft.block.*
@@ -40,7 +41,7 @@ import net.minecraft.entity.monster.*
 import net.minecraft.entity.passive.EntityMooshroom
 import net.minecraft.entity.player.*
 import net.minecraft.entity.projectile.*
-import net.minecraft.init.Blocks
+import net.minecraft.init.*
 import net.minecraft.inventory.*
 import net.minecraft.item.*
 import net.minecraft.nbt.*
@@ -263,7 +264,7 @@ object ASJHookHandler {
 			
 			return CommandBase.getListOfStringsMatchingLastWord(args, *fullNames.toTypedArray())
 		} catch (e: Throwable) {
-			e.printStackTrace()
+			ASJUtilities.error("Error tabbing /summon", e)
 			return null
 		}
 	}
@@ -400,14 +401,8 @@ object ASJHookHandler {
 		
 		if (e.isCanceled) return
 		
-		// FUCKING SIDEONLY SHIT
-		val nbt = NBTTagCompound()
-		stats.writeNBT(nbt)
-		
-		nbt.setInteger("foodLevel", min(e.newFoodLevel + stats.foodLevel, 20))
-		nbt.setFloat("foodSaturationLevel", min(stats.saturationLevel + e.newFoodLevel * e.newSaturationLevel * 2f, stats.foodLevel.F))
-		
-		stats.readNBT(nbt)
+		stats.foodLevel = min(e.newFoodLevel + stats.foodLevel, 20)
+		stats.foodSaturationLevel = min(stats.saturationLevel + e.newFoodLevel * e.newSaturationLevel * 2f, stats.foodLevel.F)
 	}
 	
 	
@@ -590,8 +585,7 @@ object ASJHookHandler {
 				}
 			}
 		} catch (ex: ConcurrentModificationException) {
-			ASJUtilities.log("Well, that was expected. Ignore.")
-			ex.printStackTrace()
+			ASJUtilities.error("Well, that was expected. Ignore.", ex)
 		} catch (e: Exception) {
 			ASJReflectionHelper.setValue(message_f, e, ASJReflectionHelper.getValue<String>(message_f, e) + "\nIt is possible that you got potion ID conflict. Try installing 'Extended Potions' or make sure you have all IDs BELOW 128!", true)
 			val stackTrace = e.stackTrace.filter { "alexsocol" !in it.className }.toTypedArray()
@@ -1374,4 +1368,40 @@ object ASJHookHandler {
 	
 	@JvmStatic
 	fun allsidedMeta(ib: ItemBlockLog, meta: Int) = meta
+	
+	
+	// bucket sounds
+	@JvmStatic
+	@Hook
+	fun func_150910_a(target: ItemBucket, stack: ItemStack?, player: EntityPlayer, item: Item): ItemStack? {
+		if (!PatcherConfigHandler.bucketSounds) return stack
+		
+		val s = if (item === Items.water_bucket)
+			"game.neutral.swim" // "game.neutral.swim.splash"
+		else if (item === Items.lava_bucket)
+			"liquid.lavapop"
+		else
+			return stack
+		
+		player.playSound(s, 1f, 1f)
+		return stack
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun tryPlaceContainedLiquid(target: ItemBucket, world: World, x: Int, y: Int, z: Int, @ReturnValue result: Boolean): Boolean {
+		if (!PatcherConfigHandler.bucketSounds) return result
+		
+		if (world.provider.isHellWorld && target.isFull === Blocks.flowing_water) return result
+		
+		val s = if (target.isFull.material === Material.water)
+			"game.neutral.swim" // "game.neutral.swim.splash"
+		else if (target.isFull.material === Material.lava)
+			"liquid.lavapop"
+		else
+			return result
+		
+		world.playSound(x + 0.5, y + 0.5, z + 0.5, s, 1f, 1f, false)
+		return result
+	}
 }

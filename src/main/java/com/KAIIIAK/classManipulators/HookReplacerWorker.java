@@ -15,9 +15,8 @@ import static com.KAIIIAK.classManipulators.SomeUtil.getStringRepresentation;
 
 public class HookReplacerWorker extends KASMWorker {
 	
-	public static HookLogger logger = new HookLogger.SystemOutLogger("HookReplacer");
+	public static HookLogger logger = new HookLogger.Log4JLogger("HookReplacer");
 	
-	public static boolean isDebug = true;
 	public static HookReplacerWorker inst = new HookReplacerWorker();
 	
 	public List<ChangesHolder> methodsToChange = new ArrayList<>();
@@ -36,8 +35,7 @@ public class HookReplacerWorker extends KASMWorker {
 	public boolean workClass(ClassNode classNode) {
 		for (ChangesHolder changesHolder : Opt.it(registeredMethods)) {
 			if (classNode.name.equals(changesHolder.clazz.getInternalName()) || className.equals(changesHolder.clazz.getInternalName()) || transformedClassName.equals(changesHolder.clazz.getClassName())) {
-				if (isDebug)
-					logger.debug("Found Class to hook into " + transformedClassName);
+				logger.debug("Found Class to hook into " + transformedClassName);
 				methodsToChange.add(changesHolder);
 			}
 		}
@@ -52,20 +50,16 @@ public class HookReplacerWorker extends KASMWorker {
 		for (ChangesHolder changesHolder : Opt.it(methodsToChange)) {
 			String actualName = McpToSrg.getTargetMethodMatchingNameAndDesc(classNode.methods, changesHolder.methodName, Type.getMethodDescriptor(changesHolder.methodReturn, changesHolder.methodParams));
 			
-			if (isDebug)
-				logger.debug(String.format("Testing method %s to be equal to %s", methodNode.name, actualName));
+			logger.debug(String.format("Testing method %s to be equal to %s", methodNode.name, actualName));
 			
 			if (methodNode.name.equals(actualName)) {
-				if (isDebug)
-					logger.debug(String.format("Found method to hook into %s", methodNode.name));
+				logger.debug(String.format("Found method to hook into %s", methodNode.name));
 				Type methodType = Type.getMethodType(methodNode.desc);
 				if (!methodType.getReturnType().equals(changesHolder.methodReturn)) continue;
-				if (isDebug)
-					logger.debug(String.format("Found method to hook into with a correct return type %s", methodNode.name));
+				logger.debug(String.format("Found method to hook into with a correct return type %s", methodNode.name));
 				Type[] argTypes = methodType.getArgumentTypes();
 				if (!isTypesSame(argTypes, changesHolder.methodParams)) continue;
-				if (isDebug)
-					logger.debug(String.format("Found method to hook into with a correct method params %s", methodNode.name));
+				logger.debug(String.format("Found method to hook into with a correct method params %s", methodNode.name));
 				workMethodChanges(methodNode, changesHolder);
 				
 				found = changesHolder;
@@ -88,21 +82,18 @@ public class HookReplacerWorker extends KASMWorker {
 	
 	//TODO check start
 	public void workMethodChanges(MethodNode methodNode, ChangesHolder changes) {
-		if (isDebug)
-			for (int i = 0; i < methodNode.instructions.size(); i++)
-				logger.debug(String.format("methodNode.instructions.get(%d) = %s", i, getStringRepresentation(methodNode.instructions.get(i))));
+		for (int i = 0; i < methodNode.instructions.size(); i++)
+			logger.trace(String.format("methodNode.instructions.get(%d) = %s", i, getStringRepresentation(methodNode.instructions.get(i))));
 		
 		for (Map.Entry<List<AbstractInsnNode>, List<AbstractInsnNode>> entry : Opt.it(changes.instToReplace.entrySet())) {
 			List<AbstractInsnNode> fromList = entry.getKey();
 			List<AbstractInsnNode> toList = entry.getValue();
 			
-			if (isDebug)
-				for (int i = 0; i < fromList.size(); i++)
-					logger.debug(String.format("fromList.get(%d) = %s", i, getStringRepresentation(fromList.get(i))));
+			for (int i = 0; i < fromList.size(); i++)
+				logger.trace(String.format("fromList.get(%d) = %s", i, getStringRepresentation(fromList.get(i))));
 			
-			if (isDebug)
-				for (int i = 0; i < toList.size(); i++)
-					logger.debug(String.format("toList.get(%d) = %s", i, getStringRepresentation(toList.get(i))));
+			for (int i = 0; i < toList.size(); i++)
+				logger.trace(String.format("toList.get(%d) = %s", i, getStringRepresentation(toList.get(i))));
 			
 			InsnList toList2 = new InsnList();
 			
@@ -120,8 +111,7 @@ public class HookReplacerWorker extends KASMWorker {
 				
 				instructions.insertBefore(instructions.get(index), toList2);
 				
-				if (isDebug)
-					logger.debug(String.format("Replaced insns at index %s", index));
+				logger.debug(String.format("Replaced insns at index %s", index));
 				
 				this.changes++;
 				index = findInstructions(instructions, fromArray);
@@ -211,8 +201,7 @@ public class HookReplacerWorker extends KASMWorker {
 					}
 				}
 				
-				if (isDebug)
-					logger.debug(String.format("Found HookReplacer annotation: %s.%s%s", classNode.name, methodNode.name, methodNode.desc));
+				logger.debug(String.format("Found HookReplacer annotation: %s.%s%s", classNode.name, methodNode.name, methodNode.desc));
 				
 				Type methodType = Type.getMethodType(methodNode.desc);
 				Type[] argTypes = methodType.getArgumentTypes();
@@ -233,20 +222,19 @@ public class HookReplacerWorker extends KASMWorker {
 								&& insnNode.getOpcode() == Opcodes.INVOKESTATIC
 								&& Type.getInternalName(HookReplacer.Replacer.class).equals(((MethodInsnNode) insnNode).owner)) {
 						MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
-						if (methodInsnNode.name.equals("startFROM")) {
-							isInsideFromBlock = true;
-							isInsideToBlock = false;
-							continue;
-						}
-						if (methodInsnNode.name.equals("startTO")) {
-							isInsideFromBlock = false;
-							isInsideToBlock = true;
-							continue;
-						}
-						if (methodInsnNode.name.equals("stop")) {
-							isInsideFromBlock = false;
-							isInsideToBlock = false;
-							continue;
+						switch (methodInsnNode.name) {
+							case "startFROM":
+								isInsideFromBlock = true;
+								isInsideToBlock = false;
+								continue;
+							case "startTO":
+								isInsideFromBlock = false;
+								isInsideToBlock = true;
+								continue;
+							case "stop":
+								isInsideFromBlock = false;
+								isInsideToBlock = false;
+								continue;
 						}
 					}
 					if (isInsideFromBlock) {
@@ -276,8 +264,7 @@ public class HookReplacerWorker extends KASMWorker {
 					
 					registeredMethods.add(changesHolder);
 					
-					if (isDebug)
-						logger.debug(String.format("HookReplacer at %s.%s%s registered!", classNode.name, methodNode.name, methodNode.desc));
+					logger.debug(String.format("HookReplacer at %s.%s%s registered!", classNode.name, methodNode.name, methodNode.desc));
 				}
 			}
 			

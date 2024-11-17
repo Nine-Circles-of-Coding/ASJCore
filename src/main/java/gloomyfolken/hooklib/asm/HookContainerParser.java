@@ -42,11 +42,11 @@ public class HookContainerParser {
 	}
 	
 	protected void parseHooks(String className) {
-		transformer.logger.debug("Parsing hooks container " + className);
+		HookClassTransformer.logger.debug("Parsing hooks container " + className);
 		try {
 			transformer.classMetadataReader.acceptVisitor(className, new HookClassVisitor());
 		} catch (IOException e) {
-			transformer.logger.error("Can not parse hooks container " + className, e);
+			HookClassTransformer.logger.error("Can not parse hooks container " + className, e);
 		}
 	}
 	
@@ -188,8 +188,8 @@ public class HookContainerParser {
 	
 	private void invalidHook(String message) {
 		String hook = currentClassName + "#" + currentMethodName;
-		transformer.logger.warning("Found invalid hook " + hook);
-		transformer.logger.warning(message);
+		HookClassTransformer.logger.warning("Found invalid hook " + hook);
+		HookClassTransformer.logger.warning(message);
 
 		if (!annotationValues.containsKey("isMandatory") || Boolean.TRUE.equals(annotationValues.get("isMandatory")))
 			throw new IllegalStateException("Mandatory hook " + hook + " is invalid: " + message);

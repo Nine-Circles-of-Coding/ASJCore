@@ -1,6 +1,6 @@
 package alexsocol.asjlib.asm
 
-import gloomyfolken.hooklib.asm.HookLogger.SystemOutLogger
+import gloomyfolken.hooklib.asm.HookLogger
 import net.minecraft.launchwrapper.IClassTransformer
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.ClassNode
@@ -16,7 +16,7 @@ class ASJASM: IClassTransformer {
 		val cr = ClassReader(basicClass)
 		val cw = ClassWriter(cr, ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
 		for (fd in fields) {
-			logger.debug("Injecting field $name")
+			logger.debug("Injecting field ${fd.name}")
 			cw.visitField(fd.access, fd.name, fd.desc, null, null).visitEnd()
 		}
 		cr.accept(cw, 0)
@@ -25,7 +25,7 @@ class ASJASM: IClassTransformer {
 	
 	companion object {
 		
-		var logger = SystemOutLogger("ASJASM")
+		var logger = HookLogger.Log4JLogger("ASJASM")
 		
 		val fieldsMap = HashMap<String, ArrayList<FieldData>>()
 		

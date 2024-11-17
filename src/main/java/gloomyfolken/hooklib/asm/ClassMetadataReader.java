@@ -21,7 +21,7 @@ public class ClassMetadataReader {
 			m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
 			m.setAccessible(true);
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
+			HookClassTransformer.logger.error("Error:", e);
 		}
 	}
 	
@@ -44,7 +44,7 @@ public class ClassMetadataReader {
 			String className = superClasses.get(i);
 			MethodReference methodReference = getMethodReference(className, name, desc);
 			if (methodReference != null) {
-				System.out.println("found virtual method: " + methodReference);
+				HookClassTransformer.logger.debug("found virtual method: " + methodReference);
 				return methodReference;
 			}
 		}
@@ -104,7 +104,7 @@ public class ClassMetadataReader {
 				ClassLoader classLoader = ClassMetadataReader.class.getClassLoader();
 				return (Class) m.invoke(classLoader, type.replace('/', '.'));
 			} catch (Exception e) {
-				e.printStackTrace();
+				HookClassTransformer.logger.error("Error getting class " + type, e);
 			}
 		}
 		return null;
@@ -188,7 +188,7 @@ public class ClassMetadataReader {
 		
 		@Override
 		public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-//			System.out.println("visiting " + name + "#" + desc);
+			HookClassTransformer.logger.trace("visiting " + name + "#" + desc);
 			if ((access & Opcodes.ACC_PRIVATE) == 0 && checkSameMethod(name, desc, targetName, targetDesc)) {
 				found = true;
 				targetName = name;

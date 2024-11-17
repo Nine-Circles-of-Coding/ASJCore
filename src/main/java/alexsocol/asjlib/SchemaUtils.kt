@@ -31,7 +31,7 @@ object SchemaUtils {
 				world.setBlock(x + loc.x, y + loc.y, z + loc.z, block, loc.meta, 3)
 				
 				if (loc.nbt != null) {
-					val tile = TileEntity.createAndLoadEntity(JsonToNBT.func_150315_a(loc.nbt) as NBTTagCompound) ?: return
+					val tile = TileEntity.createAndLoadEntity(JsonToNBT.func_150315_a(loc.nbt) as NBTTagCompound) ?: continue
 					tile.xCoord = x + loc.x
 					tile.yCoord = y + loc.y
 					tile.zCoord = z + loc.z

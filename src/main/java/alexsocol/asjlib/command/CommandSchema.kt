@@ -91,8 +91,7 @@ object CommandSchema: ASJCommandBase() {
 			sender.addChatMessage(ChatComponentTranslation("asjcore.commands.schema.dumpOk", link))
 		} catch (e: Exception) {
 			ASJUtilities.say(sender, "asjcore.commands.schema.dumpNo", e.message ?: "")
-			ASJUtilities.error("Error dumping schema: ${e.message}")
-			e.printStackTrace()
+			ASJUtilities.error("Error dumping schema: ${e.message}", e)
 		}
 	}
 	

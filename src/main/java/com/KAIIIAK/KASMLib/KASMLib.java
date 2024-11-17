@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class KASMLib implements IClassTransformer {
 	
-	public static HookLogger logger = new HookLogger.SystemOutLogger("KASMLib");
+	public static HookLogger logger = new HookLogger.Log4JLogger("KASMLib");
 
 	public boolean has2DumpChangedClasses = false;
 	public boolean has2DumpUnchangedClasses = false; // that has tp change

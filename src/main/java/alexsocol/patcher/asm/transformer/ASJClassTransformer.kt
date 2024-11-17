@@ -18,8 +18,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			cr.accept(cv, ClassReader.EXPAND_FRAMES)
 			this.basicClass = cw.toByteArray()
 		} catch (e: Throwable) {
-			System.err.println("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error).")
-			e.printStackTrace()
+			logger.error("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error):", e)
 		}
 		
 		return when (transformedName) {
@@ -46,16 +45,16 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
-	internal class ClassVisitorPotionMethodPublicizer(cv: ClassVisitor, val className: String): ClassVisitor(ASM5, cv) {
+	private inner class ClassVisitorPotionMethodPublicizer(cv: ClassVisitor, val className: String): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(acc: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			var access = acc
 			if (name == (if (OBF) "b" else "onFinishedPotionEffect") && desc == (if (OBF) "(Lrw;)V" else "(Lnet/minecraft/potion/PotionEffect;)V")) {
-				println("Publicizing onFinishedPotionEffect: $name$desc for $className")
+				logger.debug("Publicizing onFinishedPotionEffect: $name$desc for $className")
 				access = ACC_PUBLIC
 			}
 			if (name == (if (OBF) "a" else "onChangedPotionEffect") && desc == (if (OBF) "(Lrw;Z)V" else "(Lnet/minecraft/potion/PotionEffect;Z)V")) {
-				println("Publicizing onChangedPotionEffect: $name$desc for $className")
+				logger.debug("Publicizing onChangedPotionEffect: $name$desc for $className")
 				access = ACC_PUBLIC
 			}
 			return super.visitMethod(access, name, desc, signature, exceptions)
@@ -64,17 +63,17 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	
 	// fixes crash when adding eggs
 	// also calls ASJPatches#patchNeiNoWither
-	internal class `ItemInfo$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `ItemInfo$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "load") {
-				println("Visiting ItemInfo#load: $name$desc")
+				logger.debug("Visiting ItemInfo#load: $name$desc")
 				return `ItemInfo$load$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `ItemInfo$load$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `ItemInfo$load$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitMethodInsn(opcode: Int, owner: String, name: String, desc: String?, itf: Boolean) {
 				if (opcode == INVOKESTATIC && owner == "codechicken/nei/api/ItemInfo" && name == "addSpawnEggs")
@@ -85,7 +84,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
-	internal class `DefaultChannelPipeline$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `DefaultChannelPipeline$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			val mv = super.visitMethod(access, name, desc, signature, exceptions)
@@ -108,18 +107,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// wrong RangedAttribute#minimumValue fix
-	internal class `NetHandlerPlayClient$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `NetHandlerPlayClient$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "handleEntityProperties" || (name == "a" && desc == "(Lil;)V")) {
-				println("Visiting NetHandlerPlayClient#handleEntityProperties: $name$desc")
+				logger.debug("Visiting NetHandlerPlayClient#handleEntityProperties: $name$desc")
 				return `NetHandlerPlayClient$handleEntityProperties$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `NetHandlerPlayClient$handleEntityProperties$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `NetHandlerPlayClient$handleEntityProperties$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitLdcInsn(cst: Any?) {
 				if (cst == java.lang.Double.MIN_NORMAL) super.visitLdcInsn(-java.lang.Double.MAX_VALUE)
@@ -129,18 +128,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// More Particles
-	internal class `EffectRenderer$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `EffectRenderer$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "addEffect" || name == "a" && desc == "(Lbkm;)V") {
-				println("Visiting EffectRenderer#addEffect: $name$desc")
+				logger.debug("Visiting EffectRenderer#addEffect: $name$desc")
 				return `EffectRenderer$addEffect$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `EffectRenderer$addEffect$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `EffectRenderer$addEffect$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitIntInsn(opcode: Int, operand: Int) {
 				if (opcode == SIPUSH && operand == 4000) {
@@ -155,14 +154,14 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// Summom Usage
-	internal class `CommandSummon$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `CommandSummon$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-			println("Visiting CommandSummon#: $name$desc")
+			logger.debug("Visiting CommandSummon#: $name$desc")
 			return `CommandSummon$processCommand$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 		}
 		
-		internal class `CommandSummon$processCommand$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `CommandSummon$processCommand$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitLdcInsn(cst: Any?) {
 				val ncst = if ("commands.summon.usage" == cst) "commands.summon.usage.new" else cst
@@ -172,23 +171,23 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// flag count expansion to 32
-	internal class `Entity$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `Entity$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			val visitMethod = super.visitMethod(access, name, desc, signature, exceptions)
 			
 			if (name == "<init>") {
-				println("Visiting Entity#init: $name$desc")
+				logger.debug("Visiting Entity#init: $name$desc")
 				return `Entity$init$MethodVisitor`(visitMethod)
 			} else if (name == "getFlag" || name == "setFlag" || (name == "g" && desc == "(I)Z") || (name == "a" && desc == "(IZ)V")) {
-				println("Visiting Entity#flag property: $name$desc")
+				logger.debug("Visiting Entity#flag property: $name$desc")
 				return `Entity$init$MethodVisitor`(visitMethod)
 			}
 			
 			return visitMethod
 		}
 		
-		internal class `Entity$init$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `Entity$init$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
 				if ((owner == "net/minecraft/entity/DataWatcher" || owner == "te") && desc == "(I)B")
@@ -206,18 +205,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
-	internal class `ItemGlassBottle$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `ItemGlassBottle$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "onItemRightClick" || name == "a" && desc == "(Ladd;Lahb;Lyz;)Ladd;") {
-				println("Visiting ItemGlassBottle#onItemRightClick: $name$desc")
+				logger.debug("Visiting ItemGlassBottle#onItemRightClick: $name$desc")
 				return `ItemGlassBottle$onItemRightClick$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `ItemGlassBottle$onItemRightClick$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `ItemGlassBottle$onItemRightClick$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
 				if (name == "getMaterial" || name == "o" && desc == "()Lawt;") return
@@ -234,18 +233,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
-	internal class `JsonToNBT$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `JsonToNBT$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "func_150316_a" || name == "c") {
-				println("Visiting JsonToNBT#func_150316_a: $name$desc")
+				logger.debug("Visiting JsonToNBT#func_150316_a: $name$desc")
 				return `JsonToNBT$func_150316_a$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `JsonToNBT$func_150316_a$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `JsonToNBT$func_150316_a$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitLdcInsn(cst: Any?) {
 				super.visitLdcInsn(if (cst == "\\[[-\\d|,\\s]+\\]") "\\[[-\\db,\\s]+]" else cst)
@@ -254,18 +253,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// TCP no delay (other part in PatcherEventHandler)
-	internal class `Network_$_$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `Network_$_$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (PatcherConfigHandler.tcpNoDelay && name == "initChannel") {
-				println("Visiting Network%$%#initChannel: $name$desc")
+				logger.debug("Visiting $transformedName#initChannel: $name$desc")
 				return `Network_$_$initChannel$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `Network_$_$initChannel$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `Network_$_$initChannel$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			var changed = false
 			
@@ -284,19 +283,19 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// Payload fix
-	internal class `C17PacketCustomPayload$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `C17PacketCustomPayload$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (PatcherConfigHandler.c17PacketCustomPayloadUnlimit)
 				if ((name == "<init>" && desc == "(Ljava/lang/String;[B)V") || (name == "readPacketData" || name == "a" && desc == "(Let;)V") || (name == "writePacketData" || name == "b" && desc == "(Let;)V")) {
-					println("Visiting C17PacketCustomPayload methods: $name$desc")
+					logger.debug("Visiting C17PacketCustomPayload methods: $name$desc")
 					return `C17PacketCustomPayload$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 				}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `C17PacketCustomPayload$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `C17PacketCustomPayload$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitIntInsn(opcode: Int, operand: Int) {
 				if (opcode == SIPUSH && operand == 32767) {
@@ -327,18 +326,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// Non-null fire extinguishing
-	internal class `ItemInWorldManager$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `ItemInWorldManager$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "onBlockClicked" || name == "a" && desc == "(IIII)V") {
-				println("Visiting ItemInWorldManager#onBlockClicked: $name$desc")
+				logger.debug("Visiting ItemInWorldManager#onBlockClicked: $name$desc")
 				return `ItemRelic$onBlockClicked$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `ItemRelic$onBlockClicked$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `ItemRelic$onBlockClicked$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitInsn(opcode: Int) {
 				if (opcode == ACONST_NULL) {
@@ -358,21 +357,21 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// saving more than Short.MAX_VALUE amount of fuel
-	internal class `TileEntityFurnace$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `TileEntityFurnace$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "readFromNBT" || (name == "a" && desc == "(Ldh;)V")) {
-				println("Visiting TileEntityFurnace#readFromNBT: $name$desc")
+				logger.debug("Visiting TileEntityFurnace#readFromNBT: $name$desc")
 				return `TileEntityFurnace$readFromNBT$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			} else if (name == "writeToNBT" || (name == "b" && desc == "(Ldh;)V")) {
-				println("Visiting TileEntityFurnace#writeToNBT: $name$desc")
+				logger.debug("Visiting TileEntityFurnace#writeToNBT: $name$desc")
 				return `TileEntityFurnace$writeToNBT$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `TileEntityFurnace$readFromNBT$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `TileEntityFurnace$readFromNBT$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
 				if (name == "getShort" || (name == "e" && desc == "(Ljava/lang/String;)S")) {
@@ -381,7 +380,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			}
 		}
 		
-		internal class `TileEntityFurnace$writeToNBT$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `TileEntityFurnace$writeToNBT$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {
 				if (name == "setShort" || (name == "a" && desc == "(Ljava/lang/String;S)V")) {
@@ -396,18 +395,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// Firing any entity update event
-	internal class `World$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `World$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "updateEntityWithOptionalForce" || name == "a" && desc == "(Lsa;Z)V") {
-				println("Visiting World#updateEntityWithOptionalForce: $name$desc")
+				logger.debug("Visiting World#updateEntityWithOptionalForce: $name$desc")
 				return `World$updateEntityWithOptionalForce$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `World$updateEntityWithOptionalForce$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `World$updateEntityWithOptionalForce$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitMethodInsn(opcode: Int, owner: String, name: String, desc: String, itf: Boolean) {
 				if (opcode == INVOKEVIRTUAL && owner == (if (OBF) "sa" else "net/minecraft/entity/Entity") && (name == (if (OBF) "ab" else "updateRidden") || name == if (OBF) "h" else "onUpdate") && desc == "()V" && !itf) {
@@ -429,18 +428,18 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// Fix for entropy ore being without black hit particles
-	internal class `BlockCustomOre$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
+	private inner class `BlockCustomOre$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			if (name == "addHitEffects") {
-				println("Visiting BlockCustomOre#addHitEffects: $name$desc")
+				logger.debug("Visiting BlockCustomOre#addHitEffects: $name$desc")
 				return `BlockCustomOre$addHitEffects$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
 		
-		internal class `BlockCustomOre$addHitEffects$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
+		private inner class `BlockCustomOre$addHitEffects$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitIntInsn(opcode: Int, operand: Int) {
 				if (opcode == BIPUSH && operand == 6) super.visitIntInsn(opcode, 7)
@@ -449,7 +448,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
-	fun fixChunkloading() = tree { cn ->
+	private fun fixChunkloading() = tree { cn ->
 		run loadWorld@ {
 			val mn = cn.methods.find { it.name == "loadWorld" } ?: return@loadWorld
 			
@@ -489,7 +488,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
-	fun fixInfusionMatrix() = tree { cn ->
+	private fun fixInfusionMatrix() = tree { cn ->
 		val mn = cn.methods.find { it.name == "getSurroundings" } ?: return@tree
 		
 		val i = object: Iterable<AbstractInsnNode> {
