@@ -16,7 +16,10 @@ class ResourceLocationAnimated: ResourceLocation {
 	lateinit var frameList: IntArray
 	var framerate: Int = 1
 	
-	private constructor(): super("textures/entity/steve.png")
+	private constructor(): super("textures/entity/steve.png") {
+		frameList = IntArray(0)
+	}
+	
 	private constructor(mod: String, path: String): super(mod, path) {
 		init(getResourceSafe(ResourceLocation(resourceDomain, "$resourcePath.meta"))?.inputStream, mc.resourceManager.getResource(this).inputStream)
 	}
@@ -95,11 +98,17 @@ class ResourceLocationAnimated: ResourceLocation {
 	
 	private fun put(frameList: ArrayList<Int>, part: BufferedImage, blur: Boolean, clamp: Boolean) = frameList.add(TextureUtil.uploadTextureImageAllocate(GL11.glGenTextures(), part, blur, clamp))
 	
-	fun getCurrentFrame() = frameList[(((mc.theWorld?.totalWorldTime ?: 0L) % (framerate * frameList.size)) / framerate).I]
+	fun getCurrentFrame(): Int {
+		if (ASJUtilities.isServer) return 0
+		return frameList[(((mc.theWorld?.totalWorldTime ?: 0L) % (framerate * frameList.size)) / framerate).I]
+	}
 	
-	fun bind() = GL11.glBindTexture(GL11.GL_TEXTURE_2D, getCurrentFrame())
+	fun bind() {
+		if (ASJUtilities.isClient)
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, getCurrentFrame())
+	}
 	
-	fun getResourceSafe(loc: ResourceLocation): IResource? {
+	private fun getResourceSafe(loc: ResourceLocation): IResource? {
 		return try {
 			mc.resourceManager.getResource(loc)
 		} catch (e: Throwable) {
@@ -117,10 +126,13 @@ class ResourceLocationAnimated: ResourceLocation {
 		private const val MARKER_INTERPOLATION_STEPS = "interpolation="
 		
 		fun custom(metaStream: InputStream, imageStream: InputStream): ResourceLocationAnimated {
-			return ResourceLocationAnimated().init(metaStream, imageStream)
+			val rla = ResourceLocationAnimated()
+			if (ASJUtilities.isClient) rla.init(metaStream, imageStream)
+			return rla
 		}
 		
 		fun local(mod: String, path: String): ResourceLocationAnimated {
+			if (ASJUtilities.isServer) return ResourceLocationAnimated()
 			return ResourceLocationAnimated(mod, path)
 		}
 	}

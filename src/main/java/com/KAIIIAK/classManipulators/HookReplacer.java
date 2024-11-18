@@ -1,7 +1,9 @@
 package com.KAIIIAK.classManipulators;
 
 public @interface HookReplacer {
+	
 	String targetMethod() default "";
+	boolean correctStaticIndexes() default false;
 	
 	@SuppressWarnings("unused")
 	class Replacer {
@@ -30,5 +32,25 @@ public @interface HookReplacer {
 		public static void startTO() {}
 		
 		public static void stop() {}
+		
+		public static int ILOAD(String var) { return 0; }
+		
+		public static long LLOAD(String var) { return 0L; }
+		
+		public static float FLOAD(String var) { return 0f; }
+		
+		public static double DLOAD(String var) { return 0d; }
+		
+		public static <T> T ALOAD(String var) { return null; }
+		
+		public static void ISTORE(String var) {}
+		
+		public static void LSTORE(String var) {}
+		
+		public static void FSTORE(String var) {}
+		
+		public static void DSTORE(String var) {}
+		
+		public static void ASTORE(String var) {}
 	}
 }

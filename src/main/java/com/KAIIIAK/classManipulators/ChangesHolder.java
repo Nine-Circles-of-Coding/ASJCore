@@ -11,8 +11,10 @@ public class ChangesHolder {
 	public String methodName;
 	public Type[] methodParams;
 	public Type methodReturn;
+	public boolean correctStaticIndexes = true;
 	
 	public Map<List<AbstractInsnNode>, List<AbstractInsnNode>> instToReplace = new HashMap<>();//from, to
+	public Map<List<AbstractInsnNode>, List<AbstractInsnNode>> instToReplaceForStaticSrc = new HashMap<>();//from, to
 	
 	public ChangesHolder(Type clazz, String methodName) {
 		this.clazz = clazz;

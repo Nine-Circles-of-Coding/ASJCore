@@ -33,6 +33,8 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var logTrace = false
 	var maxParticles = 4000
 	var portalHook = true
+	var respawnInEnd = true
+	var respawnInNether = true
 	var showNbt = true
 	var showOreDict = true
 	var showRegName = true
@@ -80,6 +82,8 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		logTrace = loadProp(CATEGORY_GENERAL, "logTrace", logTrace, false, "Set this to true to enable thorough logging")
 		maxParticles = loadProp(CATEGORY_GENERAL, "maxParticles", maxParticles, true, "How many [any] particles can there be at one time (defaults to vanilla value)")
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
+		respawnInEnd = loadProp(CATEGORY_GENERAL, "respawnInEnd", respawnInEnd, false, "Set this to true to allow respawning in the edn")
+		respawnInNether = loadProp(CATEGORY_GENERAL, "respawnInNether", respawnInNether, false, "Set this to true to allow respawning in the nether")
 		showNbt = loadProp(CATEGORY_GENERAL, "showNbt", showNbt, false, "Set this to false to not show stack NBT in item tooltip when holding SHIFT AND when advanced tooltips are enabled (F3+H)")
 		showOreDict = loadProp(CATEGORY_GENERAL, "showOreDict", showOreDict, false, "Set this to false to not show oredict names in item tooltip when holding SHIFT")
 		showRegName = loadProp(CATEGORY_GENERAL, "showRegName", showRegName, false, "Set this to false to not show registry name in item tooltip when holding SHIFT")

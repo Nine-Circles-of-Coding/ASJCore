@@ -1,7 +1,7 @@
 Innovations:
- Added sounds to buckets (+config)
- Improved logging
+ Respawn in nether/end configs
+ [API] static methods support for @HookReplacer
+ [API] local variable handling with _STORE/_LOAD opcodes in @HookReplacer
 
 Fixes:
- Replaced oak leaves to jungle leaves on jungle shrubs
- Schemas entirely breaking on single invalid tile entity load
+ Server crash on animated textures load

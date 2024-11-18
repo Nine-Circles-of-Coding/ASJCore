@@ -1,5 +1,6 @@
 package com.KAIIIAK.KASMLib;
 
+import alexsocol.patcher.PatcherConfigHandler;
 import com.KAIIIAK.nullsafety.Opt;
 import gloomyfolken.hooklib.asm.HookLogger;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -16,9 +17,8 @@ public class KASMLib implements IClassTransformer {
 	
 	public static HookLogger logger = new HookLogger.Log4JLogger("KASMLib");
 
-	public boolean has2DumpChangedClasses = false;
-	public boolean has2DumpUnchangedClasses = false; // that has tp change
-	public boolean isInfoDebugEnabled = false;
+	public static boolean has2DumpChangedClasses = false;
+	public static boolean has2DumpUnchangedClasses = false; // that has tp change
 	
 	public static Set<KASMWorker> workers = new HashSet<>();
 	public boolean withRecalc;
@@ -216,7 +216,7 @@ public class KASMLib implements IClassTransformer {
 				asmWorker.workDataEnd();
 			}
 			if (cng > 0) {
-				if (isInfoDebugEnabled)
+				if (PatcherConfigHandler.INSTANCE.getLogDebug())
 					logger.debug(String.format("Trying to make %d changes in %s(%s)", cng, name, transformedName));
 				classNode.accept(classWriter);
 

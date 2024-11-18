@@ -1404,4 +1404,14 @@ object ASJHookHandler {
 		world.playSound(x + 0.5, y + 0.5, z + 0.5, s, 1f, 1f, false)
 		return result
 	}
+	
+	
+	// optional other worlds respawn
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun canRespawnHere(target: WorldProviderHell) = PatcherConfigHandler.respawnInNether
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun canRespawnHere(target: WorldProviderEnd) = PatcherConfigHandler.respawnInEnd
 }
