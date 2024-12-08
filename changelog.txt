@@ -1,7 +1,4 @@
 Innovations:
- Respawn in nether/end configs
- [API] static methods support for @HookReplacer
- [API] local variable handling with _STORE/_LOAD opcodes in @HookReplacer
-
-Fixes:
- Server crash on animated textures load
+ `ASJCore_doWeatherCycle` game rule - weather won't change
+ `ASJCore_mobFriendship` game rule - mobs won't fight or damage each other
+ Changed WEBiomeID default value to 40 

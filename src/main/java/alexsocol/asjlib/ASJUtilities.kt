@@ -687,7 +687,8 @@ object ASJUtilities {
 	 */
 	@JvmStatic
 	fun registerDimension(id: Int, provider: Class<out WorldProvider>, keepLoaded: Boolean) {
-		require(DimensionManager.registerProviderType(id, provider, keepLoaded)) { String.format("Failed to register provider for id %d, One is already registered", id) }
+		val registered = DimensionManager.registerProviderType(id, provider, keepLoaded)
+		if (!Loader.isModLoaded("idcv")) require(registered) { String.format("Failed to register provider for id %d, One is already registered", id) }
 		DimensionManager.registerDimension(id, id)
 	}
 	

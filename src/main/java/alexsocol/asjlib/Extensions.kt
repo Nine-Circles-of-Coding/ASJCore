@@ -262,7 +262,7 @@ operator fun IInventory.get(i: Int): ItemStack? = getStackInSlot(i)
 operator fun IInventory.set(i: Int, stack: ItemStack?) = setInventorySlotContents(i, stack)
 
 fun Block.toItem(): Item? = Item.getItemFromBlock(this)
-fun Item.toBlock() = Block.getBlockFromItem(this)!!
+fun Item.toBlock() = if (this is ItemReed) field_150935_a!! else Block.getBlockFromItem(this)!!
 val Block.id get() = Block.getIdFromBlock(this)
 val Item.id get() = Item.getIdFromItem(this)
 val ItemStack.block get() = item.toBlock()

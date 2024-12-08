@@ -42,7 +42,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var topDownButtons = true
 	var vignette = false
 	var voidFog = true
-	var WEBiomeID = 150
+	var WEBiomeID = 40
 	var WECustomLighting = true
 	
 	var allPublic = false

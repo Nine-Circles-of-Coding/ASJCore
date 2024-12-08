@@ -6,7 +6,7 @@ import net.minecraft.world.biome.BiomeGenJungle
 import net.minecraft.world.gen.feature.*
 import java.util.*
 
-@Suppress("unused")
+@Suppress("unused", "UNUSED_PARAMETER")
 object ASJHookReplacerHandler {
 	
 	// fix oak leaves on jungle shrubs
@@ -21,4 +21,7 @@ object ASJHookReplacerHandler {
 		
 		return null
 	}
+	
+	@JvmStatic
+	fun printMissingData(locallyMissing: List<String>) = "Fatally missing blocks and items for mods:\n${locallyMissing.mapTo(HashSet()) { it.split(':')[0] }}"
 }

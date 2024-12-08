@@ -2,9 +2,13 @@ package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
+import alexsocol.asjlib.math.Vector3.Companion.one
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
+import alexsocol.patcher.handler.*
+import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
+import alexsocol.patcher.handler.GameRulesHandler.GR_MOBS_FRIENDSHIP
 import alexsocol.patcher.helper.*
 import alexsocol.patcher.helper.OFHelper.shadersmodSupport
 import alexsocol.patcher.network.*
@@ -12,10 +16,9 @@ import biomesoplenty.common.blocks.BlockBOPLog
 import biomesoplenty.common.itemblocks.ItemBlockLog
 import cofh.asmhooks.HooksCore
 import cpw.mods.fml.client.*
-import cpw.mods.fml.common.TracingPrintStream
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
-import gloomyfolken.hooklib.asm.*
+import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import gloomyfolken.hooklib.asm.ReturnCondition.*
 import net.minecraft.block.*
@@ -47,7 +50,7 @@ import net.minecraft.item.*
 import net.minecraft.nbt.*
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.*
-import net.minecraft.server.*
+import net.minecraft.server.ServerEula
 import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
@@ -58,8 +61,8 @@ import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
 import net.minecraftforge.common.util.*
 import net.minecraftforge.fluids.IFluidBlock
-import org.lwjgl.opengl.*
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GLContext
 import org.lwjgl.opengl.NVFogDistance.*
 import org.objectweb.asm.Opcodes
 import java.awt.*
@@ -1414,4 +1417,23 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun canRespawnHere(target: WorldProviderEnd) = PatcherConfigHandler.respawnInEnd
+	
+	
+	// adding more game rules to default set 
+	@JvmStatic
+	@Hook(injectOnExit = true, targetMethod = "<init>")
+	fun `GameRules$init`(thiz: GameRules) {
+		GameRulesHandler.registerAll(thiz)
+	}
+	
+	// doWeatherCycle game rule implementation
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun updateWeatherBody(world: World): Boolean {
+		val rules = world.gameRules
+		if (!rules.hasRule(GR_DO_WEATHER_CYCLE))
+			rules.addGameRule(GR_DO_WEATHER_CYCLE, true.toString())
+		
+		return !rules.getGameRuleBooleanValue(GR_DO_WEATHER_CYCLE)
+	}
 }

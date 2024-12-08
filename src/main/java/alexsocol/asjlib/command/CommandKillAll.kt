@@ -22,7 +22,11 @@ object CommandKillAll: ASJCommandBase() {
 	
 	override fun getCommandUsage(sender: ICommandSender?) = StatCollector.translateToLocalFormatted(super.getCommandUsage(sender), names.joinToString("|"))
 	
-	override fun processCommand(sender: ICommandSender, args: Array<out String>) {
+	override fun processCommand(sender: ICommandSender, _args: Array<out String>) {
+		val args = _args.toMutableList()
+		val forced = "-f" in args
+		args.remove("-f")
+		
 		val name = args.getOrNull(0)?.uppercase() ?: "ALL"
 		val matcher = EntitySelector.entries.firstOrNull { it.name == name }?.matcher
 		if (matcher == null) throw WrongUsageException(getCommandUsage(sender))
@@ -42,6 +46,8 @@ object CommandKillAll: ASJCommandBase() {
 			if (!matcher(it)) return@forEach
 			if (radius != -1 && Vector3.pointDistancePlane(x, z, it.posX, it.posZ) > radius) return@forEach
 			if (modId != null && (EntityRegistry.instance().lookupModSpawn(it.javaClass, false)?.container?.modId ?: "minecraft") != modId) return@forEach
+			
+			if (it is EntityLiving && it.persistenceRequired && !forced) return@forEach
 			
 			it.setDead()
 			counter++

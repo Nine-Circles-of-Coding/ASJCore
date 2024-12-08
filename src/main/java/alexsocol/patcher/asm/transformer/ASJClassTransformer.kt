@@ -22,26 +22,28 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 		
 		return when (transformedName) {
-			"codechicken.nei.api.ItemInfo"                             -> core { `ItemInfo$ClassVisitor`(it) }
-			"io.netty.channel.DefaultChannelPipeline"                  -> core { `DefaultChannelPipeline$ClassVisitor`(it) }
-			"net.minecraft.client.network.NetHandlerPlayClient"        -> core { `NetHandlerPlayClient$ClassVisitor`(it) }
-			"net.minecraft.client.particle.EffectRenderer"             -> core { `EffectRenderer$ClassVisitor`(it) }
-			"net.minecraft.command.server.CommandSummon"               -> core { `CommandSummon$ClassVisitor`(it) }
-			"net.minecraft.entity.Entity"                              -> core { `Entity$ClassVisitor`(it) }
-			"net.minecraft.entity.effect.EntityLightningBolt"          -> tree { it.methods.removeIf { m -> m.name == "<init>" } }
-			"net.minecraft.item.ItemGlassBottle"                       -> core { `ItemGlassBottle$ClassVisitor`(it) }
-			"net.minecraft.nbt.JsonToNBT"                              -> core { `JsonToNBT$ClassVisitor`(it) }
+			"codechicken.nei.api.ItemInfo"                                    -> core { `ItemInfo$ClassVisitor`(it) }
+			"cpw.mods.fml.common.network.handshake.FMLHandshakeClientState$4" -> expandReport()
+			"io.netty.channel.DefaultChannelPipeline"                         -> core { `DefaultChannelPipeline$ClassVisitor`(it) }
+			"net.minecraft.client.network.NetHandlerPlayClient"               -> core { `NetHandlerPlayClient$ClassVisitor`(it) }
+			"net.minecraft.client.particle.EffectRenderer"                    -> core { `EffectRenderer$ClassVisitor`(it) }
+			"net.minecraft.command.server.CommandSummon"                      -> core { `CommandSummon$ClassVisitor`(it) }
+			"net.minecraft.entity.Entity"                                     -> core { `Entity$ClassVisitor`(it) }
+			"net.minecraft.entity.effect.EntityLightningBolt"                 -> tree { it.methods.removeIf { m -> m.name == "<init>" } }
+			"net.minecraft.item.ItemGlassBottle"                              -> core { `ItemGlassBottle$ClassVisitor`(it) }
+			"net.minecraft.nbt.JsonToNBT"                                     -> core { `JsonToNBT$ClassVisitor`(it) }
 			"net.minecraft.client.network.OldServerPinger$2",
 			"net.minecraft.network.NetworkManager$2",
-			"net.minecraft.network.NetworkSystem$1"                    -> core { `Network_$_$ClassVisitor`(it) }
-			"net.minecraft.network.play.client.C17PacketCustomPayload" -> core { `C17PacketCustomPayload$ClassVisitor`(it) }
-			"net.minecraft.server.management.ItemInWorldManager"       -> core { `ItemInWorldManager$ClassVisitor`(it) }
-			"net.minecraft.tileentity.TileEntityFurnace"               -> core { `TileEntityFurnace$ClassVisitor`(it) }
-			"net.minecraft.world.World"                                -> core { `World$ClassVisitor`(it) }
-			"net.minecraftforge.common.ForgeChunkManager"              -> fixChunkloading()
-			"thaumcraft.common.blocks.BlockCustomOre"                  -> core { `BlockCustomOre$ClassVisitor`(it) }
-			"thaumcraft.common.tiles.TileInfusionMatrix"               -> fixInfusionMatrix()
-			else                                                       -> this.basicClass
+			"net.minecraft.network.NetworkSystem$1"                           -> core { `Network_$_$ClassVisitor`(it) }
+			
+			"net.minecraft.network.play.client.C17PacketCustomPayload"        -> core { `C17PacketCustomPayload$ClassVisitor`(it) }
+			"net.minecraft.server.management.ItemInWorldManager"              -> core { `ItemInWorldManager$ClassVisitor`(it) }
+			"net.minecraft.tileentity.TileEntityFurnace"                      -> core { `TileEntityFurnace$ClassVisitor`(it) }
+			"net.minecraft.world.World"                                       -> core { `World$ClassVisitor`(it) }
+			"net.minecraftforge.common.ForgeChunkManager"                     -> fixChunkloading()
+			"thaumcraft.common.blocks.BlockCustomOre"                         -> core { `BlockCustomOre$ClassVisitor`(it) }
+			"thaumcraft.common.tiles.TileInfusionMatrix"                      -> fixInfusionMatrix()
+			else                                                              -> this.basicClass
 		}
 	}
 	
@@ -501,5 +503,23 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		val loc = i.find { it is InsnNode && it.opcode == I2F }?.next
 		mn.instructions.insert(loc, LdcInsnNode(10f))
 		mn.instructions.insert(loc?.next, InsnNode(FDIV))
+	}
+	
+	private fun expandReport() = tree { cn ->
+		val mn = cn.methods.find { it.name == "accept" } ?: return@tree
+		
+		val i = object: Iterable<AbstractInsnNode> {
+			override fun iterator() = mn.instructions.iterator()
+		}
+		
+		val ldc = i.find { it is LdcInsnNode && it.cst == "Fatally missing blocks and items" } ?: return@tree
+		val invoke = MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/hook/ASJHookReplacerHandler", "printMissingData", "(Ljava/util/List;)Ljava/lang/String;", false)
+		mn.instructions.insert(ldc, invoke)
+		
+		val aload = VarInsnNode(ALOAD, 4)
+		mn.instructions.set(ldc, aload)
+		
+		val log = i.find { it is MethodInsnNode && it.name == "fine" } as? MethodInsnNode ?: return@tree
+		log.name = "severe"
 	}
 }

@@ -3,6 +3,7 @@ package alexsocol.patcher
 import alexsocol.asjlib.*
 import alexsocol.asjlib.command.*
 import alexsocol.asjlib.render.ASJShaderHelper
+import alexsocol.patcher.PatcherMain.MODID
 import alexsocol.patcher.asm.ASJHookLoader
 import alexsocol.patcher.crafting.CraftingHandler
 import alexsocol.patcher.event.*
@@ -20,7 +21,7 @@ import net.minecraft.world.biome.BiomeGenBase
 import net.minecraftforge.client.ClientCommandHandler
 import net.minecraftforge.common.MinecraftForge
 
-@Mod(modid = PatcherMain.MODID, version = "1.3.1.0", useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
+@Mod(modid = MODID, useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
 object PatcherMain {
 	
 	const val MODID = "asjpatcher"

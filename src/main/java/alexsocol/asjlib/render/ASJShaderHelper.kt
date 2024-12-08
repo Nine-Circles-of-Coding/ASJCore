@@ -96,6 +96,15 @@ object ASJShaderHelper: IResourceManagerReloadListener {
 			throw RuntimeException("Error Linking program [$vertLocation x $fragLocation]: $info")
 		}
 		
+		vertID?.let {
+			glDetachShader(programID, it)
+			glDeleteShader(it)
+		}
+		fragID?.let {
+			glDetachShader(programID, it)
+			glDeleteShader(it)
+		}
+		
 		glValidateProgram(programID)
 		if (glGetProgrami(programID, GL_VALIDATE_STATUS) == GL_FALSE) {
 			val info = getProgramLogInfo(programID)
