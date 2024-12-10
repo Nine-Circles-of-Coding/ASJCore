@@ -2,6 +2,7 @@ package alexsocol.patcher.handler
 
 import alexsocol.asjlib.*
 import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.network.*
 import cpw.mods.fml.common.eventhandler.*
 import cpw.mods.fml.common.gameevent.PlayerEvent.*
 import cpw.mods.fml.common.gameevent.TickEvent
@@ -16,6 +17,7 @@ import net.minecraft.network.play.server.S1FPacketSetExperience
 import net.minecraftforge.event.entity.living.LivingAttackEvent
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent
 import net.minecraftforge.event.entity.player.*
+import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking
 import net.minecraftforge.event.world.ExplosionEvent
 import net.minecraftforge.oredict.OreDictionary
 
@@ -86,6 +88,11 @@ object PatcherEventHandler {
 		try_ { // ignore errors on ultramine servers
 			player.playerNetServerHandler.netManager.channel().config().setOption(ChannelOption.TCP_NODELAY, true)
 		}
+	}
+	
+	@SubscribeEvent
+	fun syncEntityUUID(e: StartTracking) {
+		NetworkHandler.network.sendTo(MessageUUID(e.target.entityId, e.target.uniqueID.toString()), e.entityPlayer as? EntityPlayerMP ?: return)
 	}
 }
 

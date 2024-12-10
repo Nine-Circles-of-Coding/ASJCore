@@ -362,20 +362,35 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(injectOnExit = true)
-	fun onNewPotionEffect(e: EntityLivingBase, pe: PotionEffect) {
+	@Hook(targetMethod = "onNewPotionEffect", returnCondition = ON_TRUE)
+	fun onNewPotionEffectPre(e: EntityLivingBase, pe: PotionEffect) =
+		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Add.Pre(e, pe))
+	
+	@JvmStatic
+	@Hook(targetMethod = "onChangedPotionEffect", returnCondition = ON_TRUE)
+	fun onChangedPotionEffectPre(e: EntityLivingBase, pe: PotionEffect, was: Boolean) =
+		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Change.Pre(e, pe, was))
+	
+	@JvmStatic
+	@Hook(targetMethod = "onFinishedPotionEffect", returnCondition = ON_TRUE)
+	fun onFinishedPotionEffectPre(e: EntityLivingBase, pe: PotionEffect) =
+		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Remove.Pre(e, pe))
+	
+	@JvmStatic
+	@Hook(targetMethod = "onNewPotionEffect", injectOnExit = true)
+	fun onNewPotionEffectPost(e: EntityLivingBase, pe: PotionEffect) {
 		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Add.Post(e, pe))
 	}
 	
 	@JvmStatic
-	@Hook(injectOnExit = true)
-	fun onChangedPotionEffect(e: EntityLivingBase, pe: PotionEffect, was: Boolean) {
+	@Hook(targetMethod = "onChangedPotionEffect", injectOnExit = true)
+	fun onChangedPotionEffectPost(e: EntityLivingBase, pe: PotionEffect, was: Boolean) {
 		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Change.Post(e, pe, was))
 	}
 	
 	@JvmStatic
-	@Hook(injectOnExit = true)
-	fun onFinishedPotionEffect(e: EntityLivingBase, pe: PotionEffect) {
+	@Hook(targetMethod = "onFinishedPotionEffect", injectOnExit = true)
+	fun onFinishedPotionEffectPost(e: EntityLivingBase, pe: PotionEffect) {
 		MinecraftForge.EVENT_BUS.post(LivingPotionEvent.Remove.Post(e, pe))
 	}
 	

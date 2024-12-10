@@ -1,4 +1,6 @@
 Innovations:
- `ASJCore_doWeatherCycle` game rule - weather won't change
- `ASJCore_mobFriendship` game rule - mobs won't fight or damage each other
- Changed WEBiomeID default value to 40 
+ [API] New potion application events
+ [API] Removed deprecated InteractionSecurity
+
+Fixes:
+ Entity UUID sync

@@ -10,5 +10,6 @@ object NetworkHandler {
 	
 	init {
 		network.registerMessage(MessageClipboard, MessageClipboard::class.java, 0, Side.CLIENT)
+		network.registerMessage(MessageUUID, MessageUUID::class.java, 1, Side.CLIENT)
 	}
 }
