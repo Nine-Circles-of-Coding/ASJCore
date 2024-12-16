@@ -34,3 +34,7 @@ asjcore.commands.schema.posSet=Позиция %s установлен на (%s, 
 asjcore.commands.tpdim.worlderr=Ошибка инициализации измерения
 
 commands.summon.usage.new=/summon <имя> [['x'кол-во]] [x] [y] [z] [нбт]
+
+key.keyNI.desc=Переключить взаимодействие с сущностями
+key.keyNI.is.false=[ASJCore] Взаимодействие с сущностями включено
+key.keyNI.is.true=[ASJCore] Взаимодействие с сущностями отключено

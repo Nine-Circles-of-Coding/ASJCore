@@ -1,6 +1,2 @@
 Innovations:
- [API] New potion application events
- [API] Removed deprecated InteractionSecurity
-
-Fixes:
- Entity UUID sync
+ Toggleable entity interaction (F10 keybind)

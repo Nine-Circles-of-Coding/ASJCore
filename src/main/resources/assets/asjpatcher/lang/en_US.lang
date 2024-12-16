@@ -34,3 +34,7 @@ asjcore.commands.schema.posSet=Pos %s set to (%s, %s, %s)
 asjcore.commands.tpdim.worlderr=Dimension Initialization Error
 
 commands.summon.usage.new=/summon <EntityName> [['x'count]] [x] [y] [z] [dataTag]
+
+key.keyNI.desc=Toggle Entity Interaction
+key.keyNI.is.false=[ASJCore] Entity interaction enabled
+key.keyNI.is.true=[ASJCore] Entity interaction disabled
