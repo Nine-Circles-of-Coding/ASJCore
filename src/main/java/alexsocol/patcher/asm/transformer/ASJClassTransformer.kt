@@ -450,6 +450,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
+	@Deprecated("To be deleted")
 	private fun fixChunkloading() = tree { cn ->
 		run loadWorld@ {
 			val mn = cn.methods.find { it.name == "loadWorld" } ?: return@loadWorld

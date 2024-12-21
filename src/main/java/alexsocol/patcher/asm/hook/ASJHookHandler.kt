@@ -1098,6 +1098,7 @@ object ASJHookHandler {
 	// chunk reforcing after world reload
 	@JvmStatic
 	@Hook(injectOnExit = true)
+	@Deprecated("To be deleted")
 	fun loadWorld(static: ForgeChunkManager?, world: World) {
 		val persistentChunks = world.persistentChunks.keySet()
 		
@@ -1118,6 +1119,7 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
+	@Deprecated("To be deleted")
 	fun addChunksToTicket(nbt: NBTTagCompound, ticket: ForgeChunkManager.Ticket) {
 		val list = nbt.getTagList("ChunkList", Constants.NBT.TAG_INT_ARRAY)
 		
@@ -1128,6 +1130,7 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
+	@Deprecated("To be deleted")
 	fun storeChunksFromTicket(nbt: NBTTagCompound, ticket: ForgeChunkManager.Ticket) {
 		val list = NBTTagList()
 		nbt.setTag("ChunkList", list)

@@ -1,2 +1,2 @@
-Innovations:
- Toggleable entity interaction (F10 keybind)
+Fixes:
+ Keybinding-related server crash 
