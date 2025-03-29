@@ -1,5 +1,6 @@
 package com.KAIIIAK.superwrapper;
 
+import com.KAIIIAK.KASMLib.KASMLib;
 import com.KAIIIAK.classManipulators.SomeUtil;
 import gloomyfolken.hooklib.asm.HookLogger;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -7,9 +8,10 @@ import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
-import java.util.logging.Logger;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -31,7 +33,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 		
 		for (SuperWrapperTransformerContainer container : registeredContainers) {
 			try {
-				if (classNode.name.equals(container.nameOfClassWithAnnotation)) {
+				if (container.containerClassName.equals(classNode.name)) {
 					if (classNode.methods == null) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", classNode.name));
 					
 					logger.debug("Patching SuperWrapper container " + transformedName);
@@ -109,10 +111,23 @@ public class SuperWrapperTransformer implements IClassTransformer {
 			
 			try {
 				classNode.accept(classWriter);
-				return classWriter.toByteArray();
+				byte[] bytes = classWriter.toByteArray();
+				
+				if (KASMLib.has2DumpChangedClasses) {
+					File file = new File("ASJCoreDumpClasses/SuperWrapper/" + transformedName.replaceAll("\\.", "/") + ".class");
+					file.getParentFile().mkdirs();
+					IOUtils.write(bytes, Files.newOutputStream(file.toPath()));
+				}
+				if (KASMLib.has2DumpUnchangedClasses) {
+					File file = new File("ASJCoreDumpClasses/SuperWrapper/" + transformedName.replaceAll("\\.", "/") + "UNCHANGED.class");
+					file.getParentFile().mkdirs();
+					IOUtils.write(basicClass, Files.newOutputStream(file.toPath()));
+				}
+				
+				return bytes;
 			} catch (Exception e) {
 				logger.error("Exception while making changes in class " + transformedName, e);
-				throw e;
+				throw new RuntimeException(e);
 			}
 		}
 		

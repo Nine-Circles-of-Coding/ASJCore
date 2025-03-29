@@ -6,22 +6,17 @@ import net.minecraft.world.biome.BiomeGenJungle
 import net.minecraft.world.gen.feature.*
 import java.util.*
 
-@Suppress("unused", "UNUSED_PARAMETER")
-object ASJHookReplacerHandler {
+// fix oak leaves on jungle shrubs
+@HookReplacer
+fun func_150567_a(target: BiomeGenJungle, rand: Random): WorldGenAbstractTree? {
+	startFROM()
+	POPLine();POP(WorldGenShrub(3, 0))
+	POPLine();startTO()
+	POPLine();POP(WorldGenShrub(3, 3))
+	POPLine();stop()
 	
-	// fix oak leaves on jungle shrubs
-	@JvmStatic
-	@HookReplacer
-	fun func_150567_a(target: BiomeGenJungle, rand: Random): WorldGenAbstractTree? {
-		startFROM()
-		POPLine();POP(WorldGenShrub(3, 0))
-		POPLine();startTO()
-		POPLine();POP(WorldGenShrub(3, 3))
-		POPLine();stop()
-		
-		return null
-	}
-	
-	@JvmStatic
-	fun printMissingData(locallyMissing: List<String>) = "Fatally missing blocks and items for mods:\n${locallyMissing.mapTo(HashSet()) { it.split(':')[0] }}"
+	return null
 }
+
+@Suppress("unused") // used in class transformer
+fun printMissingData(locallyMissing: List<String>) = "Fatally missing blocks and items for mods:\n${locallyMissing.mapTo(HashSet()) { it.split(':')[0] }}"

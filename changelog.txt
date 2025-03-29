@@ -1,2 +1,10 @@
+Innovations:
+ /rtp command to teleport to random location in world
+ /top command to teleport to highest point on current x/z
+ Max reach distance attribute "asjpatcher.reachDistance"
+ List of missing mods on local world join
+
 Fixes:
- Keybinding-related server crash 
+ Move player from non-existent dimension on join
+ Player shadow render
+ https://bugs.mojang.com/browse/MC-1519

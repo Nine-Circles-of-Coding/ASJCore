@@ -116,12 +116,6 @@ public class HookReplacerWorker extends KASMWorker {
 			for (int i = 0; i < toList.size(); i++)
 				logger.trace(String.format("toList.get(%d) = %s", i, getStringRepresentation(toList.get(i))));
 			
-			InsnList toList2 = new InsnList();
-			
-			for (AbstractInsnNode abstractInsnNode : Opt.it(toList)) {
-				toList2.add(abstractInsnNode);
-			}
-			
 			AbstractInsnNode[] fromArray = fromList.toArray(new AbstractInsnNode[0]);
 			
 			InsnList instructions = methodNode.instructions;
@@ -129,6 +123,12 @@ public class HookReplacerWorker extends KASMWorker {
 			
 			while (index >= 0) {
 				removeInstructions(instructions, index, fromArray.length);
+				
+				InsnList toList2 = new InsnList();
+				
+				for (AbstractInsnNode abstractInsnNode : Opt.it(toList)) {
+					toList2.add(SomeUtil.copyInsnNode(abstractInsnNode));
+				}
 				
 				instructions.insertBefore(instructions.get(index), toList2);
 				

@@ -16,6 +16,7 @@ asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [filler] | 
 asjcore.commands.explode.usage=/explode [size] [breakBlocks] [doFlame]
 asjcore.commands.heal.usage=/heal [[player]] [h (heal)][f (feed)][e (clear debuffs)[! (clear ALL effects)]]
 asjcore.commands.killall.usage=/killall [%s] [radius] [dimension id] [mod id]
+asjcore.commands.rtp.usage=/rtp [distance from spawn] [origin x z]
 asjcore.commands.tpdim.usage=/tpdim <dimension id> [player]
 
 asjcore.commands.diminfo.current=Current dimension is "%s" (id '%d')
@@ -38,3 +39,5 @@ commands.summon.usage.new=/summon <EntityName> [['x'count]] [x] [y] [z] [dataTag
 key.keyNI.desc=Toggle Entity Interaction
 key.keyNI.is.false=[ASJCore] Entity interaction enabled
 key.keyNI.is.true=[ASJCore] Entity interaction disabled
+
+attribute.name.asjpatcher.reachDistance=Reach Distance

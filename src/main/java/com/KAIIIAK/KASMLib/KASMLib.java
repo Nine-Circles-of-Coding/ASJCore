@@ -237,6 +237,7 @@ public class KASMLib implements IClassTransformer {
 			}
 		} catch (Exception e) {
 			logger.error(String.format("Error transforming class %s(%s)", name, transformedName), e);
+			throw new RuntimeException(e);
 		}
 		return basicClass;
 	}

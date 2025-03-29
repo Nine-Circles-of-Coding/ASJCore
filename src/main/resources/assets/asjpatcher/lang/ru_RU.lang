@@ -16,6 +16,7 @@ asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [фильт
 asjcore.commands.explode.usage=/explode [размер] [разрушения] [огонь]
 asjcore.commands.heal.usage=/heal [[игрок]] [h (вылечить)][f (накормить)][e (очистить дебаффы)[! (очистить все эффекты)]]
 asjcore.commands.killall.usage=/killall [%s] [радиус] [id измерения] [id мода]
+asjcore.commands.rtp.usage=/rtp [дистанция от спавна] [начальные x z]
 asjcore.commands.tpdim.usage=/tpdim <id измерения> [игрок]
 
 asjcore.commands.diminfo.current=Текущее измерение "%s" (id '%d')
@@ -38,3 +39,5 @@ commands.summon.usage.new=/summon <имя> [['x'кол-во]] [x] [y] [z] [нб�
 key.keyNI.desc=Переключить взаимодействие с сущностями
 key.keyNI.is.false=[ASJCore] Взаимодействие с сущностями включено
 key.keyNI.is.true=[ASJCore] Взаимодействие с сущностями отключено
+
+attribute.name.asjpatcher.reachDistance=Досягаемость

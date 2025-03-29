@@ -157,9 +157,9 @@ public class SomeUtil {
 			FrameNode secondFrameNode = (FrameNode) second;
 			
 			// Compare the frame type and local/stack values
-			return firstFrameNode.type == secondFrameNode.type &&
-						   Objects.equals(firstFrameNode.local, secondFrameNode.local) &&
-						   Objects.equals(firstFrameNode.stack, secondFrameNode.stack);
+			return firstFrameNode.getOpcode() == secondFrameNode.getOpcode() &&
+				   (firstFrameNode.type != secondFrameNode.type || // Ochen unsafe huinya (c) KAIIIAK
+				   (Objects.equals(firstFrameNode.local, secondFrameNode.local) && Objects.equals(firstFrameNode.stack, secondFrameNode.stack)));
 		} else if (first instanceof IincInsnNode) {
 			IincInsnNode firstIincInsn = (IincInsnNode) first;
 			IincInsnNode secondIincInsn = (IincInsnNode) second;
@@ -186,11 +186,8 @@ public class SomeUtil {
 			
 			return Objects.equals(firstLdcInsn.cst, secondLdcInsn.cst);
 		} else if (first instanceof LineNumberNode) {
-			LineNumberNode firstLineNumberNode = (LineNumberNode) first;
-			LineNumberNode secondLineNumberNode = (LineNumberNode) second;
-			
-			return firstLineNumberNode.line == secondLineNumberNode.line &&
-						   Objects.equals(firstLineNumberNode.start, secondLineNumberNode.start);
+			// For LineNumberNode, compare the opcode
+			return first.getOpcode() == second.getOpcode();
 		} else if (first instanceof LookupSwitchInsnNode) {
 			LookupSwitchInsnNode firstLookupSwitchInsn = (LookupSwitchInsnNode) first;
 			LookupSwitchInsnNode secondLookupSwitchInsn = (LookupSwitchInsnNode) second;
@@ -235,12 +232,15 @@ public class SomeUtil {
 					Objects.equals(firstMethodInsn.name, secondMethodInsn.name) &&
 					Objects.equals(firstMethodInsn.desc, secondMethodInsn.desc) &&
 					firstMethodInsn.itf == secondMethodInsn.itf;
+		} else if (first instanceof JumpInsnNode) {
+			// For JumpInsnNode subclasses, compare the opcode
+			return first.getOpcode() == second.getOpcode();
 		} else if (first instanceof InsnNode) {
 			// For InsnNode subclasses, compare the opcode
 			return first.getOpcode() == second.getOpcode();
 		} else if (first instanceof LabelNode) {
-			// For LabelNode, compare the Label objects
-			return Objects.equals(((LabelNode) first).getLabel(), ((LabelNode) second).getLabel());
+			// For LabelNode, compare the opcode
+			return first.getOpcode() == second.getOpcode();
 		}
 		
 		// For unknown AbstractInsnNode types, return false

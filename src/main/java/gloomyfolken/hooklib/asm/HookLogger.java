@@ -65,7 +65,7 @@ public interface HookLogger {
 		
 		@Override
 		public void trace(String message) {
-			if (PatcherConfigHandler.INSTANCE.getLogDebug())
+			if (PatcherConfigHandler.INSTANCE.getLogTrace())
 				logger.finest(message);
 		}
 		

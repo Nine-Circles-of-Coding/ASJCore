@@ -61,3 +61,12 @@ class ServerWakeUpEvent(val world: WorldServer): Event()
  * If the event is canceled no sky is rendered.
  */
 @Cancelable class RenderSkyEvent(renderer: EntityRenderer?, entity: EntityLivingBase?, block: Block?, ticks: Float): EntityViewRenderEvent(renderer, entity, block, ticks.D)
+
+/**
+ * Fires after reading the mouse movement delta
+ *
+ * This event is fired on the [net.minecraftforge.common.MinecraftForge.EVENT_BUS]
+ *
+ * This event is not [Cancelable]
+ */
+class MouseMovedEvent: Event()

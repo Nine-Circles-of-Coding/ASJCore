@@ -16,7 +16,7 @@ import cpw.mods.fml.common.event.*
 import cpw.mods.fml.common.registry.GameData
 import net.minecraft.block.*
 import net.minecraft.init.Blocks
-import net.minecraft.item.ItemBlock
+import net.minecraft.item.*
 import net.minecraft.util.Facing
 import net.minecraft.world.biome.BiomeGenBase
 import net.minecraftforge.client.ClientCommandHandler
@@ -58,6 +58,7 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun init(e: FMLInitializationEvent) {
 		PatcherEventHandler.eventForge().eventFML()
+		PlayerReachDistanceHandler.eventForge()
 		
 		NetworkHandler
 		
@@ -84,7 +85,9 @@ object PatcherMain {
 		e.registerServerCommand(CommandHeal)
 		e.registerServerCommand(CommandHookList)
 		e.registerServerCommand(CommandKillAll)
+		e.registerServerCommand(CommandRtp)
 		e.registerServerCommand(CommandSchema)
+		e.registerServerCommand(CommandTop)
 		
 		MinecraftForge.EVENT_BUS.post(ServerStartingEvent(e))
 	}

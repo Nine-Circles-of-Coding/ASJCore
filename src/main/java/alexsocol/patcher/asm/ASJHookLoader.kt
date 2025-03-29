@@ -5,7 +5,7 @@ import alexsocol.asjlib.asm.*
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.asm.transformer.*
 import alexsocol.patcher.asm.worker.InterfaceAppenderWorker
-import com.KAIIIAK.KASMLib.*
+import com.KAIIIAK.KASMLib.KASMLib
 import com.KAIIIAK.KASMLib.workers.ReflectionLikeWorker
 import com.KAIIIAK.classManipulators.HookReplacerWorker
 import com.KAIIIAK.superwrapper.SuperWrapperTransformer
@@ -80,6 +80,7 @@ class ASJHookLoader: HookLoader() {
 		KASMLib.register(InterfaceAppenderWorker)
 		KASMLib.register(ReflectionLikeWorker.inst)
 		
-		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler")
+		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
+		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
 	}
 }

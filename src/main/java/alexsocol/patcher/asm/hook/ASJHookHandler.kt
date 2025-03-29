@@ -2,13 +2,11 @@ package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
-import alexsocol.asjlib.math.Vector3.Companion.one
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
-import alexsocol.patcher.handler.GameRulesHandler.GR_MOBS_FRIENDSHIP
 import alexsocol.patcher.helper.*
 import alexsocol.patcher.helper.OFHelper.shadersmodSupport
 import alexsocol.patcher.network.*
@@ -29,6 +27,7 @@ import net.minecraft.client.gui.*
 import net.minecraft.client.multiplayer.PlayerControllerMP
 import net.minecraft.client.renderer.*
 import net.minecraft.client.renderer.entity.Render
+import net.minecraft.client.settings.KeyBinding
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
 import net.minecraft.creativetab.CreativeTabs
@@ -51,6 +50,7 @@ import net.minecraft.nbt.*
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.*
 import net.minecraft.server.ServerEula
+import net.minecraft.server.management.ServerConfigurationManager
 import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
@@ -59,7 +59,7 @@ import net.minecraft.world.chunk.Chunk
 import net.minecraft.world.chunk.storage.AnvilChunkLoader
 import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
-import net.minecraftforge.common.util.*
+import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GLContext
@@ -422,6 +422,11 @@ object ASJHookHandler {
 		stats.foodLevel = min(e.newFoodLevel + stats.foodLevel, 20)
 		stats.foodSaturationLevel = min(stats.saturationLevel + e.newFoodLevel * e.newSaturationLevel * 2f, stats.foodLevel.F)
 	}
+	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun mouseXYChange(mh: MouseHelper) = MinecraftForge.EVENT_BUS.post(MouseMovedEvent())
 	
 	
 	// Portal closes GUI fix
@@ -1095,52 +1100,6 @@ object ASJHookHandler {
 	}
 	
 	
-	// chunk reforcing after world reload
-	@JvmStatic
-	@Hook(injectOnExit = true)
-	@Deprecated("To be deleted")
-	fun loadWorld(static: ForgeChunkManager?, world: World) {
-		val persistentChunks = world.persistentChunks.keySet()
-		
-		ForgeChunkManager.tickets[world]?.values()?.forEach {
-			val ticketChunks = HashSet<ChunkCoordIntPair>()
-			ticketChunks.addAll(it.requestedChunks)
-			
-			ticketChunks.forEach inner@ { c ->
-				if (c in persistentChunks) return@inner
-				
-				try {
-					ForgeChunkManager.forceChunk(it, c)
-				} catch (e: Exception) {
-					ASJUtilities.error("Failed to force chunk $c requested by ${it.modId}. It won't persist until requested again.", e)
-				}
-			}
-		}
-	}
-	
-	@JvmStatic
-	@Deprecated("To be deleted")
-	fun addChunksToTicket(nbt: NBTTagCompound, ticket: ForgeChunkManager.Ticket) {
-		val list = nbt.getTagList("ChunkList", Constants.NBT.TAG_INT_ARRAY)
-		
-		for (i in 0 until list.tagCount()) {
-			val (x, z) = list.func_150306_c(i)
-			ticket.requestedChunks.add(ChunkCoordIntPair(x, z))
-		}
-	}
-	
-	@JvmStatic
-	@Deprecated("To be deleted")
-	fun storeChunksFromTicket(nbt: NBTTagCompound, ticket: ForgeChunkManager.Ticket) {
-		val list = NBTTagList()
-		nbt.setTag("ChunkList", list)
-		
-		ticket.chunkList.forEach {
-			list.appendTag(NBTTagIntArray(intArrayOf(it.chunkXPos, it.chunkZPos)))
-		}
-	}
-	
-	
 	// dark theme for start screen
 	@JvmStatic
 	@Hook(injectOnExit = true)
@@ -1453,5 +1412,67 @@ object ASJHookHandler {
 			rules.addGameRule(GR_DO_WEATHER_CYCLE, true.toString())
 		
 		return !rules.getGameRuleBooleanValue(GR_DO_WEATHER_CYCLE)
+	}
+	
+	// move player from non-existent dimension
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun readPlayerDataFromFile(scm: ServerConfigurationManager, player: EntityPlayerMP?, @ReturnValue result: NBTTagCompound?): NBTTagCompound? {
+		player ?: return result
+		val dim = player.dimension
+		if (DimensionManager.isDimensionRegistered(dim)) return result
+		
+		player.dimension = 0
+		
+		val (x, y, z) = DimensionManager.getWorld(0).spawnPoint
+		ASJUtilities.sendToDimensionWithoutPortal(player, 0, x + 0.5, y.D, z + 0.5)
+		
+		if (result == null) return null
+		
+		result.setInteger("Dimension", 0)
+		val pos = NBTTagList()
+		pos.appendTag(NBTTagDouble(x + 0.5))
+		pos.appendTag(NBTTagDouble(y.D))
+		pos.appendTag(NBTTagDouble(z + 0.5))
+		result.setTag("Pos", pos)
+		
+		return result
+	}
+	
+	
+	// fix player shadow render
+	@JvmStatic
+	@Hook(targetMethod = "renderShadow")
+	fun renderShadowPre(render: Render, entity: Entity, x: Double, y: Double, z: Double, shadowAlpha: Float, partialTickTime: Float) {
+		if (entity !== mc.thePlayer) return
+		
+		entity.lastTickPosY -= 1.6200000047683716
+		entity.posY -= 1.6200000047683716
+		Tessellator.instance.addTranslation(0f, -1.62f, 0f)
+	}
+	
+	@JvmStatic
+	@Hook(targetMethod = "renderShadow", injectOnExit = true)
+	fun renderShadowPost(render: Render, entity: Entity, x: Double, y: Double, z: Double, shadowAlpha: Float, partialTickTime: Float) {
+		if (entity !== mc.thePlayer) return
+		
+		entity.lastTickPosY += 1.6200000047683716
+		entity.posY += 1.6200000047683716
+		Tessellator.instance.addTranslation(0f, 1.62f, 0f)
+	}
+	
+	
+	// changeable reach distance
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun getBlockReachDistance(pcmp: PlayerControllerMP) = (mc.thePlayer?.getEntityAttribute(PlayerReachDistanceHandler.reachDistance)?.attributeValue ?: PlayerReachDistanceHandler.reachDistance.defaultValue).F
+	
+	// fix for https://bugs.mojang.com/browse/MC-1519
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun toggleFullscreen(mc: Minecraft) {
+		KeyBinding.unPressAllKeys()
 	}
 }
