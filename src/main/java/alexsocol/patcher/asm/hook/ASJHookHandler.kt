@@ -8,12 +8,13 @@ import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
 import alexsocol.patcher.helper.*
-import alexsocol.patcher.helper.OFHelper.shadersmodSupport
 import alexsocol.patcher.network.*
 import biomesoplenty.common.blocks.BlockBOPLog
 import biomesoplenty.common.itemblocks.ItemBlockLog
 import cofh.asmhooks.HooksCore
+import com.emoniph.witchery.dimension.WorldProviderDreamWorld
 import cpw.mods.fml.client.*
+import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.registry.GameRegistry
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.Hook
@@ -26,12 +27,11 @@ import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.client.gui.*
 import net.minecraft.client.multiplayer.PlayerControllerMP
 import net.minecraft.client.renderer.*
-import net.minecraft.client.renderer.entity.Render
+import net.minecraft.client.renderer.entity.*
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
 import net.minecraft.creativetab.CreativeTabs
-import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.*
 import net.minecraft.entity.DataWatcher.WatchableObject
 import net.minecraft.entity.EntityList.EntityEggInfo
@@ -57,13 +57,10 @@ import net.minecraft.world.*
 import net.minecraft.world.biome.*
 import net.minecraft.world.chunk.Chunk
 import net.minecraft.world.chunk.storage.AnvilChunkLoader
-import net.minecraftforge.client.event.EntityViewRenderEvent
 import net.minecraftforge.common.*
 import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GLContext
-import org.lwjgl.opengl.NVFogDistance.*
 import org.objectweb.asm.Opcodes
 import java.awt.*
 import java.awt.datatransfer.StringSelection
@@ -736,122 +733,6 @@ object ASJHookHandler {
 		return (furnace.furnaceBurnTime.D / furnace.currentItemBurnTime * mod).I
 	}
 	
-	// fog fixes
-	@SideOnly(Side.CLIENT)
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun setupFog(renderer: EntityRenderer, fogMode: Int, renderPartialTicks: Float) {
-		val entity = renderer.mc.renderViewEntity
-		val creative = if (entity is EntityPlayer) entity.capabilities.isCreativeMode else false
-		
-		OFHelper.setStandardFog(renderer, false)
-		
-		if (fogMode == 999) {
-			glFog(GL_FOG_COLOR, renderer.setFogColorBuffer(0f, 0f, 0f, 1f))
-			shadersmodSupport(GL_FOG_MODE, GL_LINEAR)
-			glFogf(GL_FOG_START, 0f)
-			glFogf(GL_FOG_END, 8f)
-			
-			if (GLContext.getCapabilities().GL_NV_fog_distance)
-				shadersmodSupport(GL_FOG_DISTANCE_MODE_NV, GL_EYE_RADIAL_NV)
-			
-			glFogf(GL_FOG_START, 0f)
-			return
-		}
-		
-		glFog(GL_FOG_COLOR, renderer.setFogColorBuffer(renderer.fogColorRed, renderer.fogColorGreen, renderer.fogColorBlue, 1f))
-		
-		glNormal3f(0f, -1f, 0f)
-		glColor4f(1f, 1f, 1f, 1f)
-		
-		val block = ActiveRenderInfo.getBlockAtEntityViewpoint(renderer.mc.theWorld, entity, renderPartialTicks)
-		val event = EntityViewRenderEvent.FogDensity(renderer, entity, block, renderPartialTicks.D, 0.1f)
-		
-		if (MinecraftForge.EVENT_BUS.post(event)) {
-			glFogf(GL_FOG_DENSITY, event.density)
-		} else if (entity.isPotionActive(Potion.blindness) && !creative) {
-			val pe = entity.getActivePotionEffect(Potion.blindness)
-			var distance = 5f / (pe.amplifier + 1)
-			
-			if (pe.duration < 20)
-				distance += (renderer.farPlaneDistance - distance) * (1f - pe.duration / 20f)
-			
-			shadersmodSupport(GL_FOG_MODE, GL_LINEAR)
-			
-			if (fogMode < 0) {
-				glFogf(GL_FOG_START, 0f)
-				glFogf(GL_FOG_END, distance * 0.8f)
-			} else {
-				glFogf(GL_FOG_START, distance * 0.25f)
-				glFogf(GL_FOG_END, distance)
-			}
-			
-			OFHelper.fancyFogCheck()
-		} else if (renderer.cloudFog) {
-			shadersmodSupport(GL_FOG_MODE, GL_EXP)
-			glFogf(GL_FOG_DENSITY, 0.1f)
-		} else if (block.material === Material.water) {
-			shadersmodSupport(GL_FOG_MODE, GL_EXP)
-			
-			if (OFHelper.isClearWater())
-				glFogf(GL_FOG_DENSITY, 0.01f)
-			else if (entity.isPotionActive(Potion.waterBreathing)) {
-				glFogf(GL_FOG_DENSITY, 0.05f)
-			} else {
-				glFogf(GL_FOG_DENSITY, 0.1f - min(3, EnchantmentHelper.getRespiration(entity)) * 0.03f)
-			}
-		} else if (block.material === Material.lava) {
-			shadersmodSupport(GL_FOG_MODE, GL_EXP)
-			glFogf(GL_FOG_DENSITY, if (creative) 0.05f else 2f)
-		} else {
-			var farPlane = renderer.farPlaneDistance
-			
-			OFHelper.setStandardFog(renderer, true)
-			
-			if (OFHelper.isVoidFog() && renderer.mc.theWorld.provider.worldHasVoidParticles && !creative) {
-				var brightness = (((entity.getBrightnessForRender(renderPartialTicks) and 0xF00000) shr 20) / 16.0 + (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * renderPartialTicks + 4.0) / 32.0).F
-				
-				if (brightness < 1f) {
-					if (brightness < 0f) brightness = 0f
-					
-					brightness *= brightness
-					
-					var newPlane = 100f * brightness
-					if (newPlane < 5f) newPlane = 5f
-					
-					if (farPlane > newPlane) farPlane = newPlane
-				}
-			}
-			
-			shadersmodSupport(GL_FOG_MODE, GL_LINEAR)
-			
-			if (fogMode < 0) {
-				glFogf(GL_FOG_START, 0f)
-				glFogf(GL_FOG_END, farPlane)
-			} else {
-				glFogf(GL_FOG_START, farPlane * OFHelper.getFogStart())
-				glFogf(GL_FOG_END, farPlane)
-			}
-			
-			if (GLContext.getCapabilities().GL_NV_fog_distance) {
-				if (OFHelper.isFogFancy())
-					shadersmodSupport(GL_FOG_DISTANCE_MODE_NV, GL_EYE_RADIAL_NV)
-				
-				if (OFHelper.isFogFast())
-					shadersmodSupport(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV)
-			}
-			
-			if (renderer.mc.theWorld.provider.doesXZShowFog(entity.posX.mfloor(), entity.posZ.mfloor())) {
-				OFHelper.XZFog(renderer.farPlaneDistance)
-			}
-			
-			MinecraftForge.EVENT_BUS.post(EntityViewRenderEvent.RenderFogEvent(renderer, entity, block, renderPartialTicks.D, fogMode, farPlane))
-		}
-		
-		glEnable(GL_COLOR_MATERIAL)
-		glColorMaterial(GL_FRONT, GL_AMBIENT)
-	}
-	
 	// fixing some occasional OptiFine crashes
 	@SideOnly(Side.CLIENT)
 	@Synchronized
@@ -1475,4 +1356,17 @@ object ASJHookHandler {
 	fun toggleFullscreen(mc: Minecraft) {
 		KeyBinding.unPressAllKeys()
 	}
+	
+	// arm fix
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook
+	fun renderFirstPersonArm(rp: RenderPlayer, player: EntityPlayer) {
+		rp.modelBipedMain.isRiding = player.isRiding
+	}
+	
+	// fucking stupid shitcoder fix
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun dropBetterBackpacks(static: WorldProviderDreamWorld?, player: EntityPlayer) = !Loader.isModLoaded("betterstorage")
 }

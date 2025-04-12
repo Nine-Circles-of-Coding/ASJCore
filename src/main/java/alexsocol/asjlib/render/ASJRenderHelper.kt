@@ -7,6 +7,7 @@ import net.minecraft.util.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
+@Suppress("unused")
 object ASJRenderHelper {
 	
 	/**
@@ -133,6 +134,9 @@ object ASJRenderHelper {
 		tessellator.draw()
 	}
 	
+	private var prevBlend = false
+	private var prevCullFace = true
+	private var prevLighting = true
 	private var prevX = 0f
 	private var prevY = 0f
 	
@@ -142,6 +146,7 @@ object ASJRenderHelper {
 	
 	@JvmStatic
 	fun setGlow() {
+		prevLighting = glIsEnabled(GL_LIGHTING)
 		glDisable(GL_LIGHTING)
 		prevX = OpenGlHelper.lastBrightnessX
 		prevY = OpenGlHelper.lastBrightnessY
@@ -151,12 +156,14 @@ object ASJRenderHelper {
 	
 	@JvmStatic
 	fun setTwoside() {
+		prevCullFace = glIsEnabled(GL_CULL_FACE)
 		glDisable(GL_CULL_FACE)
 		cull = true
 	}
 	
 	@JvmStatic
 	fun setBlend() {
+		prevBlend = glIsEnabled(GL_BLEND)
 		glEnable(GL_BLEND)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 		alfa = true
@@ -165,16 +172,16 @@ object ASJRenderHelper {
 	@JvmStatic
 	fun discard() {
 		if (glow) {
-			glEnable(GL_LIGHTING)
+			if (prevLighting) glEnable(GL_LIGHTING)
 			OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, prevX, prevY)
 			glow = false
 		}
 		if (cull) {
-			glEnable(GL_CULL_FACE)
+			if (prevCullFace) glEnable(GL_CULL_FACE)
 			cull = false
 		}
 		if (alfa) {
-			glDisable(GL_BLEND)
+			if (prevBlend) glDisable(GL_BLEND)
 			alfa = false
 		}
 	}

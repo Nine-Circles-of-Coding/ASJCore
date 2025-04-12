@@ -32,6 +32,8 @@ public class HookClassTransformer {
 	}
 	
 	public byte[] transform(String className, byte[] bytecode) {
+		if (bytecode == null) return null;
+		
 		List<AsmHook> hooks = hooksMap.get(className);
 		
 		if (hooks != null) {

@@ -17,7 +17,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var c17PacketCustomPayloadUnlimit = true
 	var cacheSchemas = true
 	var clampPotionLevel = true
-	var clearWater = true
 	var creativeDamage = false
 	var damageMobArmor = true
 	var darkMode = true
@@ -41,7 +40,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var tcpNoDelay = true
 	var topDownButtons = true
 	var vignette = false
-	var voidFog = true
 	var WEBiomeID = 40
 	var WECustomLighting = true
 	
@@ -66,7 +64,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		c17PacketCustomPayloadUnlimit = loadProp(CATEGORY_GENERAL, "c17PacketCustomPayloadUnlimit", c17PacketCustomPayloadUnlimit, true, "Set this to false to disable C17PacketCustomPayload expansion")
 		cacheSchemas = loadProp(CATEGORY_GENERAL, "cacheSchemas", cacheSchemas, false, "Set this to false to disable schemas caching - it will save your RAM but worldgen will take longer")
 		clampPotionLevel = loadProp(CATEGORY_GENERAL, "clampPotionLevel", clampPotionLevel, false, "Set this to false to disable potion level clamping to 0..255 (you almost never want this disabled)")
-		clearWater = loadProp(CATEGORY_GENERAL, "clearWater", clearWater, false, "Set this to true for clear, transparent water (will be overridden by OptiFine setting)")
 		creativeDamage = loadProp(CATEGORY_GENERAL, "creativeDamage", creativeDamage, false, "Set this to true to allow taking damage in creative")
 		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")
 		darkMode = loadProp(CATEGORY_GENERAL, "darkMode", darkMode, true, "Set this to false to disable dark mode on minecraft load")
@@ -90,7 +87,6 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		tcpNoDelay = loadProp(CATEGORY_GENERAL, "tcpNoDelay", tcpNoDelay, true, "Set this to false to disable TCP No Delay network feature")
 		topDownButtons = loadProp(CATEGORY_GENERAL, "topDownButtons", topDownButtons, true, "Set this to false to disable functionality allowing buttons to be placed on block top or bottom")
 		vignette = loadProp(CATEGORY_GENERAL, "vignette", vignette, false, "Set this to true to enable vignette on fancy graphics")
-		voidFog = loadProp(CATEGORY_GENERAL, "voidFog", voidFog, false, "Set this to false to disable void fog (will be overridden by OptiFine setting)")
 		WEBiomeID = loadProp(CATEGORY_GENERAL, "WEBiomeID", WEBiomeID, true, "ID for standard WorldEngine biome")
 		WECustomLighting = loadProp(CATEGORY_GENERAL, "WECustomLighting", WECustomLighting, false, "Set this to false to use default lighting calculation for WE worlds")
 		
