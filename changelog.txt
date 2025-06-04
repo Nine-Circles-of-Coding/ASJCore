@@ -1,7 +1,16 @@
 Innovations:
- 
+ Config for Orthographic projection
+ Deleted realms from runtime
+ Removed streaming tab and keybinds
+ Removed snooper data sending thread
+ Removed stats collection
+ Removed loading all lang files
+ Removed ladder interference with flight
+ Slot indices and numbers display config (for debug)
+ Updated Kotlin to 2.1.21
 
 Fixes:
- Angelica/OptiFine fog setting incompatibility
- First person arm render on riding
- [Witchery] crash without BetterStorage
+ In-game mod options GUI
+ WE ore gen
+ Floating creeper model
+ https://bugs.mojang.com/browse/MC/issues/MC-11207

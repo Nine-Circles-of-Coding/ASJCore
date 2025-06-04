@@ -1,9 +1,11 @@
-@file:Suppress("JoinDeclarationAndAssignment", "UNUSED_VARIABLE", "UNUSED_VALUE", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+@file:Suppress("JoinDeclarationAndAssignment", "UNUSED_VARIABLE", "UNUSED_VALUE", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE", "unused", "VariableNeverRead", "AssignedValueIsNeverRead")
 
 package alexsocol.patcher.asm.hook
 
 import com.KAIIIAK.classManipulators.HookReplacer
 import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
+import net.minecraft.client.gui.*
+import net.minecraft.client.model.ModelCreeper
 import net.minecraft.client.renderer.EntityRenderer
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.potion.Potion
@@ -23,6 +25,7 @@ fun func_150567_a(target: BiomeGenJungle, rand: Random): WorldGenAbstractTree? {
 	return null
 }
 
+// add more blindness
 @HookReplacer(targetMethod = "setupFog")
 fun blindnessDegree(er: EntityRenderer, fogMode: Int, ticks: Float) {
 	val entitylivingbase: EntityLivingBase = er.mc.renderViewEntity
@@ -52,3 +55,23 @@ fun lavaFog(flag: Boolean) = if (flag) 0.05f else 2f
 
 @Suppress("unused") // used in class transformer
 fun printMissingData(locallyMissing: List<String>) = "Fatally missing blocks and items for mods:\n${locallyMissing.mapTo(HashSet()) { it.split(':')[0] }}"
+
+@HookReplacer(targetMethod = "<init>")
+fun GuiSnooperList(list: GuiSnooper.List, parent: GuiSnooper) {
+	startFROM()
+	POPLine();POP(80)
+	POPLine();startTO()
+	POPLine();POP(24)
+	POPLine();stop()
+}
+
+@HookReplacer
+fun renderString(fr: FontRenderer, text: String, x: Int, y: Int, color: Int, shadow: Boolean): Int {
+	startFROM()
+	POPLine();POP(-67108864)
+	POPLine();startTO()
+	POPLine();POP(-16777216)
+	POPLine();stop()
+	
+	return 0
+}

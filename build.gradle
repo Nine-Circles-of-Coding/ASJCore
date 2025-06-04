@@ -3,7 +3,7 @@ apply plugin: 'kotlin'
 apply plugin: 'idea'
 
 buildscript {
-	ext.kotlinVersion = '2.0.21'
+	ext.kotlinVersion = '2.1.21'
 	
 	repositories {
 		mavenCentral()
@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.4.3.1"
+version = "1.4.4.0"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -122,6 +122,6 @@ tasks.register('sourcesJar', Jar) {
 }
 
 artifacts {
-    archives deobfJar
-    archives sourcesJar
+	archives deobfJar
+	archives sourcesJar
 }

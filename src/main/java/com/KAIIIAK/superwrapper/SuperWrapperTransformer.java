@@ -2,6 +2,8 @@ package com.KAIIIAK.superwrapper;
 
 import com.KAIIIAK.KASMLib.KASMLib;
 import com.KAIIIAK.classManipulators.SomeUtil;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.SideOnly;
 import gloomyfolken.hooklib.asm.HookLogger;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.commons.io.IOUtils;
@@ -16,6 +18,11 @@ import java.util.*;
 import static org.objectweb.asm.Opcodes.*;
 
 public class SuperWrapperTransformer implements IClassTransformer {
+	
+	// AlexSocol side parsing --
+	private static final String SIDEONLY_DESC = Type.getDescriptor(SideOnly.class);
+	private static final String SIDE = FMLLaunchHandler.side().name();
+	// -- end
 	
 	public static final String SUPERWRAPPER_DESC = Type.getDescriptor(SuperWrapper.class);
 	public static HookLogger logger = new HookLogger.Log4JLogger("SuperWrapper");
@@ -188,6 +195,15 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				List<AnnotationNode> annotations = new ArrayList<>();
 				if (methodNode.visibleAnnotations != null) annotations.addAll(methodNode.visibleAnnotations);
 				if (methodNode.invisibleAnnotations != null) annotations.addAll(methodNode.invisibleAnnotations);
+				
+				AnnotationNode sideOnlyAnnotation = annotations.stream().filter(it -> SIDEONLY_DESC.equals(it.desc)).findFirst().orElse(null);
+				if (sideOnlyAnnotation != null) {
+					String targetSide = ((String[]) sideOnlyAnnotation.values.get(1))[1];
+					if (!SIDE.equals(targetSide)) {
+						logger.debug("Skipping SuperWrapper method " + methodNode.name + methodNode.desc + " for invalid side " + targetSide);
+						continue;
+					}
+				}
 				
 				for (AnnotationNode annotationNode : annotations) {
 					if (!SUPERWRAPPER_DESC.equals(annotationNode.desc)) continue;

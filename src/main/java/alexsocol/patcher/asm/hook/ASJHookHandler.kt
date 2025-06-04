@@ -2,7 +2,7 @@ package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
-import alexsocol.asjlib.render.ICustomArmSwingEndEntity
+import alexsocol.asjlib.render.*
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
@@ -14,8 +14,9 @@ import biomesoplenty.common.itemblocks.ItemBlockLog
 import cofh.asmhooks.HooksCore
 import com.emoniph.witchery.dimension.WorldProviderDreamWorld
 import cpw.mods.fml.client.*
-import cpw.mods.fml.common.Loader
+import cpw.mods.fml.common.*
 import cpw.mods.fml.common.registry.GameRegistry
+import cpw.mods.fml.common.registry.LanguageRegistry
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
@@ -25,9 +26,13 @@ import net.minecraft.block.material.Material
 import net.minecraft.client.Minecraft
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.client.gui.*
+import net.minecraft.client.gui.achievement.GuiStats
+import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.multiplayer.PlayerControllerMP
 import net.minecraft.client.renderer.*
 import net.minecraft.client.renderer.entity.*
+import net.minecraft.client.resources.I18n
+import net.minecraft.client.settings.GameSettings
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
@@ -49,8 +54,14 @@ import net.minecraft.item.*
 import net.minecraft.nbt.*
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.*
+import net.minecraft.profiler.PlayerUsageSnooper
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.ServerEula
+import net.minecraft.server.dedicated.DedicatedServer
+import net.minecraft.server.integrated.IntegratedServer
 import net.minecraft.server.management.ServerConfigurationManager
+import net.minecraft.stats.*
+import net.minecraft.stats.StatList.*
 import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
@@ -653,38 +664,16 @@ object ASJHookHandler {
 		return if (duration >= 20) 1f else (duration + (1 - partialTicks)) * 0.05f
 	}
 	
-	// Fix nbt clearing in Enchanting Table
+	// Fix nbt clearing and item deletion in Enchanting Table
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun transferStackInSlot(container: ContainerEnchantment, player: EntityPlayer?, slotID: Int): ItemStack? {
-		var itemstack: ItemStack? = null
-		val slot = container.inventorySlots[slotID] as Slot?
-		if (slot != null && slot.hasStack) {
-			val itemstack1 = slot.stack
-			itemstack = itemstack1.copy()
-			if (slotID == 0) {
-				if (!ASJSuperWrapperHandler.mergeItemStack(container, itemstack1, 1, 37, true)) return null
-			} else {
-				if ((container.inventorySlots[0] as Slot).hasStack || !(container.inventorySlots[0] as Slot).isItemValid(itemstack1)) return null
-				
-				if (itemstack1.hasTagCompound() && itemstack1.stackSize == 1) {
-					(container.inventorySlots[0] as Slot).putStack(itemstack1.copy())
-					itemstack1.stackSize = 0
-				} else if (itemstack1.stackSize >= 1) {
-					val copy = itemstack1.copy()
-					copy.stackSize = 1
-					(container.inventorySlots[0] as Slot).putStack(copy)
-					--itemstack1.stackSize
-				}
-			}
-			if (itemstack1.stackSize == 0) slot.putStack(null as ItemStack?)
-			else slot.onSlotChanged()
-			
-			if (itemstack1.stackSize == itemstack.stackSize) return null
-			
-			slot.onPickupFromSlot(player, itemstack1)
+	@Hook(targetMethod = "<init>", injectOnExit = true)
+	fun ContainerEnchantment(thiz: ContainerEnchantment, inv: InventoryPlayer?, world: World?, x: Int, y: Int, z: Int) {
+		val slot = object: Slot(thiz.tableInventory, 0, 25, 47) {
+			override fun isItemValid(stack: ItemStack?) =  stack?.stackSize == 1
 		}
-		return itemstack
+		
+		slot.slotNumber = 0
+		thiz.inventorySlots[0] = slot
 	}
 	
 	// clear entity name
@@ -708,9 +697,16 @@ object ASJHookHandler {
 	// invisible blocks to tabs
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook
-	fun getSubBlocks(block: BlockTallGrass, item: Item?, tab: CreativeTabs?, list: MutableList<ItemStack?>) {
+	@Hook(targetMethod = "getSubBlocks")
+	fun getSubBlocksPre(block: BlockTallGrass, item: Item?, tab: CreativeTabs?, list: MutableList<ItemStack?>) {
 		list.add(ItemStack(item))
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(targetMethod = "getSubBlocks", injectOnExit = true)
+	fun getSubBlocksPost(block: BlockTallGrass, item: Item?, tab: CreativeTabs?, list: MutableList<ItemStack?>) {
+		list.add(ItemStack(item, 1, 3))
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -1021,7 +1017,6 @@ object ASJHookHandler {
 		
 		for (pe in potions) {
 			val j = Potion.potionTypes[pe.getPotionID()].getLiquidColor()
-			
 			val amp = min(pe.getAmplifier(), 255)
 			
 			for (k in 0..amp) {
@@ -1369,4 +1364,211 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
 	fun dropBetterBackpacks(static: WorldProviderDreamWorld?, player: EntityPlayer) = !Loader.isModLoaded("betterstorage")
+	
+	// Mod options gui tweaks
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun showInGameModOptions(fmlch: FMLClientHandler, guiIngameMenu: GuiIngameMenu?): Boolean {
+		if (!PatcherConfigHandler.fixInGameModOptions) return false
+		fmlch.showGuiScreen(GuiModList(guiIngameMenu))
+		return true
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun initGui(gui: GuiModList) {
+		if (!PatcherConfigHandler.fixInGameModOptions) return
+		
+		gui.buttonList.remove(gui.disableModButton)
+	}
+	
+	// delete streaming
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun initGui(gui: GuiOptions) {
+		gui.buttonList.removeAll { (it as GuiButton).id == 107 } // Broadcast Settings
+		gui.buttonList.find { (it as GuiButton).id == 8675309 }?.let { // SSS
+			it as GuiButton
+			it.yPosition = gui.height / 6 + 72 - 6
+		}
+		gui.buttonList.forEach {
+			it as GuiButton
+			if (it.displayString == I18n.format("options.snooper.view"))
+				it.displayString = I18n.format("options.snooper.view.new")
+		}
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true, targetMethod = "<init>")
+	fun GameSettings(thiz: GameSettings) {
+		deleteStreamKeyBindings(thiz)
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true, targetMethod = "<init>")
+	fun GameSettings(thiz: GameSettings, mc: Minecraft?, file: File?) {
+		deleteStreamKeyBindings(thiz)
+	}
+	
+	fun deleteStreamKeyBindings(thiz: GameSettings) {
+		unregisterKeyBinding(thiz, thiz.field_152396_an)
+		unregisterKeyBinding(thiz, thiz.field_152397_ao)
+		unregisterKeyBinding(thiz, thiz.field_152398_ap)
+		unregisterKeyBinding(thiz, thiz.field_152399_aq)
+		
+		KeyBinding.getKeybinds().remove("key.categories.stream")
+	}
+	
+	private fun unregisterKeyBinding(thiz: GameSettings, key: KeyBinding) {
+		key.keyCode = 0
+		KeyBinding.keybindArray.remove(key)
+		thiz.keyBindings = thiz.keyBindings.filter { it !== key }.toTypedArray()
+	}
+	
+	
+	// remove snooper sending
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun startSnooper(pus: PlayerUsageSnooper) {
+		pus.stopSnooper()
+	}
+	
+	@JvmStatic
+	@Hook(targetMethod = "loadOptions", injectOnExit = true)
+	fun loadOptionsPost(thiz: GameSettings) {
+		thiz.snooperEnabled = false
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun isSnooperEnabled(server: Minecraft) = false
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun isSnooperEnabled(server: MinecraftServer) = false
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun isSnooperEnabled(server: IntegratedServer) = false
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun isSnooperEnabled(server: DedicatedServer) = false
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun setOptionValue(thiz: GameSettings, option: GameSettings.Options?, value: Int) = option == GameSettings.Options.SNOOPER_ENABLED
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun initGui(gui: GuiSnooper) {
+		gui.buttonList.removeAll { (it as GuiButton).id == 1 } // snooper toggle button
+		gui.buttonList.find { (it as GuiButton).id == 2 }?.let { // Done
+			it as GuiButton
+			it.xPosition = gui.width / 2 - 75
+		}
+		
+		gui.field_146607_r = emptyArray<String>() // no text
+	}
+	
+	
+	// slot indices debug 
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook
+	fun func_146977_a(gui: GuiContainer, slot: Slot) {
+		if (!PatcherConfigHandler.slotIndices) return
+		
+		glScaled(0.5)
+		mc.fontRenderer.drawString("${slot.slotIndex}:${slot.slotNumber}", slot.xDisplayPosition * 2, slot.yDisplayPosition * 2, 0xFFFFFF)
+		glScalef(2f)
+	}
+	
+	
+	// remove stats
+	@JvmStatic
+	@Hook(injectOnExit = true, targetMethod = "<clinit>")
+	fun StatList_static(static: StatList?) {
+		if (!PatcherConfigHandler.disableStats) return
+		
+		allStats.clear()
+		generalStats.clear()
+		oneShotStats.values.clear()
+		
+		val dumbStat = StatBasic("gui.stats.new", ChatComponentTranslation("gui.stats.new")) { "" }.registerStat()
+		
+		mineBlockStatArray.fill(dumbStat)
+		objectBreakStats.fill(dumbStat)
+		objectCraftStats.fill(dumbStat)
+		objectUseStats.fill(dumbStat)
+		
+		leaveGameStat = dumbStat
+		minutesPlayedStat = dumbStat
+		distanceWalkedStat = dumbStat
+		distanceSwumStat = dumbStat
+		distanceFallenStat = dumbStat
+		distanceClimbedStat = dumbStat
+		distanceFlownStat = dumbStat
+		distanceDoveStat = dumbStat
+		distanceByMinecartStat = dumbStat
+		distanceByBoatStat = dumbStat
+		distanceByPigStat = dumbStat
+		field_151185_q = dumbStat
+		jumpStat = dumbStat
+		dropStat = dumbStat
+		damageDealtStat = dumbStat
+		damageTakenStat = dumbStat
+		deathsStat = dumbStat
+		mobKillsStat = dumbStat
+		field_151186_x = dumbStat
+		playerKillsStat = dumbStat
+		fishCaughtStat = dumbStat
+		field_151183_A = dumbStat
+		field_151184_B = dumbStat
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun func_151178_a(static: StatList?): Boolean {
+		if (!PatcherConfigHandler.disableStats) return false
+		
+		AchievementList.init()
+		EntityList.func_151514_a()
+		
+		return true
+	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun addStat(player: EntityPlayerMP, stat: StatBase?, amount: Int) = PatcherConfigHandler.disableStats && stat?.isAchievement != true
+	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun func_146541_h(gui: GuiStats) {
+		if (!PatcherConfigHandler.disableStats) return
+		
+		gui.buttonList.removeAll { (it as GuiButton).id != 0 }
+		(gui.buttonList[0] as GuiButton).xPosition = gui.width / 2 - 75
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun initGui(gui: GuiStats) {
+		if (PatcherConfigHandler.disableStats)
+			gui.field_146542_f = ""
+	}
+	
+	
+	// Remove ladder interference with flight 
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE, booleanReturnConstant = false)
+	fun isLivingOnLadder(static: ForgeHooks?, block: Block?, world: World?, x: Int, y: Int, z: Int, entity: EntityLivingBase?) =
+		entity is EntityPlayer && entity.capabilities.isFlying
+	
+	// remove extra langs
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun loadLanguagesFor(reg: LanguageRegistry, container: ModContainer?, side: Side?) = Unit
 }

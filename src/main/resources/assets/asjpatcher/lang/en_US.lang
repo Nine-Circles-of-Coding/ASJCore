@@ -41,3 +41,7 @@ key.keyNI.is.false=[ASJCore] Entity interaction enabled
 key.keyNI.is.true=[ASJCore] Entity interaction disabled
 
 attribute.name.asjpatcher.reachDistance=Reach Distance
+
+options.snooper.view.new=Snooper Data...
+
+gui.stats.new=Statistics were disabled in ASJCore config

@@ -10,6 +10,7 @@ import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.*;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraftforge.common.MinecraftForge;
@@ -27,15 +28,15 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 	//////////////////
 	//- Generators -//
 	//////////////////
-	public final List<WE_CreateChunkGen> createChunkGen_List = new ArrayList();
-	public final List<WE_CreateChunkGen_InXZ> createChunkGen_InXZ_List = new ArrayList();
-	public final List<WE_CreateChunkGen_InXYZ> createChunkGen_InXYZ_List = new ArrayList();
-	public final List<IWorldGenerator> decorateChunkGen_List = new ArrayList();
+	public final List<WE_CreateChunkGen> createChunkGen_List = new ArrayList<>();
+	public final List<WE_CreateChunkGen_InXZ> createChunkGen_InXZ_List = new ArrayList<>();
+	public final List<WE_CreateChunkGen_InXYZ> createChunkGen_InXYZ_List = new ArrayList<>();
+	public final List<IWorldGenerator> decorateChunkGen_List = new ArrayList<>();
 	
 	//////////////////////
 	//- Biome Map Info -//
 	//////////////////////
-	public final List<WE_Biome> biomesList = new ArrayList();
+	public final List<WE_Biome> biomesList = new ArrayList<>();
 	public WE_Biome standardBiomeOnMap;
 	//-//
 	public double biomemapPersistence = 1.0D, biomemapScaleX = 1.0D, biomemapScaleY = 1.0D;
@@ -147,7 +148,8 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 		BlockFalling.fallInstantly = false;
 	}
 	
-	public List getPossibleCreatures(EnumCreatureType type, int x, int y, int z) {
+	@SuppressWarnings("unchecked")
+	public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(EnumCreatureType type, int x, int y, int z) {
 		WE_Biome b = WE_Biome.getBiomeAt(this, x, z);
 		return /*type == EnumCreatureType.monster && this.scatteredFeatureGenerator.func_143030_a(x, y, z) ? this.scatteredFeatureGenerator.getScatteredFeatureSpawnList() :*/ b.getSpawnableList(type);
 	}

@@ -19,7 +19,7 @@ public class WE_OreGen implements IWorldGenerator {
 	@Override
 	public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider chunkGenerator, IChunkProvider chunkProvider) {
 		for (WorldGenMinableParametrized wgmp : oreGen) {
-			if (random.nextInt(101) < (100 - wgmp.chanceToSpawn)) return;
+			if (random.nextInt(101) < (100 - wgmp.chanceToSpawn)) continue;
 			int veins = randInBounds(wgmp.minVeinsPerChunk, wgmp.maxVeinsPerChunk, random);
 			for (int i = 0; i < veins; i++) {
 				int posX = chunkX * 16 + random.nextInt(16) + 8;

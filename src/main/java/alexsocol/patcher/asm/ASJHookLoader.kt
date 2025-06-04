@@ -51,6 +51,7 @@ class ASJHookLoader: HookLoader() {
 			ASJAccessTransformer::class.java.name,
 			ASJClassTransformer::class.java.name,
 			ASJPacketCompleter::class.java.name,
+			RealmsDeleteTransformer::class.java.name,
 			SpigotTransformer::class.java.name
 		)
 	}
@@ -63,6 +64,7 @@ class ASJHookLoader: HookLoader() {
 		registerHookContainer("alexsocol.patcher.asm.hook.NoEntityInteractionHandler")
 		
 		if (PatcherConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.hook.BlockButtonExtender")
+		if (PatcherConfigHandler.deleteRealms) registerHookContainer("alexsocol.patcher.asm.hook.RealmsDeleter")
 		
 		registerHookContainer("alexsocol.patcher.asm.hook.ArmorFixes")
 		
@@ -82,5 +84,7 @@ class ASJHookLoader: HookLoader() {
 		
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
+		
+		if (PatcherConfigHandler.deleteRealms) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.RealmsDeleterHR")
 	}
 }

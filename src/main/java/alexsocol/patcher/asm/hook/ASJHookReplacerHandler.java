@@ -1,22 +1,32 @@
 package alexsocol.patcher.asm.hook;
 
+import alexsocol.patcher.PatcherConfigHandler;
 import alexsocol.patcher.handler.PlayerReachDistanceHandler;
 import com.KAIIIAK.classManipulators.HookReplacer;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelCreeper;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.play.client.C02PacketUseEntity;
 import net.minecraft.server.management.ItemInWorldManager;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldServer;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.glu.Project;
+
+import java.io.File;
 
 import static com.KAIIIAK.classManipulators.HookReplacer.Replacer.*;
 
 @SuppressWarnings("ALL")
 public class ASJHookReplacerHandler {
 	
+	// reach distance
 	@SideOnly(Side.CLIENT)
 	@HookReplacer
 	public static void getMouseOver(EntityRenderer er, float partialTick) {
@@ -78,6 +88,54 @@ public class ASJHookReplacerHandler {
 		POPLine();iiwm.blockReachDistance = distance;
 		POPLine();startTO();
 		POPLine();iiwm.thisPlayerMP.getEntityAttribute(PlayerReachDistanceHandler.INSTANCE.getReachDistance()).setBaseValue(distance);
+		POPLine();stop();
+	}
+	
+	
+	// Perspective vs Ortho proj config
+	@HookReplacer
+	public static void setupCameraTransform(EntityRenderer er, float f, int i) {
+		startFROM();
+		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2.0F);
+		POPLine();startTO();
+		POPLine();selectProjection(er, f);
+		POPLine();stop();
+	}
+	
+	public static void selectProjection(EntityRenderer er, float f) {
+		if (PatcherConfigHandler.INSTANCE.getOrthoProjection()) {
+			double mod = er.getFOVModifier(f, true) * 2;
+			GL11.glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05F, er.farPlaneDistance * 2.0F);
+		} else {
+			Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2.0F);
+		}
+	}
+	
+	// bind smooth camera key
+	@HookReplacer(targetMethod = "<init>")
+	public static void GameSettings(GameSettings thiz) {
+		startFROM();
+		POPLine();POP("key.smoothCamera");POP(0);
+		POPLine();startTO();
+		POPLine();POP("key.smoothCamera");POP(Keyboard.KEY_F8);
+		POPLine();stop();
+	}
+	
+	@HookReplacer(targetMethod = "<init>")
+	public static void GameSettings(GameSettings thiz, Minecraft mc, File options) {
+		startFROM();
+		POPLine();POP("key.smoothCamera");POP(0);
+		POPLine();startTO();
+		POPLine();POP("key.smoothCamera");POP(Keyboard.KEY_F8);
+		POPLine();stop();
+	}
+	
+	@HookReplacer(targetMethod = "<init>")
+	public static void ModelCreeper(ModelCreeper thiz, float size) {
+		startFROM();
+		POPLine();{byte b0 = 4;}
+		POPLine();startTO();
+		POPLine();{byte b0 = 6;}
 		POPLine();stop();
 	}
 }

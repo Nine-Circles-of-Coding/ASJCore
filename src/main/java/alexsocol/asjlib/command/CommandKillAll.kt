@@ -8,9 +8,11 @@ import net.minecraft.command.*
 import net.minecraft.command.CommandBase.getListOfStringsFromIterableMatchingLastWord
 import net.minecraft.entity.*
 import net.minecraft.entity.item.EntityItem
+import net.minecraft.entity.item.EntityXPOrb
 import net.minecraft.entity.monster.IMob
 import net.minecraft.entity.passive.*
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.StatCollector
 
@@ -65,7 +67,12 @@ object CommandKillAll: ASJCommandBase() {
 	}
 	
 	enum class EntitySelector(val matcher: (Entity) -> Boolean) {
-		ALL({ true }), ITEMS({ it is EntityItem }), LIVING({ it is EntityLivingBase }), MOBS({ it is IMob }), AMBIENT({ it is EntityAnimal || it is EntityAmbientCreature || it is EntityWaterMob })
+		ALL({ true }),
+		ITEMS({ it is EntityItem }),
+		GROUND({ it is EntityItem || it is EntityXPOrb || it is EntityArrow }),
+		LIVING({ it is EntityLivingBase }),
+		MOBS({ it is IMob }),
+		AMBIENT({ it is EntityAnimal || it is EntityAmbientCreature || it is EntityWaterMob })
 	}
 	
 	private val names = EntitySelector.entries.map { it.name.lowercase() }

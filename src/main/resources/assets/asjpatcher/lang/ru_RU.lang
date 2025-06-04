@@ -41,3 +41,5 @@ key.keyNI.is.false=[ASJCore] Взаимодействие с сущностям�
 key.keyNI.is.true=[ASJCore] Взаимодействие с сущностями отключено
 
 attribute.name.asjpatcher.reachDistance=Досягаемость
+
+options.snooper.view.new=Данные Snooper...

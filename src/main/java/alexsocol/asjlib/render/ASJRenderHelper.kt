@@ -181,7 +181,7 @@ object ASJRenderHelper {
 			cull = false
 		}
 		if (alfa) {
-			if (prevBlend) glDisable(GL_BLEND)
+			if (!prevBlend) glDisable(GL_BLEND)
 			alfa = false
 		}
 	}

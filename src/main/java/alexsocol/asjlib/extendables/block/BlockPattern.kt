@@ -26,9 +26,9 @@ open class BlockPattern(modid: String, material: Material, name: String, tab: Cr
 	
 	override fun isOpaqueCube() = isOpaque
 	
-	override fun isBeaconBase(world: IBlockAccess?, x: Int, y: Int, z: Int, beaconX: Int, beaconY: Int, beaconZ: Int) = isBeacon
+	override fun isBeaconBase(world: IBlockAccess, x: Int, y: Int, z: Int, beaconX: Int, beaconY: Int, beaconZ: Int) = isBeacon
 	
-	override fun updateTick(world: World, x: Int, y: Int, z: Int, rand: Random?) {
+	override fun updateTick(world: World, x: Int, y: Int, z: Int, rand: Random) {
 		if (!world.isRemote && isFalling) func_149830_m(world, x, y, z)
 	}
 	

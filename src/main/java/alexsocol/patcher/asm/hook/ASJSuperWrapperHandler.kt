@@ -1,6 +1,7 @@
 package alexsocol.patcher.asm.hook
 
 import com.KAIIIAK.superwrapper.SuperWrapper
+import cpw.mods.fml.relauncher.*
 import net.minecraft.entity.*
 import net.minecraft.inventory.Container
 import net.minecraft.item.ItemStack
@@ -29,6 +30,13 @@ object ASJSuperWrapperHandler {
 	@JvmStatic
 	@SuperWrapper(callThis = false)
 	fun getFlag(entity: Entity, id: Int): Boolean {
+		throw NotImplementedError()
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@SuperWrapper(callThis = false)
+	fun equals(thiz: Any, other: Any): Boolean {
 		throw NotImplementedError()
 	}
 }
