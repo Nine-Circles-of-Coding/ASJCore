@@ -96,7 +96,7 @@ public class ASJHookReplacerHandler {
 	@HookReplacer
 	public static void setupCameraTransform(EntityRenderer er, float f, int i) {
 		startFROM();
-		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2.0F);
+		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
 		POPLine();startTO();
 		POPLine();selectProjection(er, f);
 		POPLine();stop();
@@ -105,9 +105,9 @@ public class ASJHookReplacerHandler {
 	public static void selectProjection(EntityRenderer er, float f) {
 		if (PatcherConfigHandler.INSTANCE.getOrthoProjection()) {
 			double mod = er.getFOVModifier(f, true) * 2;
-			GL11.glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05F, er.farPlaneDistance * 2.0F);
+			GL11.glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05F, er.farPlaneDistance * 2F);
 		} else {
-			Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2.0F);
+			Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
 		}
 	}
 	

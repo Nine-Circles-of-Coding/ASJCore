@@ -13,6 +13,8 @@ import net.minecraft.inventory.IInventory
 import net.minecraft.item.*
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.PotionEffect
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.integrated.IntegratedServer
 import net.minecraft.stats.Achievement
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.*
@@ -381,3 +383,6 @@ fun NBTTagCompound.getChunkCoords(tag: String): ChunkCoordinates {
 	val (x, y, z) = ints
 	return ChunkCoordinates(x, y, z)
 }
+
+val MinecraftServer.isMultiPlayer // WTF
+	get() = if (this is IntegratedServer) public else !isSinglePlayer

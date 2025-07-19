@@ -13,6 +13,7 @@ import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.*
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL12
 
 open class TileItemContainer: ASJTile() {
 	
@@ -46,6 +47,7 @@ open class TileItemContainer: ASJTile() {
 		fun renderItem(tile: TileEntity, stack_: ItemStack? = null) {
 			val stack = stack_ ?: (tile as? TileItemContainer)?.item ?: return
 			
+			glEnable(GL12.GL_RESCALE_NORMAL)
 			glDisable(GL_CULL_FACE)
 			val entityitem = EntityItem(tile.worldObj, 0.0, 0.0, 0.0, stack)
 			val item = entityitem.entityItem.item

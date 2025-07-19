@@ -15,8 +15,7 @@ import cofh.asmhooks.HooksCore
 import com.emoniph.witchery.dimension.WorldProviderDreamWorld
 import cpw.mods.fml.client.*
 import cpw.mods.fml.common.*
-import cpw.mods.fml.common.registry.GameRegistry
-import cpw.mods.fml.common.registry.LanguageRegistry
+import cpw.mods.fml.common.registry.*
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
@@ -32,8 +31,7 @@ import net.minecraft.client.multiplayer.PlayerControllerMP
 import net.minecraft.client.renderer.*
 import net.minecraft.client.renderer.entity.*
 import net.minecraft.client.resources.I18n
-import net.minecraft.client.settings.GameSettings
-import net.minecraft.client.settings.KeyBinding
+import net.minecraft.client.settings.*
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
 import net.minecraft.creativetab.CreativeTabs
@@ -43,7 +41,7 @@ import net.minecraft.entity.EntityList.EntityEggInfo
 import net.minecraft.entity.ai.attributes.AttributeModifier
 import net.minecraft.entity.boss.*
 import net.minecraft.entity.effect.*
-import net.minecraft.entity.item.EntityEnderPearl
+import net.minecraft.entity.item.*
 import net.minecraft.entity.monster.*
 import net.minecraft.entity.passive.EntityMooshroom
 import net.minecraft.entity.player.*
@@ -55,14 +53,13 @@ import net.minecraft.nbt.*
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.*
 import net.minecraft.profiler.PlayerUsageSnooper
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.ServerEula
+import net.minecraft.server.*
 import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.server.integrated.IntegratedServer
-import net.minecraft.server.management.ServerConfigurationManager
+import net.minecraft.server.management.*
 import net.minecraft.stats.*
 import net.minecraft.stats.StatList.*
-import net.minecraft.tileentity.TileEntityFurnace
+import net.minecraft.tileentity.*
 import net.minecraft.util.*
 import net.minecraft.world.*
 import net.minecraft.world.biome.*
@@ -178,11 +175,13 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(targetMethod = "<clinit>", injectOnExit = true)
 	fun `EntityList$clinit`(e: EntityList?) {
-		addEntityEgg(EntityGiantZombie::class.java, 0x00AFAF, 0x4D6341) // Giant
-		addEntityEgg(EntityDragon::class.java, 0x0E0E0E, 0xCC00FA) // Ender Dragon
-		addEntityEgg(EntityWither::class.java, 0x141414, 0x5C5C5C) // Wither Boss
-		addEntityEgg(EntitySnowman::class.java, 0xEEFFFF, 0xFFA221) // Snowman
-		addEntityEgg(EntityIronGolem::class.java, 0xC5C2C1, 0xFFE1CC) // Iron Golem
+		if (PatcherConfigHandler.eggs) {
+			addEntityEgg(EntityGiantZombie::class.java, 0x00AFAF, 0x4D6341) // Giant
+			addEntityEgg(EntityDragon::class.java, 0x0E0E0E, 0xCC00FA) // Ender Dragon
+			addEntityEgg(EntityWither::class.java, 0x141414, 0x5C5C5C) // Wither Boss
+			addEntityEgg(EntitySnowman::class.java, 0xEEFFFF, 0xFFA221) // Snowman
+			addEntityEgg(EntityIronGolem::class.java, 0xC5C2C1, 0xFFE1CC) // Iron Golem
+		}
 		
 		if (PatcherConfigHandler.lightningID != -1) EntityList.addMapping(EntityLightningBolt::class.java, "LightningBolt", PatcherConfigHandler.lightningID)
 	}
@@ -224,8 +223,9 @@ object ASJHookHandler {
 		if (!count.startsWith('x')) return false
 		
 		val newArgs = args.toMutableList().apply { removeAt(1) }.toTypedArray()
-		for (i in 0 until count.substring(1).toInt())
+		repeat(count.substring(1).toInt()) {
 			c.processCommand(sender, newArgs)
+		}
 		
 		return true
 	}
@@ -688,7 +688,7 @@ object ASJHookHandler {
 		return false
 	}
 	
-	// can't shear dead animals (dupe fix)
+	// can't shear dead mooshroom (dupe fix)
 	@JvmStatic
 	@Hook(returnCondition = ON_NOT_NULL)
 	fun onSheared(entity: EntityMooshroom, item: ItemStack?, world: IBlockAccess?, x: Int, y: Int, z: Int, fortune: Int) = if (entity.isDead) ArrayList<Any?>() else null
@@ -738,7 +738,7 @@ object ASJHookHandler {
 		if (GLAllocation.mapDisplayLists.contains(id)) glDeleteLists(id, GLAllocation.mapDisplayLists.remove(id) as Int)
 	}
 	
-	// file:// scheme for chat
+	// fix for file: URI scheme crash 
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(targetMethod = "<clinit>", injectOnExit = true)
@@ -746,7 +746,7 @@ object ASJHookHandler {
 		GuiChat.field_152175_f.add("file")
 	}
 	
-	// ???
+	// NPE fix for TextureMap errors
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
 	fun trackBrokenTexture(handler: FMLClientHandler, resourceLocation: ResourceLocation, error: String?): Boolean {
@@ -780,6 +780,7 @@ object ASJHookHandler {
 		return "$s]"
 	}
 	
+	// TODO WTF ???
 	@Suppress("LocalVariableName")
 	fun func_150489_a(primitive: JsonToNBT.Primitive): NBTBase {
 		val field_150493_b = primitive.field_150493_b
@@ -1486,6 +1487,9 @@ object ASJHookHandler {
 	
 	
 	// remove stats
+	
+	val dummyStat by lazy { StatBasic("gui.stats.new", ChatComponentTranslation("gui.stats.new")) { "" }.registerStat() }
+	
 	@JvmStatic
 	@Hook(injectOnExit = true, targetMethod = "<clinit>")
 	fun StatList_static(static: StatList?) {
@@ -1495,36 +1499,34 @@ object ASJHookHandler {
 		generalStats.clear()
 		oneShotStats.values.clear()
 		
-		val dumbStat = StatBasic("gui.stats.new", ChatComponentTranslation("gui.stats.new")) { "" }.registerStat()
+		mineBlockStatArray.fill(dummyStat)
+		objectBreakStats.fill(dummyStat)
+		objectCraftStats.fill(dummyStat)
+		objectUseStats.fill(dummyStat)
 		
-		mineBlockStatArray.fill(dumbStat)
-		objectBreakStats.fill(dumbStat)
-		objectCraftStats.fill(dumbStat)
-		objectUseStats.fill(dumbStat)
-		
-		leaveGameStat = dumbStat
-		minutesPlayedStat = dumbStat
-		distanceWalkedStat = dumbStat
-		distanceSwumStat = dumbStat
-		distanceFallenStat = dumbStat
-		distanceClimbedStat = dumbStat
-		distanceFlownStat = dumbStat
-		distanceDoveStat = dumbStat
-		distanceByMinecartStat = dumbStat
-		distanceByBoatStat = dumbStat
-		distanceByPigStat = dumbStat
-		field_151185_q = dumbStat
-		jumpStat = dumbStat
-		dropStat = dumbStat
-		damageDealtStat = dumbStat
-		damageTakenStat = dumbStat
-		deathsStat = dumbStat
-		mobKillsStat = dumbStat
-		field_151186_x = dumbStat
-		playerKillsStat = dumbStat
-		fishCaughtStat = dumbStat
-		field_151183_A = dumbStat
-		field_151184_B = dumbStat
+		leaveGameStat = dummyStat
+		minutesPlayedStat = dummyStat
+		distanceWalkedStat = dummyStat
+		distanceSwumStat = dummyStat
+		distanceFallenStat = dummyStat
+		distanceClimbedStat = dummyStat
+		distanceFlownStat = dummyStat
+		distanceDoveStat = dummyStat
+		distanceByMinecartStat = dummyStat
+		distanceByBoatStat = dummyStat
+		distanceByPigStat = dummyStat
+		field_151185_q = dummyStat
+		jumpStat = dummyStat
+		dropStat = dummyStat
+		damageDealtStat = dummyStat
+		damageTakenStat = dummyStat
+		deathsStat = dummyStat
+		mobKillsStat = dummyStat
+		field_151186_x = dummyStat
+		playerKillsStat = dummyStat
+		fishCaughtStat = dummyStat
+		field_151183_A = dummyStat
+		field_151184_B = dummyStat
 	}
 	
 	@JvmStatic
@@ -1560,6 +1562,14 @@ object ASJHookHandler {
 			gui.field_146542_f = ""
 	}
 	
+	@JvmStatic
+	@Hook(returnCondition = ON_NULL)
+	fun func_151182_a(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) null else dummyStat
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_NULL)
+	fun func_151176_b(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) null else dummyStat
+	
 	
 	// Remove ladder interference with flight 
 	@JvmStatic
@@ -1569,6 +1579,29 @@ object ASJHookHandler {
 	
 	// remove extra langs
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun loadLanguagesFor(reg: LanguageRegistry, container: ModContainer?, side: Side?) = Unit
+	@Hook(returnCondition = ON_TRUE)
+	fun loadLanguagesFor(reg: LanguageRegistry, container: ModContainer?, side: Side?) = PatcherConfigHandler.langsRamOptimization
+	
+	// drop beacon inventory on break
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS, createMethod = true)
+	fun breakBlock(target: BlockBeacon, world: World, x: Int, y: Int, z: Int, block: Block?, meta: Int) {
+		val tile = world.getTileEntity(x, y, z) as? TileEntityBeacon ?: return
+		
+		repeat(tile.sizeInventory) { slot ->
+			val stack = tile[slot]?.copy() ?: return@repeat
+			tile[slot] = null
+			
+			EntityItem(world, x + 0.5, y + 0.5, z + 0.5, stack).spawn()
+		}
+		
+		world.func_147453_f(x, y, z, block)
+		
+		ASJSuperWrapperHandler.breakBlock(target, world, x, y, z, block, meta)
+	}
+	
+	// no use of *empty* stacks
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE, booleanReturnConstant = false)
+	fun tryUseItem(manager: ItemInWorldManager, player: EntityPlayer?, world: World?, stack: ItemStack) = stack.stackSize <= 0
 }

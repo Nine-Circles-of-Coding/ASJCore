@@ -55,24 +55,28 @@ abstract class ASJConfigHandler {
 		return prop.getBoolean(default)
 	}
 	
+	@JvmOverloads
 	fun loadProp(category: String, propName: String, default: Int, restart: Boolean, desc: String?, min: Int = Int.MIN_VALUE, max: Int = Int.MAX_VALUE): Int {
 		val prop = config.get(category, propName, default, desc, min, max)
 		prop.setRequiresMcRestart(restart)
 		return prop.getInt(default).also { if (it !in min..max) throw IllegalArgumentException("Int $propName is not within required min/max bounds ($it), must be in range $min..$max") }
 	}
 	
+	@JvmOverloads
 	fun loadProp(category: String, propName: String, default: IntArray, restart: Boolean, desc: String?, ensureLength: Boolean = true): IntArray {
 		val prop = config.get(category, propName, default, desc)
 		prop.setRequiresMcRestart(restart)
 		return prop.intList.also { if (ensureLength && it.size < default.size) throw IllegalArgumentException("Array $propName is not of suitable length (${it.size}), must be ${default.size}") }
 	}
 	
-	fun loadProp(category: String, propName: String, default: Double, restart: Boolean, desc: String?): Double {
-		val prop = config.get(category, propName, default, desc)
+	@JvmOverloads
+	fun loadProp(category: String, propName: String, default: Double, restart: Boolean, desc: String?, min: Double = -Double.MIN_VALUE, max: Double = Double.MAX_VALUE): Double {
+		val prop = config.get(category, propName, default, desc, min, max)
 		prop.setRequiresMcRestart(restart)
 		return prop.getDouble(default)
 	}
 	
+	@JvmOverloads
 	fun loadProp(category: String, propName: String, default: DoubleArray, restart: Boolean, desc: String?, ensureLength: Boolean = true): DoubleArray {
 		val prop = config.get(category, propName, default, desc)
 		prop.setRequiresMcRestart(restart)
@@ -85,6 +89,7 @@ abstract class ASJConfigHandler {
 		return prop.string
 	}
 	
+	@JvmOverloads
 	fun loadProp(category: String, propName: String, default: Array<String>, restart: Boolean, desc: String?, ensureLength: Boolean = true): Array<String> {
 		val prop = config.get(category, propName, default, desc)
 		prop.setRequiresMcRestart(restart)

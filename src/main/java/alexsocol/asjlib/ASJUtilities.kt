@@ -107,8 +107,19 @@ object ASJUtilities {
 		
 		val worldTo = server.worldServerForDimension(dimTo)
 		
-		if (target is EntityPlayerMP)
-			return server.configurationManager.transferPlayerToDimension(target, dimTo, FreeTeleporter(worldTo, x, y, z))
+		if (target is EntityPlayerMP) {
+			var player: EntityPlayerMP = target
+			
+			if (player.worldObj.provider.dimensionId == 1) {
+				player.worldObj.removeEntity(player)
+				player.playerConqueredTheEnd = true
+				val respawnedPlayer = MinecraftServer.getServer().configurationManager.respawnPlayer(player, dimTo, true)
+				player.playerNetServerHandler.playerEntity = respawnedPlayer
+				player = respawnedPlayer
+			}
+			
+			return server.configurationManager.transferPlayerToDimension(player, dimTo, FreeTeleporter(worldTo, x, y, z))
+		}
 		
 		val dimFrom = target.dimension
 		val worldFrom = server.worldServerForDimension(dimFrom)

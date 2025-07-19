@@ -85,6 +85,8 @@ class ASJHookLoader: HookLoader() {
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
 		
+		if (PatcherConfigHandler.fixCapeRotations) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.CapeRotationsFix")
+		
 		if (PatcherConfigHandler.deleteRealms) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.RealmsDeleterHR")
 	}
 }

@@ -2,11 +2,14 @@ package alexsocol.patcher.asm.hook
 
 import com.KAIIIAK.superwrapper.SuperWrapper
 import cpw.mods.fml.relauncher.*
+import net.minecraft.block.Block
+import net.minecraft.block.BlockContainer
 import net.minecraft.entity.*
 import net.minecraft.inventory.Container
 import net.minecraft.item.ItemStack
+import net.minecraft.world.World
 
-@Suppress("unused")
+@Suppress("unused", "UNUSED_PARAMETER")
 object ASJSuperWrapperHandler {
 	
 	@JvmStatic
@@ -37,6 +40,12 @@ object ASJSuperWrapperHandler {
 	@JvmStatic
 	@SuperWrapper(callThis = false)
 	fun equals(thiz: Any, other: Any): Boolean {
+		throw NotImplementedError()
+	}
+	
+	@JvmStatic
+	@SuperWrapper
+	fun breakBlock(target: BlockContainer, world: World?, x: Int, y: Int, z: Int, block: Block?, meta: Int) {
 		throw NotImplementedError()
 	}
 }
