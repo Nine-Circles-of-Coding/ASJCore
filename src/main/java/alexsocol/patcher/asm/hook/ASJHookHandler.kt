@@ -70,6 +70,7 @@ import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11.*
 import org.objectweb.asm.Opcodes
+import ru.vamig.worldengine.*
 import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.io.File
@@ -1604,4 +1605,30 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE, booleanReturnConstant = false)
 	fun tryUseItem(manager: ItemInWorldManager, player: EntityPlayer?, world: World?, stack: ItemStack) = stack.stackSize <= 0
+	
+	
+	// WE biome detection
+	@JvmStatic
+	@Hook
+	fun getChunkFromBlockCoords(world: World, x: Int, z: Int) {
+		worldChunkCoordX = x
+		worldChunkCoordZ = z
+	}
+	
+	var worldChunkCoordX = Int.MAX_VALUE
+	var worldChunkCoordZ = Int.MAX_VALUE
+	
+	@JvmStatic
+	@Hook(injectOnExit = true, returnCondition = ALWAYS)
+	fun getBiomeGenForWorldCoords(c: Chunk, localChunkX: Int, localChunkZ: Int, cm: WorldChunkManager, @ReturnValue oldBiome: BiomeGenBase): BiomeGenBase? {
+		if (worldChunkCoordX == Int.MAX_VALUE || worldChunkCoordZ == Int.MAX_VALUE)
+			return oldBiome
+		
+		try {
+			return WE_Biome.getBiomeAt((cm as? WE_WorldChunkManager ?: return oldBiome).cp, worldChunkCoordX.toLong(), worldChunkCoordZ.toLong())
+		} finally {
+			worldChunkCoordX = Int.MAX_VALUE
+			worldChunkCoordZ = Int.MAX_VALUE
+		}
+	}
 }
