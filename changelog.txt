@@ -1,8 +1,1 @@
-Innovations:
- Config to disable adding eggs
-
-Fixes:
- Beacon not dropping inventory on breaking
- Capes rotating too much on high velocities
- Teleportation from The End to other dimensions
- Use of stacks with non-positive size
+Moved WE-related feature from Alfheim - do not use with Alfheim 60 or older
