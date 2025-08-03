@@ -7,6 +7,7 @@ import net.minecraft.block.BlockContainer
 import net.minecraft.entity.*
 import net.minecraft.inventory.Container
 import net.minecraft.item.ItemStack
+import net.minecraft.server.MinecraftServer
 import net.minecraft.world.World
 
 @Suppress("unused", "UNUSED_PARAMETER")
@@ -46,6 +47,12 @@ object ASJSuperWrapperHandler {
 	@JvmStatic
 	@SuperWrapper
 	fun breakBlock(target: BlockContainer, world: World?, x: Int, y: Int, z: Int, block: Block?, meta: Int) {
+		throw NotImplementedError()
+	}
+	
+	@JvmStatic
+	@SuperWrapper(callThis = false)
+	fun isMultiPlayer(server: MinecraftServer): Boolean {
 		throw NotImplementedError()
 	}
 }

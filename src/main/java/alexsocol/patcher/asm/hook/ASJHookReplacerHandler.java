@@ -8,6 +8,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelCreeper;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.resources.FileResourcePack;
+import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetHandlerPlayServer;
@@ -20,6 +22,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.Project;
 
 import java.io.File;
+import java.util.Set;
 
 import static com.KAIIIAK.classManipulators.HookReplacer.Replacer.*;
 
@@ -137,5 +140,27 @@ public class ASJHookReplacerHandler {
 		POPLine();startTO();
 		POPLine();{byte b0 = 6;}
 		POPLine();stop();
+	}
+	
+	@HookReplacer
+	public static Set getResourceDomains(FileResourcePack frp) {
+		startFROM();
+		POPLine();POP(HookReplacer.Replacer.<String>ALOAD("7").toLowerCase());
+		POPLine();startTO();
+		POPLine();POP(ALOAD("7").toString());
+		POPLine();stop();
+		
+		return null;
+	}
+	
+	@HookReplacer
+	public static Set getResourceDomains(FolderResourcePack frp) {
+		startFROM();
+		POPLine();POP(HookReplacer.Replacer.<String>ALOAD("7").toLowerCase());
+		POPLine();startTO();
+		POPLine();POP(ALOAD("7").toString());
+		POPLine();stop();
+		
+		return null;
 	}
 }

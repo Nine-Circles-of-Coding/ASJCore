@@ -58,7 +58,7 @@ public @interface SuperWrapper {
 	 *     protected void foo() { ... }
 	 * }
 	 *
-	 * class Baz {
+	 * class Baz extends Bar {
 	 *     @Override protected void foo() { ... }
 	 * }
 	 *

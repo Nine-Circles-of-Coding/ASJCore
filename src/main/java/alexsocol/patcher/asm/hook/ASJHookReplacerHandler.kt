@@ -5,10 +5,11 @@ package alexsocol.patcher.asm.hook
 import com.KAIIIAK.classManipulators.HookReplacer
 import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
 import net.minecraft.client.gui.*
-import net.minecraft.client.model.ModelCreeper
 import net.minecraft.client.renderer.EntityRenderer
 import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.potion.Potion
+import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeGenJungle
 import net.minecraft.world.gen.feature.*
 import java.util.*
@@ -75,3 +76,23 @@ fun renderString(fr: FontRenderer, text: String, x: Int, y: Int, color: Int, sha
 	
 	return 0
 }
+
+@HookReplacer(targetMethod = "<init>")
+fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double) {
+	startFROM()
+	POPLine();POP(world.gameRules.getGameRuleBooleanValue("doFireTick"))
+	POPLine();startTO()
+	POPLine();POP(cutOutByASJCore())
+	POPLine();stop()
+}
+
+@HookReplacer(targetMethod = "<init>") // Bukkit compatibility
+fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double, isEffect: Boolean) {
+	startFROM()
+	POPLine();POP(world.gameRules.getGameRuleBooleanValue("doFireTick"))
+	POPLine();startTO()
+	POPLine();POP(cutOutByASJCore())
+	POPLine();stop()
+}
+
+fun cutOutByASJCore() = false

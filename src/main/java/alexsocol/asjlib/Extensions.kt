@@ -3,6 +3,7 @@
 package alexsocol.asjlib
 
 import alexsocol.asjlib.math.Vector3
+import alexsocol.patcher.asm.hook.ASJSuperWrapperHandler
 import cpw.mods.fml.common.FMLCommonHandler
 import net.minecraft.block.Block
 import net.minecraft.client.entity.EntityClientPlayerMP
@@ -14,7 +15,6 @@ import net.minecraft.item.*
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.PotionEffect
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.integrated.IntegratedServer
 import net.minecraft.stats.Achievement
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.*
@@ -385,4 +385,4 @@ fun NBTTagCompound.getChunkCoords(tag: String): ChunkCoordinates {
 }
 
 val MinecraftServer.isMultiPlayer // WTF
-	get() = if (this is IntegratedServer) public else !isSinglePlayer
+	get() = ASJSuperWrapperHandler.isMultiPlayer(this)

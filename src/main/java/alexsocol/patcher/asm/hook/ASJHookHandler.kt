@@ -92,19 +92,11 @@ object ASJHookHandler {
 	@Hook(returnCondition = ALWAYS, targetMethod = "<init>", createMethod = true, superClass = "net/minecraft/entity/effect/EntityWeatherEffect.${Opcodes.ALOAD}.1.(Lnet/minecraft/world/World;)V")
 	fun EntityLightningBolt(thiz: EntityLightningBolt, world: World) {
 		thiz.lightningState = 2
-		thiz.boltVertex = (Math.random() * Long.MAX_VALUE).toLong()
+		thiz.boltVertex = world.rand.nextLong()
 		thiz.boltLivingTime = ASJUtilities.randInBounds(1, 3, world.rand)
 	}
 	
-	
-	// move fire spawn from init to update
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetMethod = "<init>", createMethod = true, superClass = "net/minecraft/entity/effect/EntityWeatherEffect.${Opcodes.ALOAD}.1.(Lnet/minecraft/world/World;)V")
-	fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double) {
-		thiz.setLocationAndAngles(x, y, z, 0f, 0f)
-		EntityLightningBolt(thiz, world)
-	}
-	
+	// move fire spawn from init to update (removing from init by HookReplacer)
 	@JvmStatic
 	@Hook
 	fun onUpdate(entity: EntityLightningBolt) {
@@ -130,7 +122,6 @@ object ASJHookHandler {
 		}
 	}
 	
-	
 	// AIOOBE 257+ crash fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, targetMethod = "<clinit>")
@@ -145,15 +136,15 @@ object ASJHookHandler {
 		}
 	}
 	
+	
 	// invisible lightnings fix
 	@JvmStatic
-	@Hook
-	fun spawnEntityInWorld(world: World, target: Entity?): Boolean {
-		if (target !is EntityWeatherEffect)
-			return false
-		
-		return world.addWeatherEffect(target)
-	}
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "swapLightningSpawn")
+	fun spawnEntityInWorld(world: World, target: Entity?) = target is EntityWeatherEffect
+	
+	@JvmStatic
+	fun swapLightningSpawn(world: World, target: Entity?) = world.addWeatherEffect(target)
+	
 	
 	// damageMobArmor config prop impl
 	@JvmStatic
@@ -1359,7 +1350,7 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook
 	fun renderFirstPersonArm(rp: RenderPlayer, player: EntityPlayer) {
-		rp.modelBipedMain.isRiding = player.isRiding
+		rp.modelBipedMain.isRiding = if (PatcherConfigHandler.ridingHandRotationDisable) false else player.isRiding
 	}
 	
 	// fucking stupid shitcoder fix
@@ -1578,10 +1569,26 @@ object ASJHookHandler {
 	fun isLivingOnLadder(static: ForgeHooks?, block: Block?, world: World?, x: Int, y: Int, z: Int, entity: EntityLivingBase?) =
 		entity is EntityPlayer && entity.capabilities.isFlying
 	
-	// remove extra langs
+	
+	// remove extra langs + fix deprecated usage
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
 	fun loadLanguagesFor(reg: LanguageRegistry, container: ModContainer?, side: Side?) = PatcherConfigHandler.langsRamOptimization
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "getStringLocalizationBody")
+	fun getStringLocalization(reg: LanguageRegistry, key: String?) = PatcherConfigHandler.langsRamOptimization
+	
+	@JvmStatic
+	fun getStringLocalizationBody(reg: LanguageRegistry, key: String?) = StatCollector.translateToLocal(key)
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "getStringLocalizationBody")
+	fun getStringLocalization(reg: LanguageRegistry, key: String?, lang: String) = PatcherConfigHandler.langsRamOptimization
+	
+	@JvmStatic
+	fun getStringLocalizationBody(reg: LanguageRegistry, key: String?, lang: String) = StatCollector.translateToLocal(key)
+	
 	
 	// drop beacon inventory on break
 	@JvmStatic
@@ -1631,4 +1638,16 @@ object ASJHookHandler {
 			worldChunkCoordZ = Int.MAX_VALUE
 		}
 	}
+	
+	@JvmStatic
+	@Hook(createMethod = true, isAbstract = true)
+	fun isMultiPlayer(server: MinecraftServer): Boolean = throw AbstractMethodError()
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS, createMethod = true)
+	fun isMultiPlayer(server: IntegratedServer) = server.public
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS, createMethod = true)
+	fun isMultiPlayer(server: DedicatedServer) = !server.isSinglePlayer
 }

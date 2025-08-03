@@ -41,6 +41,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var portalHook = true
 	var respawnInEnd = false
 	var respawnInNether = false
+	var ridingHandRotationDisable = false
 	var showNbt = true
 	var showOreDict = true
 	var showRegName = true
@@ -96,6 +97,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
 		respawnInEnd = loadProp(CATEGORY_GENERAL, "respawnInEnd", respawnInEnd, false, "Set this to true to allow respawning in the end")
 		respawnInNether = loadProp(CATEGORY_GENERAL, "respawnInNether", respawnInNether, false, "Set this to true to allow respawning in the nether")
+		ridingHandRotationDisable = loadProp(CATEGORY_GENERAL, "ridingHandRotationDisable", ridingHandRotationDisable, false, "Set this to true to disable FPV hand rotation while riding")
 		showNbt = loadProp(CATEGORY_GENERAL, "showNbt", showNbt, false, "Set this to false to not show stack NBT in item tooltip when holding SHIFT AND when advanced tooltips are enabled (F3+H)")
 		showOreDict = loadProp(CATEGORY_GENERAL, "showOreDict", showOreDict, false, "Set this to false to not show oredict names in item tooltip when holding SHIFT")
 		showRegName = loadProp(CATEGORY_GENERAL, "showRegName", showRegName, false, "Set this to false to not show registry name in item tooltip when holding SHIFT")

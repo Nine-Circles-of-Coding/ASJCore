@@ -1,8 +1,7 @@
 Innovations:
- Config to disable adding eggs
+ Config to disable FPV hand rotation while riding
 
 Fixes:
- Beacon not dropping inventory on breaking
- Capes rotating too much on high velocities
- Teleportation from The End to other dimensions
- Use of stacks with non-positive size
+ Lightning bolt entities on Bukkit
+ Dedicated server crash
+ Issues with lang optimization
