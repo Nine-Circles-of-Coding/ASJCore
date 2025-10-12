@@ -1,15 +1,2 @@
-Innovations:
- Dark mode for server UI
- Invulnerability frames for /rtp
- Removed crash with occupied WEBiomeID when there are no registered WE biomes
- Config for removing streaming-related keybinds for compat with ReBind mod
- /wolk.jpeg
-
 Fixes:
- /rtp logic
- Item collision on complex blocks
- Immersive Engineering crashing with removed stats
- Creepers height
- Floating top & bottom polys on iron bars
- Server-side langs optimization
- NBTTagByteArray de-/serialization
+ Client langs optimization for mods with alternative localization

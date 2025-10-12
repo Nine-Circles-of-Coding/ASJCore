@@ -1620,17 +1620,11 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
 	fun injectLanguage(reg: LanguageRegistry, lang: String, parsedLangFile: HashMap<String, String>): Boolean {
-		val opt = PatcherConfigHandler.langsRamOptimization
-		
-		// client is not using this class anyway
-		if (ASJUtilities.isClient)
-			return opt
-		
-		if (!opt)
+		if (!PatcherConfigHandler.langsRamOptimization)
 			return false
 		
-		// check match to default lang or server lang (for Uranium and such servers)
-		return lang != "en_US" && lang != FMLServerHandler.instance().currentLanguage
+		// check match to default lang or current lang (FMLCommonHandler is too early on client -> gives NPE)
+		return lang != "en_US" && lang != (if (ASJUtilities.isClient) mc.gameSettings.language else FMLServerHandler.instance().currentLanguage)
 	}
 	
 	// drop beacon inventory on break
