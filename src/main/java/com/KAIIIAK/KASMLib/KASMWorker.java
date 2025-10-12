@@ -135,43 +135,43 @@ public abstract class KASMWorker {
 		return false;
 	}
 	
-	public boolean workMethodVisibleLocalVariableAnnotations(ClassNode classNode, MethodNode methodNode, LocalVariableAnnotationNode localVariableAnnotationNode) {
+	public boolean workMethodVisibleLocalVariableAnnotation(ClassNode classNode, MethodNode methodNode, LocalVariableAnnotationNode localVariableAnnotationNode) {
 		return false;
 	}
 	
-	public boolean workMethodInvisibleLocalVariableAnnotations(ClassNode classNode, MethodNode methodNode, LocalVariableAnnotationNode localVariableAnnotationNode) {
+	public boolean workMethodInvisibleLocalVariableAnnotation(ClassNode classNode, MethodNode methodNode, LocalVariableAnnotationNode localVariableAnnotationNode) {
 		return false;
 	}
 	
-	public boolean workMethodParameters(ClassNode classNode, MethodNode methodNode, ParameterNode parameterNode) {
+	public boolean workMethodParameter(ClassNode classNode, MethodNode methodNode, ParameterNode parameterNode) {
 		return false;
 	}
 	
-	public boolean workMethodInvisibleAnnotations(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
+	public boolean workMethodInvisibleAnnotation(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
 		return false;
 	}
 	
-	public boolean workMethodVisibleAnnotations(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
+	public boolean workMethodVisibleAnnotation(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
 		return false;
 	}
 	
-	public boolean workMethodInvisibleTypeAnnotations(ClassNode classNode, MethodNode methodNode, TypeAnnotationNode typeAnnotationNode) {
+	public boolean workMethodInvisibleTypeAnnotation(ClassNode classNode, MethodNode methodNode, TypeAnnotationNode typeAnnotationNode) {
 		return false;
 	}
 	
-	public boolean workMethodVisibleTypeAnnotations(ClassNode classNode, MethodNode methodNode, TypeAnnotationNode typeAnnotationNode) {
+	public boolean workMethodVisibleTypeAnnotation(ClassNode classNode, MethodNode methodNode, TypeAnnotationNode typeAnnotationNode) {
 		return false;
 	}
 	
-	public boolean workMethodTryCatchBlocks(ClassNode classNode, MethodNode methodNode, TryCatchBlockNode tryCatchBlockNode) {
+	public boolean workMethodTryCatchBlock(ClassNode classNode, MethodNode methodNode, TryCatchBlockNode tryCatchBlockNode) {
 		return false;
 	}
 	
-	public boolean workMethodInvisibleParameterAnnotations(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
+	public boolean workMethodInvisibleParameterAnnotation(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
 		return false;
 	}
 	
-	public boolean workMethodVisibleParameterAnnotations(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
+	public boolean workMethodVisibleParameterAnnotation(ClassNode classNode, MethodNode methodNode, AnnotationNode annotationNode) {
 		return false;
 	}
 	
@@ -187,19 +187,19 @@ public abstract class KASMWorker {
 		return returnType;
 	}
 	
-	public boolean workFieldInvisibleAnnotations(ClassNode classNode, FieldNode fieldNode, AnnotationNode annotation) {
+	public boolean workFieldInvisibleAnnotation(ClassNode classNode, FieldNode fieldNode, AnnotationNode annotation) {
 		return false;
 	}
 	
-	public boolean workFieldInvisibleTypeAnnotations(ClassNode classNode, FieldNode fieldNode, TypeAnnotationNode annotation) {
+	public boolean workFieldInvisibleTypeAnnotation(ClassNode classNode, FieldNode fieldNode, TypeAnnotationNode annotation) {
 		return false;
 	}
 	
-	public boolean workFieldVisibleAnnotations(ClassNode classNode, FieldNode fieldNode, AnnotationNode annotation) {
+	public boolean workFieldVisibleAnnotation(ClassNode classNode, FieldNode fieldNode, AnnotationNode annotation) {
 		return false;
 	}
 	
-	public boolean workFieldVisibleTypeAnnotations(ClassNode classNode, FieldNode fieldNode, TypeAnnotationNode annotation) {
+	public boolean workFieldVisibleTypeAnnotation(ClassNode classNode, FieldNode fieldNode, TypeAnnotationNode annotation) {
 		return false;
 	}
 }

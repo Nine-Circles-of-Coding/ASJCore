@@ -2,6 +2,7 @@ package com.KAIIIAK.KASMLib.workers;
 
 import alexsocol.patcher.PatcherConfigHandler;
 import com.KAIIIAK.KASMLib.KASMWorker;
+import com.KAIIIAK.KASMLib.util.KASMUtil;
 import com.KAIIIAK.KASMLib.util.ReflectionLikeUtil;
 import com.KAIIIAK.nullsafety.Opt;
 import org.objectweb.asm.tree.*;
@@ -10,15 +11,11 @@ import static org.objectweb.asm.Opcodes.*;
 
 public class ReflectionLikeWorker extends KASMWorker {
 	
-	public static ReflectionLikeWorker inst = new ReflectionLikeWorker(ReflectionLikeUtil.class);
+	public static KASMWorker inst = KASMUtil.inst();
 	
-	public String utilClassName;
+	public String utilClassName = ReflectionLikeUtil.class.getName().replace(".", "/");
 
 	public boolean ignoreClass;
-	
-	private ReflectionLikeWorker(Class<?> clazz) {
-		utilClassName = clazz.getName().replace(".", "/");
-	}
 	
 	@Override
 	public void workDataStart() {

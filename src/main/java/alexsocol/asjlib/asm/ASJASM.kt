@@ -29,6 +29,7 @@ class ASJASM: IClassTransformer {
 		
 		val fieldsMap = HashMap<String, ArrayList<FieldData>>()
 		
+		@JvmStatic
 		fun registerFieldHookContainer(className: String) {
 			try {
 				logger.debug("Parsing field hooks container $className")

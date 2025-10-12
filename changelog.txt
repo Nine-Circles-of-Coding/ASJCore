@@ -1,7 +1,15 @@
 Innovations:
- Config to disable FPV hand rotation while riding
+ Dark mode for server UI
+ Invulnerability frames for /rtp
+ Removed crash with occupied WEBiomeID when there are no registered WE biomes
+ Config for removing streaming-related keybinds for compat with ReBind mod
+ /wolk.jpeg
 
 Fixes:
- Lightning bolt entities on Bukkit
- Dedicated server crash
- Issues with lang optimization
+ /rtp logic
+ Item collision on complex blocks
+ Immersive Engineering crashing with removed stats
+ Creepers height
+ Floating top & bottom polys on iron bars
+ Server-side langs optimization
+ NBTTagByteArray de-/serialization

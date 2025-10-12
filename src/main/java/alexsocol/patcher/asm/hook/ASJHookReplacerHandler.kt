@@ -2,16 +2,20 @@
 
 package alexsocol.patcher.asm.hook
 
+import alexsocol.patcher.PatcherConfigHandler
 import com.KAIIIAK.classManipulators.HookReplacer
 import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
+import net.minecraft.block.BlockPane
 import net.minecraft.client.gui.*
-import net.minecraft.client.renderer.EntityRenderer
+import net.minecraft.client.renderer.*
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.potion.Potion
+import net.minecraft.server.gui.StatsComponent
 import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeGenJungle
 import net.minecraft.world.gen.feature.*
+import java.awt.*
 import java.util.*
 
 // fix oak leaves on jungle shrubs
@@ -96,3 +100,54 @@ fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: D
 }
 
 fun cutOutByASJCore() = false
+
+
+// dark theme for server
+@HookReplacer(targetMethod = "paint")
+fun darkBackground(stats: StatsComponent, graphics: Graphics) {
+	startFROM()
+	POPLine();POP(Color(16777215))
+	POPLine();startTO()
+	POPLine();POP(getStatsBackgroundColor())
+	POPLine();stop()
+}
+
+fun getStatsBackgroundColor() = if (PatcherConfigHandler.darkMode) Color.DARK_GRAY else Color.WHITE
+
+@HookReplacer(targetMethod = "paint")
+fun whiteText(stats: StatsComponent, graphics: Graphics) {
+	startFROM()
+	POPLine();POP(Color.BLACK)
+	POPLine();startTO()
+	POPLine();POP(getStatsTextColor())
+	POPLine();stop()
+}
+
+fun getStatsTextColor() = if (PatcherConfigHandler.darkMode) Color.WHITE else Color.BLACK
+
+
+// iron bars gap
+@HookReplacer(targetMethod = "renderBlockPane")
+fun fixGapBig(rb: RenderBlocks, block: BlockPane, x: Int, y: Int, z: Int): Boolean {
+	startFROM()
+	POPLine();POP(0.01)
+	POPLine();startTO()
+	POPLine();POP(0.001)
+	POPLine();stop()
+	
+	return false
+}
+
+@HookReplacer(targetMethod = "renderBlockPane")
+fun fixGapSmall(rb: RenderBlocks, block: BlockPane, x: Int, y: Int, z: Int): Boolean {
+	startFROM()
+	POPLine();POP(0.005)
+	POPLine();startTO()
+	POPLine();POP(0.0005)
+	POPLine();stop()
+	
+	return false
+}
+
+fun javaStreamsAreShitSB(elements: Array<String>) = ByteArray(elements.size) { elements[it].trim().dropLast(1).toByte() }
+fun javaStreamsAreShitSI(elements: Array<String>) = IntArray(elements.size) { elements[it].trim().toInt() }

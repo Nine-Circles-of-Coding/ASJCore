@@ -33,7 +33,7 @@ abstract class ASJAbstractClassTransformer: IClassTransformer {
 		return cw.toByteArray()
 	}
 	
-	protected inline fun tree(acceptFlags: Int = ClassReader.EXPAND_FRAMES, cwFlags: Int = ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES, lambda: (ClassNode) -> Unit): ByteArray {
+	protected inline fun tree(acceptFlags: Int = ClassReader.SKIP_FRAMES, cwFlags: Int = ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES, lambda: (ClassNode) -> Unit): ByteArray {
 		logger.debug("Transforming $transformedName")
 		val cr = ClassReader(basicClass)
 		val cw = ClassWriter(cwFlags)

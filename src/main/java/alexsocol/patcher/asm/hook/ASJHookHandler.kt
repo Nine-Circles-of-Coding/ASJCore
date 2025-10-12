@@ -2,21 +2,23 @@ package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
-import alexsocol.asjlib.render.*
+import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
-import alexsocol.patcher.helper.*
+import alexsocol.patcher.helper.FuckingSpigotFix
 import alexsocol.patcher.network.*
+import alexsocol.patcher.util.FakeStatsList
 import biomesoplenty.common.blocks.BlockBOPLog
 import biomesoplenty.common.itemblocks.ItemBlockLog
 import cofh.asmhooks.HooksCore
 import com.emoniph.witchery.dimension.WorldProviderDreamWorld
 import cpw.mods.fml.client.*
-import cpw.mods.fml.common.*
+import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.registry.*
 import cpw.mods.fml.relauncher.*
+import cpw.mods.fml.server.FMLServerHandler
 import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import gloomyfolken.hooklib.asm.ReturnCondition.*
@@ -55,6 +57,7 @@ import net.minecraft.potion.*
 import net.minecraft.profiler.PlayerUsageSnooper
 import net.minecraft.server.*
 import net.minecraft.server.dedicated.DedicatedServer
+import net.minecraft.server.gui.MinecraftServerGui
 import net.minecraft.server.integrated.IntegratedServer
 import net.minecraft.server.management.*
 import net.minecraft.stats.*
@@ -75,6 +78,8 @@ import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.io.File
 import java.util.*
+import javax.swing.*
+import javax.swing.plaf.basic.BasicScrollBarUI
 import kotlin.math.*
 
 @Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST", "DEPRECATION")
@@ -755,8 +760,7 @@ object ASJHookHandler {
 	@Hook(returnCondition = ALWAYS, injectOnExit = true)
 	fun getArmSwingAnimationEnd(e: EntityLivingBase, @ReturnValue result: Int) = if (e is ICustomArmSwingEndEntity) e.getCustomArmSwingAnimationEnd() else result
 	
-	
-	// NBT ByteArray to string fix -- STUPID FUCKING MOTHERFUCKERS
+	// NBTTagByteArray -> String fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun toString(tag: NBTTagByteArray): String {
@@ -771,69 +775,6 @@ object ASJHookHandler {
 		
 		return "$s]"
 	}
-	
-	// TODO WTF ???
-	@Suppress("LocalVariableName")
-	fun func_150489_a(primitive: JsonToNBT.Primitive): NBTBase {
-		val field_150493_b = primitive.field_150493_b
-		return try {
-			if (field_150493_b.matches("[-+]?\\d*\\.?\\d+[dD]".toRegex())) {
-				NBTTagDouble(field_150493_b.substring(0, field_150493_b.length - 1).toDouble())
-			} else if (field_150493_b.matches("[-+]?\\d*\\.?\\d+[fF]".toRegex())) {
-				NBTTagFloat(field_150493_b.substring(0, field_150493_b.length - 1).toFloat())
-			} else if (field_150493_b.matches("[-+]?\\d+[bB]".toRegex())) {
-				NBTTagByte(field_150493_b.substring(0, field_150493_b.length - 1).toByte())
-			} else if (field_150493_b.matches("[-+]?\\d+[lL]".toRegex())) {
-				NBTTagLong(field_150493_b.substring(0, field_150493_b.length - 1).toLong())
-			} else if (field_150493_b.matches("[-+]?\\d+[sS]".toRegex())) {
-				NBTTagShort(field_150493_b.substring(0, field_150493_b.length - 1).toShort())
-			} else if (field_150493_b.matches("[-+]?\\d+".toRegex())) {
-				NBTTagInt(field_150493_b.substring(0, field_150493_b.length).toInt())
-			} else if (field_150493_b.matches("[-+]?\\d*\\.?\\d+".toRegex())) {
-				NBTTagDouble(field_150493_b.substring(0, field_150493_b.length).toDouble())
-			} else if (!field_150493_b.equals("true", true) && !field_150493_b.equals("false", true)) {
-				if (field_150493_b.startsWith("[") && field_150493_b.endsWith("]")) {
-					if (field_150493_b.length > 2) {
-						val s = field_150493_b.substring(1, field_150493_b.length - 1)
-						val astring = s.split(",")
-						
-						try {
-							if (astring.size <= 1) {
-								val st = s.trim()
-								if (st.endsWith('b') || st.endsWith('B'))
-									NBTTagByteArray(byteArrayOf(st.substringEnding(1).toByte()))
-								else
-									NBTTagIntArray(intArrayOf(st.toInt()))
-							} else {
-								val st = astring[0].trim() // supposing that all other also endsWith b
-								if (st.endsWith('b') || st.endsWith('B'))
-									NBTTagByteArray(ByteArray(astring.size) { astring[it].trim().substringEnding(1).toByte() })
-								else
-									NBTTagIntArray(IntArray(astring.size) { astring[it].trim().toInt() })
-							}
-						} catch (e: NumberFormatException) {
-							NBTTagString(field_150493_b)
-						}
-					} else {
-						NBTTagIntArray(IntArray(0))
-					}
-				} else {
-					var field_150493_b_ = field_150493_b
-					if (field_150493_b_.startsWith("\"") && field_150493_b_.endsWith("\"") && field_150493_b_.length > 2) {
-						field_150493_b_ = field_150493_b_.substring(1, field_150493_b_.length - 1)
-					}
-					
-					field_150493_b_ = field_150493_b_.replace("\\\\\"", "\"")
-					NBTTagString(field_150493_b_)
-				}
-			} else {
-				NBTTagByte(if (field_150493_b.toBoolean()) 1 else 0)
-			}
-		} catch (e: NumberFormatException) {
-			NBTTagString(field_150493_b.replace("\\\\\"", "\""))
-		}
-	}
-	
 	
 	// NPE fix
 	@JvmStatic
@@ -970,7 +911,7 @@ object ASJHookHandler {
 	}
 	
 	
-	// dark theme for start screen
+	// dark theme
 	@JvmStatic
 	@Hook(injectOnExit = true)
 	@SideOnly(Side.CLIENT)
@@ -983,6 +924,75 @@ object ASJHookHandler {
 		SplashProgress.barColor = 0x2D0709
 		SplashProgress.fontColor = 0xCCCCCC
 	}
+	
+	@JvmStatic
+	@Hook
+	@SideOnly(Side.SERVER)
+	fun createServerGui(static: MinecraftServerGui?, server: DedicatedServer?) {
+		if (!PatcherConfigHandler.darkMode) return
+		
+		UIManager.put("Panel.background", Color.DARK_GRAY)
+		
+		UIManager.put("TextArea.background", Color.DARK_GRAY)
+		UIManager.put("TextArea.foreground", Color.WHITE)
+		
+		UIManager.put("TextField.background", Color.DARK_GRAY)
+		UIManager.put("TextField.foreground", Color.WHITE)
+		
+		UIManager.put("List.background", Color.DARK_GRAY)
+		UIManager.put("List.foreground", Color.WHITE)
+		
+		UIManager.put("ScrollPane.background", Color.DARK_GRAY)
+		UIManager.put("TitledBorder.titleColor", Color.WHITE)
+		
+		UIManager.put("ScrollBar.thumbHighlight", Color.LIGHT_GRAY)
+		UIManager.put("ScrollBar.thumbShadow", Color.LIGHT_GRAY)
+		UIManager.put("ScrollBar.thumbDarkShadow", Color.LIGHT_GRAY)
+		UIManager.put("ScrollBar.thumb", Color.DARK_GRAY.brighter())
+		UIManager.put("ScrollBar.track", Color.DARK_GRAY.darker())
+		UIManager.put("ScrollBar.trackHighlight", Color.GRAY)
+		
+		// ???
+		UIManager.put("ScrollBar.background", Color.DARK_GRAY)
+		UIManager.put("ScrollBar.foreground", Color.LIGHT_GRAY)
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun getPlayerListComponent(gui: MinecraftServerGui, @ReturnValue result: JComponent): JComponent {
+		if (!PatcherConfigHandler.darkMode || result !is JScrollPane) return result
+		
+		result.verticalScrollBar = createScrollBar(JScrollBar.VERTICAL)
+		result.horizontalScrollBar = createScrollBar(JScrollBar.HORIZONTAL)
+		
+		return result
+	}
+	
+	@JvmStatic
+	@Hook(injectOnExit = true)
+	fun getLogComponent(gui: MinecraftServerGui, @ReturnValue result: JComponent): JComponent {
+		if (!PatcherConfigHandler.darkMode || result !is JPanel) return result
+		
+		val log = result.components.find { it is JScrollPane } as? JScrollPane ?: return result
+		log.verticalScrollBar = createScrollBar(JScrollBar.VERTICAL)
+		log.horizontalScrollBar = createScrollBar(JScrollBar.HORIZONTAL)
+		
+		return result
+	}
+	
+	@JvmStatic
+	fun createScrollBar(orientation: Int): JScrollBar {
+		class CustomScrollBar(): JScrollBar(orientation) {
+			init {
+				setUI(BasicScrollBarUI())
+				setBackground(Color.DARK_GRAY)
+				setForeground(Color.LIGHT_GRAY)
+			}
+		}
+		
+		return CustomScrollBar()
+	}
+	
 	
 	// mooshrum respawn fix
 	@JvmStatic
@@ -1391,31 +1401,53 @@ object ASJHookHandler {
 		}
 	}
 	
+	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(injectOnExit = true, targetMethod = "<init>")
 	fun GameSettings(thiz: GameSettings) {
 		deleteStreamKeyBindings(thiz)
 	}
 	
+	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(injectOnExit = true, targetMethod = "<init>")
 	fun GameSettings(thiz: GameSettings, mc: Minecraft?, file: File?) {
 		deleteStreamKeyBindings(thiz)
 	}
 	
+	@SideOnly(Side.CLIENT)
+	private lateinit var emptyKey: KeyBinding
+	
+	@SideOnly(Side.CLIENT)
 	fun deleteStreamKeyBindings(thiz: GameSettings) {
+		if (!PatcherConfigHandler.removeStreamKeys) return
+		
 		unregisterKeyBinding(thiz, thiz.field_152396_an)
 		unregisterKeyBinding(thiz, thiz.field_152397_ao)
 		unregisterKeyBinding(thiz, thiz.field_152398_ap)
 		unregisterKeyBinding(thiz, thiz.field_152399_aq)
 		
+		if (!::emptyKey.isInitialized) {
+			emptyKey = KeyBinding("", 0, "")
+		}
+		
+		thiz.field_152396_an = emptyKey
+		thiz.field_152397_ao = emptyKey
+		thiz.field_152398_ap = emptyKey
+		thiz.field_152399_aq = emptyKey
+		
+		unregisterKeyBinding(thiz, emptyKey) // delete from array and set
+		
 		KeyBinding.getKeybinds().remove("key.categories.stream")
 	}
 	
+	@SideOnly(Side.CLIENT)
 	private fun unregisterKeyBinding(thiz: GameSettings, key: KeyBinding) {
+		KeyBinding.keybindArray.removeAll { (it as KeyBinding).keyDescription == key.keyDescription }
+		KeyBinding.hash.removeObject(key.keyCode)
 		key.keyCode = 0
-		KeyBinding.keybindArray.remove(key)
-		thiz.keyBindings = thiz.keyBindings.filter { it !== key }.toTypedArray()
+		
+		thiz.keyBindings = thiz.keyBindings.filter { it.keyDescription != key.keyDescription }.toTypedArray()
 	}
 	
 	
@@ -1426,12 +1458,14 @@ object ASJHookHandler {
 		pus.stopSnooper()
 	}
 	
+	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(targetMethod = "loadOptions", injectOnExit = true)
 	fun loadOptionsPost(thiz: GameSettings) {
 		thiz.snooperEnabled = false
 	}
 	
+	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun isSnooperEnabled(server: Minecraft) = false
@@ -1448,10 +1482,12 @@ object ASJHookHandler {
 	@Hook(returnCondition = ALWAYS)
 	fun isSnooperEnabled(server: DedicatedServer) = false
 	
+	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
 	fun setOptionValue(thiz: GameSettings, option: GameSettings.Options?, value: Int) = option == GameSettings.Options.SNOOPER_ENABLED
 	
+	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(injectOnExit = true)
 	fun initGui(gui: GuiSnooper) {
@@ -1490,6 +1526,13 @@ object ASJHookHandler {
 		allStats.clear()
 		generalStats.clear()
 		oneShotStats.values.clear()
+		
+		// region dumb-dumb Immersive Engineering
+		allStats = FakeStatsList(dummyStat)
+		generalStats = allStats
+		itemStats = allStats
+		objectMineStats = allStats
+		// endregion
 		
 		mineBlockStatArray.fill(dummyStat)
 		objectBreakStats.fill(dummyStat)
@@ -1555,12 +1598,16 @@ object ASJHookHandler {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ON_NULL)
-	fun func_151182_a(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) null else dummyStat
+	@Hook(returnCondition = ON_NOT_NULL)
+	fun func_151182_a(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) dummyStat else null 
 	
 	@JvmStatic
-	@Hook(returnCondition = ON_NULL)
-	fun func_151176_b(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) null else dummyStat
+	@Hook(returnCondition = ON_NOT_NULL)
+	fun func_151176_b(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) dummyStat else null
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_NOT_NULL, injectOnExit = true)
+	fun func_151177_a(static: StatList?, stat: String, @ReturnValue result: StatBase?): StatBase? = if (PatcherConfigHandler.disableStats && result?.isAchievement != true) dummyStat else null
 	
 	
 	// Remove ladder interference with flight 
@@ -1569,26 +1616,22 @@ object ASJHookHandler {
 	fun isLivingOnLadder(static: ForgeHooks?, block: Block?, world: World?, x: Int, y: Int, z: Int, entity: EntityLivingBase?) =
 		entity is EntityPlayer && entity.capabilities.isFlying
 	
-	
-	// remove extra langs + fix deprecated usage
+	// remove extra langs
 	@JvmStatic
 	@Hook(returnCondition = ON_TRUE)
-	fun loadLanguagesFor(reg: LanguageRegistry, container: ModContainer?, side: Side?) = PatcherConfigHandler.langsRamOptimization
-	
-	@JvmStatic
-	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "getStringLocalizationBody")
-	fun getStringLocalization(reg: LanguageRegistry, key: String?) = PatcherConfigHandler.langsRamOptimization
-	
-	@JvmStatic
-	fun getStringLocalizationBody(reg: LanguageRegistry, key: String?) = StatCollector.translateToLocal(key)
-	
-	@JvmStatic
-	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "getStringLocalizationBody")
-	fun getStringLocalization(reg: LanguageRegistry, key: String?, lang: String) = PatcherConfigHandler.langsRamOptimization
-	
-	@JvmStatic
-	fun getStringLocalizationBody(reg: LanguageRegistry, key: String?, lang: String) = StatCollector.translateToLocal(key)
-	
+	fun injectLanguage(reg: LanguageRegistry, lang: String, parsedLangFile: HashMap<String, String>): Boolean {
+		val opt = PatcherConfigHandler.langsRamOptimization
+		
+		// client is not using this class anyway
+		if (ASJUtilities.isClient)
+			return opt
+		
+		if (!opt)
+			return false
+		
+		// check match to default lang or server lang (for Uranium and such servers)
+		return lang != "en_US" && lang != FMLServerHandler.instance().currentLanguage
+	}
 	
 	// drop beacon inventory on break
 	@JvmStatic
@@ -1639,15 +1682,27 @@ object ASJHookHandler {
 		}
 	}
 	
+	
+	// utility
 	@JvmStatic
 	@Hook(createMethod = true, isAbstract = true)
 	fun isMultiPlayer(server: MinecraftServer): Boolean = throw AbstractMethodError()
 	
+	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, createMethod = true)
 	fun isMultiPlayer(server: IntegratedServer) = server.public
 	
+	@SideOnly(Side.SERVER)
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS, createMethod = true)
 	fun isMultiPlayer(server: DedicatedServer) = !server.isSinglePlayer
+	
+	
+	// fix creeper height
+	@JvmStatic
+	@Hook(targetMethod = "<init>", injectOnExit = true)
+	fun EntityCreeper(thiz: EntityCreeper, world: World?) {
+		thiz.height -= 0.15f
+	}
 }

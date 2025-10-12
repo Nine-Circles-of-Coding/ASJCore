@@ -28,7 +28,12 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.client.network.NetHandlerPlayClient"               -> core { `NetHandlerPlayClient$ClassVisitor`(it) }
 			"net.minecraft.client.particle.EffectRenderer"                    -> core { `EffectRenderer$ClassVisitor`(it) }
 			"net.minecraft.command.server.CommandSummon"                      -> core { `CommandSummon$ClassVisitor`(it) }
-			"net.minecraft.entity.Entity"                                     -> core { `Entity$ClassVisitor`(it) }
+			"net.minecraft.entity.Entity"                                     -> {
+				if (PatcherConfigHandler.fixItemCollision)
+					this.basicClass = fixEntityCollision()
+				
+				core { `Entity$ClassVisitor`(it) }
+			}
 			"net.minecraft.item.ItemGlassBottle"                              -> core { `ItemGlassBottle$ClassVisitor`(it) }
 			"net.minecraft.nbt.JsonToNBT"                                     -> core { `JsonToNBT$ClassVisitor`(it) }
 			"net.minecraft.client.network.OldServerPinger$2",
@@ -235,7 +240,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	private inner class `JsonToNBT$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-			if (name == "func_150316_a" || name == "c") {
+			if (name == "func_150316_a" || (name == "a" && desc == "(Ljava/lang/String;Ljava/lang/String;)Lec;")) {
 				logger.debug("Visiting JsonToNBT#func_150316_a: $name$desc")
 				return `JsonToNBT$func_150316_a$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
@@ -246,7 +251,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		private inner class `JsonToNBT$func_150316_a$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitLdcInsn(cst: Any?) {
-				super.visitLdcInsn(if (cst == "\\[[-\\d|,\\s]+\\]") "\\[[-\\db,\\s]+]" else cst)
+				super.visitLdcInsn(if (cst == "\\[[-\\d|,\\s]+\\]") "\\[[-\\db|,\\s]+]" else cst)
 			}
 		}
 	}
@@ -479,4 +484,49 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		val log = i.find { it is MethodInsnNode && it.name == "fine" } as? MethodInsnNode ?: return@tree
 		log.name = "severe"
 	}
+	
+	// FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK YOU
+	private fun fixEntityCollision() = tree(0, 0) { cn ->
+		val mn = cn.methods.find { it.name == "func_145771_j" || (it.name == "j" && it.desc == "(DDD)Z") } ?: return@tree
+		
+		val i = object: Iterable<AbstractInsnNode> {
+			override fun iterator() = mn.instructions.iterator()
+		}
+		
+		run {
+			val aload = i.find { it is VarInsnNode && it.opcode == ALOAD && it.`var` == 16 && it.next?.let { next -> next is MethodInsnNode && next.name == "isEmpty" } == true } ?: return@run
+			mn.instructions.insertBefore(aload, VarInsnNode(ALOAD, 0))
+			mn.instructions.set(aload.next, MethodInsnNode(
+				INVOKESTATIC,
+				"alexsocol/patcher/asm/hook/ItemCollisionFix",
+				"checkCollisions",
+				"(L${if (OBF) "sa" else "net/minecraft/entity/Entity"};Ljava/util/List;)Z",
+				false
+			))
+		}
+		
+		run {
+			val aload = i.find {
+				it is VarInsnNode && it.opcode == ALOAD && it.`var` == 0 && it.next?.let { next ->
+					next is FieldInsnNode && next.name == (if (OBF) "o" else "worldObj") && next.next?.let { nnext ->
+						nnext is VarInsnNode && nnext.opcode == ILOAD && nnext.`var` == 7 && nnext.next?.let { nnnext ->
+							nnnext is VarInsnNode && nnnext.opcode == ILOAD && nnnext.`var` == 8 && nnnext.next?.let { nnnnext ->
+								nnnnext is VarInsnNode && nnnnext.opcode == ILOAD && nnnnext.`var` == 9 && nnnnext.next?.let { nnnnnext ->
+									nnnnnext is MethodInsnNode && nnnnnext.name == (if (OBF) "q" else "func_147469_q")
+								} == true
+							} == true
+						} == true
+					} == true
+				} == true
+			} ?: return@run
+			
+			mn.instructions.remove(aload.next.next.next.next.next)
+			mn.instructions.remove(aload.next.next.next.next)
+			mn.instructions.remove(aload.next.next.next)
+			mn.instructions.remove(aload.next.next)
+			mn.instructions.remove(aload.next)
+			mn.instructions.set(aload, InsnNode(ICONST_0))
+		}
+	}
+	
 }

@@ -1,31 +1,35 @@
 package com.KAIIIAK.classManipulators;
 
 import com.KAIIIAK.KASMLib.KASMWorker;
+import com.KAIIIAK.KASMLib.util.KASMUtil;
 import com.KAIIIAK.nullsafety.Opt;
 import com.KAIIIAK.superwrapper.McpToSrg;
 import com.google.common.collect.ImmutableMap;
 import gloomyfolken.hooklib.asm.HookLogger;
 import org.apache.commons.io.IOUtils;
-import org.objectweb.asm.*;
-
-import static org.objectweb.asm.Opcodes.*;
-
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
 import static com.KAIIIAK.classManipulators.SomeUtil.getStringRepresentation;
+import static org.objectweb.asm.Opcodes.*;
 
 public class HookReplacerWorker extends KASMWorker {
 	
 	public static HookLogger logger = new HookLogger.Log4JLogger("HookReplacer");
 	
-	public static HookReplacerWorker inst = new HookReplacerWorker();
+	public static KASMWorker inst = KASMUtil.inst();
 	
 	public List<ChangesHolder> methodsToChange = new ArrayList<>();
 	
-	private HookReplacerWorker() {
+	{
 		withRecalc = true;
 	}
 	

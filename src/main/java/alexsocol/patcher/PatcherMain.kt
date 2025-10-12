@@ -16,11 +16,12 @@ import cpw.mods.fml.common.event.*
 import cpw.mods.fml.common.registry.GameData
 import net.minecraft.block.*
 import net.minecraft.init.Blocks
-import net.minecraft.item.*
+import net.minecraft.item.ItemBlock
 import net.minecraft.util.Facing
 import net.minecraft.world.biome.BiomeGenBase
 import net.minecraftforge.client.ClientCommandHandler
 import net.minecraftforge.common.MinecraftForge
+import ru.vamig.worldengine.WE_Biome
 
 @Mod(modid = MODID, useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
 object PatcherMain {
@@ -88,6 +89,7 @@ object PatcherMain {
 		e.registerServerCommand(CommandRtp)
 		e.registerServerCommand(CommandSchema)
 		e.registerServerCommand(CommandTop)
+		e.registerServerCommand(CommandWolkJpeg)
 		
 		MinecraftForge.EVENT_BUS.post(ServerStartingEvent(e))
 	}
@@ -96,9 +98,10 @@ object PatcherMain {
 	fun onServerStarted(e: FMLServerStartedEvent) {
 		MinecraftForge.EVENT_BUS.post(ServerStartedEvent(e))
 		
-		BiomeGenBase.getBiome(PatcherConfigHandler.WEBiomeID)?.let {
-			throw IllegalArgumentException("[$MODID] WEBiomeID is set to ${PatcherConfigHandler.WEBiomeID} - this ID is occupied with ${it.biomeName} (${it::class.java.name}). Change that in configs!")
-		}
+		if (WE_Biome.biomeList.isNotEmpty())
+			BiomeGenBase.getBiome(PatcherConfigHandler.WEBiomeID)?.let {
+				throw IllegalArgumentException("[$MODID] WEBiomeID is set to ${PatcherConfigHandler.WEBiomeID} - this ID is occupied with ${it.biomeName} (${it::class.java.name}). Change that in configs!")
+			}
 	}
 	
 	@Mod.EventHandler

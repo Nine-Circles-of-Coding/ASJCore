@@ -11,8 +11,7 @@ import net.minecraft.client.settings.KeyBinding
 import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.world.World
-import org.lwjgl.input.*
-import java.util.ArrayList
+import org.lwjgl.input.Keyboard
 
 @Suppress("unused")
 object NoEntityInteractionHandler {
@@ -21,7 +20,7 @@ object NoEntityInteractionHandler {
 	var noInteract = false
 	var toggleNI = false
 	
-	val keyNI = KeyBinding("key.keyNI.desc", Keyboard.KEY_F10, "key.categories.misc")
+	val keyNI = KeyBinding("asjcore.noEntityInteract", Keyboard.KEY_F10, "key.categories.misc")
 	
 	init {
 		ClientRegistry.registerKeyBinding(keyNI)
@@ -56,7 +55,7 @@ object NoEntityInteractionHandler {
 				toggleNI = true
 				noInteract = !noInteract
 				
-				ASJUtilities.say(mc.thePlayer, "key.keyNI.is.$noInteract")
+				ASJUtilities.say(mc.thePlayer, "asjcore.noEntityInteract.is.$noInteract")
 			}
 		} else if (toggleNI) {
 			toggleNI = false

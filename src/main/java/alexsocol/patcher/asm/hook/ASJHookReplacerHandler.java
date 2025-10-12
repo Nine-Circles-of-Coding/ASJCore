@@ -12,6 +12,10 @@ import net.minecraft.client.resources.FileResourcePack;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.Entity;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagByteArray;
+import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.play.client.C02PacketUseEntity;
 import net.minecraft.server.management.ItemInWorldManager;
@@ -26,7 +30,7 @@ import java.util.Set;
 
 import static com.KAIIIAK.classManipulators.HookReplacer.Replacer.*;
 
-@SuppressWarnings("ALL")
+@SuppressWarnings({"unused", "ConstantValue", "UnusedAssignment", "JavaExistingMethodCanBeUsed", "DataFlowIssue"})
 public class ASJHookReplacerHandler {
 	
 	// reach distance
@@ -143,7 +147,7 @@ public class ASJHookReplacerHandler {
 	}
 	
 	@HookReplacer
-	public static Set getResourceDomains(FileResourcePack frp) {
+	public static Set<String> getResourceDomains(FileResourcePack frp) {
 		startFROM();
 		POPLine();POP(HookReplacer.Replacer.<String>ALOAD("7").toLowerCase());
 		POPLine();startTO();
@@ -154,11 +158,52 @@ public class ASJHookReplacerHandler {
 	}
 	
 	@HookReplacer
-	public static Set getResourceDomains(FolderResourcePack frp) {
+	public static Set<String> getResourceDomains(FolderResourcePack frp) {
 		startFROM();
 		POPLine();POP(HookReplacer.Replacer.<String>ALOAD("7").toLowerCase());
 		POPLine();startTO();
 		POPLine();POP(ALOAD("7").toString());
+		POPLine();stop();
+		
+		return null;
+	}
+	
+	
+	// String -> NBTTagByteArray fix
+	@HookReplacer(targetMethod = "func_150489_a", correctStaticIndexes = true)
+	public static NBTBase fixSingleElement(JsonToNBT.Primitive primitive) {
+		startFROM();
+		POPLine();POP(new NBTTagIntArray(new int[] {Integer.parseInt(HookReplacer.Replacer.<String>ALOAD("1").trim())}));
+		POPLine();startTO();
+		POPLine();POP(deserialize(ALOAD("2")));
+		POPLine();stop();
+
+		return null;
+	}
+
+	public static NBTBase deserialize(String[] elements) {
+		if (elements.length == 1) {
+			String element = elements[0];
+			if (element.endsWith("B") || element.endsWith("b")) {
+				return new NBTTagByteArray(new byte[]{Byte.parseByte(element.substring(0, element.length() - 1))});
+			} else {
+				return new NBTTagIntArray(new int[]{Integer.parseInt(element)});
+			}
+		} else {
+			if (elements[0].endsWith("B") || elements[0].endsWith("b")) {
+				return new NBTTagByteArray(ASJHookReplacerHandlerKt.javaStreamsAreShitSB(elements));
+			} else {
+				return new NBTTagIntArray(ASJHookReplacerHandlerKt.javaStreamsAreShitSI(elements));
+			}
+		}
+	}
+
+	@HookReplacer(targetMethod = "func_150489_a", correctStaticIndexes = true)
+	public static NBTBase blockExtraCode(JsonToNBT.Primitive primitive) {
+		startFROM();
+		POPLine();POP(HookReplacer.Replacer.<String[]>ALOAD("2").length);
+		POPLine();startTO();
+		POPLine();POP(0);
 		POPLine();stop();
 		
 		return null;

@@ -75,13 +75,13 @@ public class KASMLib implements IClassTransformer {
 							fieldNode.attrs.removeIf(attribute -> asmWorker.workFieldAttribute(classNode, attribute));
 						
 						if (fieldNode.invisibleAnnotations != null)
-							fieldNode.invisibleAnnotations.removeIf(annotation -> asmWorker.workFieldInvisibleAnnotations(classNode, fieldNode, annotation));
+							fieldNode.invisibleAnnotations.removeIf(annotation -> asmWorker.workFieldInvisibleAnnotation(classNode, fieldNode, annotation));
 						if (fieldNode.invisibleTypeAnnotations != null)
-							fieldNode.invisibleTypeAnnotations.removeIf(annotation -> asmWorker.workFieldInvisibleTypeAnnotations(classNode, fieldNode, annotation));
+							fieldNode.invisibleTypeAnnotations.removeIf(annotation -> asmWorker.workFieldInvisibleTypeAnnotation(classNode, fieldNode, annotation));
 						if (fieldNode.visibleAnnotations != null)
-							fieldNode.visibleAnnotations.removeIf(annotation -> asmWorker.workFieldVisibleAnnotations(classNode, fieldNode, annotation));
+							fieldNode.visibleAnnotations.removeIf(annotation -> asmWorker.workFieldVisibleAnnotation(classNode, fieldNode, annotation));
 						if (fieldNode.visibleTypeAnnotations != null)
-							fieldNode.visibleTypeAnnotations.removeIf(annotation -> asmWorker.workFieldVisibleTypeAnnotations(classNode, fieldNode, annotation));
+							fieldNode.visibleTypeAnnotations.removeIf(annotation -> asmWorker.workFieldVisibleTypeAnnotation(classNode, fieldNode, annotation));
 					}
 				}
 				
@@ -104,28 +104,28 @@ public class KASMLib implements IClassTransformer {
 						if (methodNode.localVariables != null)
 							methodNode.localVariables.removeIf(localVariableNode -> asmWorker.workMethodLocalVariable(classNode, methodNode, localVariableNode));
 						if (methodNode.visibleLocalVariableAnnotations != null)
-							methodNode.visibleLocalVariableAnnotations.removeIf(localVariableAnnotationNode -> asmWorker.workMethodVisibleLocalVariableAnnotations(classNode, methodNode, localVariableAnnotationNode));
+							methodNode.visibleLocalVariableAnnotations.removeIf(localVariableAnnotationNode -> asmWorker.workMethodVisibleLocalVariableAnnotation(classNode, methodNode, localVariableAnnotationNode));
 						if (methodNode.invisibleLocalVariableAnnotations != null)
-							methodNode.invisibleLocalVariableAnnotations.removeIf(localVariableAnnotationNode -> asmWorker.workMethodInvisibleLocalVariableAnnotations(classNode, methodNode, localVariableAnnotationNode));
+							methodNode.invisibleLocalVariableAnnotations.removeIf(localVariableAnnotationNode -> asmWorker.workMethodInvisibleLocalVariableAnnotation(classNode, methodNode, localVariableAnnotationNode));
 						if (methodNode.parameters != null)
-							methodNode.parameters.removeIf(parameterNode -> asmWorker.workMethodParameters(classNode, methodNode, parameterNode));
+							methodNode.parameters.removeIf(parameterNode -> asmWorker.workMethodParameter(classNode, methodNode, parameterNode));
 						if (methodNode.invisibleAnnotations != null)
-							methodNode.invisibleAnnotations.removeIf(annotationNode -> asmWorker.workMethodInvisibleAnnotations(classNode, methodNode, annotationNode));
+							methodNode.invisibleAnnotations.removeIf(annotationNode -> asmWorker.workMethodInvisibleAnnotation(classNode, methodNode, annotationNode));
 						if (methodNode.visibleAnnotations != null)
-							methodNode.visibleAnnotations.removeIf(annotationNode -> asmWorker.workMethodVisibleAnnotations(classNode, methodNode, annotationNode));
+							methodNode.visibleAnnotations.removeIf(annotationNode -> asmWorker.workMethodVisibleAnnotation(classNode, methodNode, annotationNode));
 						if (methodNode.invisibleTypeAnnotations != null)
-							methodNode.invisibleTypeAnnotations.removeIf(typeAnnotationNode -> asmWorker.workMethodInvisibleTypeAnnotations(classNode, methodNode, typeAnnotationNode));
+							methodNode.invisibleTypeAnnotations.removeIf(typeAnnotationNode -> asmWorker.workMethodInvisibleTypeAnnotation(classNode, methodNode, typeAnnotationNode));
 						if (methodNode.visibleTypeAnnotations != null)
-							methodNode.visibleTypeAnnotations.removeIf(typeAnnotationNode -> asmWorker.workMethodVisibleTypeAnnotations(classNode, methodNode, typeAnnotationNode));
+							methodNode.visibleTypeAnnotations.removeIf(typeAnnotationNode -> asmWorker.workMethodVisibleTypeAnnotation(classNode, methodNode, typeAnnotationNode));
 						if (methodNode.tryCatchBlocks != null)
-							methodNode.tryCatchBlocks.removeIf(tryCatchBlockNode -> asmWorker.workMethodTryCatchBlocks(classNode, methodNode, tryCatchBlockNode));
+							methodNode.tryCatchBlocks.removeIf(tryCatchBlockNode -> asmWorker.workMethodTryCatchBlock(classNode, methodNode, tryCatchBlockNode));
 						for (List<AnnotationNode> listAnnotationNode : Opt.it(methodNode.invisibleParameterAnnotations)) {
 							if (listAnnotationNode != null)
-								listAnnotationNode.removeIf(annotationNode -> asmWorker.workMethodInvisibleParameterAnnotations(classNode, methodNode, annotationNode));
+								listAnnotationNode.removeIf(annotationNode -> asmWorker.workMethodInvisibleParameterAnnotation(classNode, methodNode, annotationNode));
 						}
 						for (List<AnnotationNode> listAnnotationNode : Opt.it(methodNode.visibleParameterAnnotations)) {
 							if (listAnnotationNode != null)
-								listAnnotationNode.removeIf(annotationNode -> asmWorker.workMethodVisibleParameterAnnotations(classNode, methodNode, annotationNode));
+								listAnnotationNode.removeIf(annotationNode -> asmWorker.workMethodVisibleParameterAnnotation(classNode, methodNode, annotationNode));
 						}
 						
 						Type methodType = Type.getMethodType(methodNode.desc);

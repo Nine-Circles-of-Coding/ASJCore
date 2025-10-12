@@ -88,8 +88,6 @@ fun <T> Array<T?>.ensureCapacity(min: Int): Array<T?> {
  */
 infix fun <A, B, C> Pair<A, B>.with(third: C): Triple<A, B, C> = Triple(first, second, third)
 
-fun String.substringEnding(lastNChars: Int): String = this.substring(0, length - lastNChars)
-
 val Number.D get() = toDouble()
 val Number.F get() = toFloat()
 val Number.I get() = toInt()
@@ -119,33 +117,6 @@ fun Double.mfloor() = MathHelper.floor_double(this)
 fun Float.mfloor() = MathHelper.floor_float(this)
 fun Double.mceil() = MathHelper.ceiling_double_int(this)
 fun Float.mceil() = MathHelper.ceiling_float_int(this)
-
-fun Entity.setSize(wid: Double, hei: Double) {
-	var f2: Float
-	val w = wid.F
-	val h = hei.F
-	
-	if (w != width || h != height) {
-		f2 = width
-		width = w
-		height = h
-		boundingBox.maxX = boundingBox.minX + width
-		boundingBox.maxZ = boundingBox.minZ + width
-		boundingBox.maxY = boundingBox.minY + height
-		if (width > f2 && !worldObj.isRemote) moveEntity((f2 - width).D, 0.0, (f2 - width).D)
-	}
-	
-	f2 = w % 2f
-	
-	myEntitySize = when {
-		f2 < 0.375 -> Entity.EnumEntitySize.SIZE_1
-		f2 < 0.75  -> Entity.EnumEntitySize.SIZE_2
-		f2 < 1.0   -> Entity.EnumEntitySize.SIZE_3
-		f2 < 1.375 -> Entity.EnumEntitySize.SIZE_4
-		f2 < 1.75  -> Entity.EnumEntitySize.SIZE_5
-		else       -> Entity.EnumEntitySize.SIZE_6
-	}
-}
 
 fun DataWatcher.getWatchableObjectChunkCoordinates(id: Int): ChunkCoordinates {
 	return getWatchedObject(id).`object` as ChunkCoordinates? ?: ChunkCoordinates()

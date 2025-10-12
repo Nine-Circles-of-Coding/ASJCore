@@ -35,11 +35,11 @@ class ASJHookLoader: HookLoader() {
 	companion object {
 		
 		// may be used before #injectData so reflection -_-
-		var OBF: Boolean = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true
-		private set
+		val OBF = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true
 		
 		init {
 			PatcherConfigHandler.loadConfig(File("config/ASJCore.cfg"))
+//			KASMLib.has2DumpChangedClasses = true
 		}
 	}
 	
@@ -84,6 +84,8 @@ class ASJHookLoader: HookLoader() {
 		
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
+		
+		if (PatcherConfigHandler.fixItemCollision) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ItemCollisionFix")
 		
 		if (PatcherConfigHandler.fixCapeRotations) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.CapeRotationsFix")
 		

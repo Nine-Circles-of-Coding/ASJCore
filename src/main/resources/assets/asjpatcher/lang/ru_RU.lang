@@ -16,8 +16,11 @@ asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [фильт
 asjcore.commands.explode.usage=/explode [размер] [разрушения] [огонь]
 asjcore.commands.heal.usage=/heal [[игрок]] [h (вылечить)][f (накормить)][e (очистить дебаффы)[! (очистить все эффекты)]]
 asjcore.commands.killall.usage=/killall [%s] [радиус] [id измерения] [id мода]
-asjcore.commands.rtp.usage=/rtp [дистанция от спавна] [начальные x z]
+asjcore.commands.rtp.fail=%sНе удалось найти подходящее место для телепортации
+asjcore.commands.rtp.usage=/rtp [дистанция от спавна] [начальные x z] [f (принудительный флаг)]
+asjcore.commands.top.usage=/top
 asjcore.commands.tpdim.usage=/tpdim <id измерения> [игрок]
+asjcore.commands.wolk.jpeg.usage=/wolk.jpeg <игрок>
 
 asjcore.commands.diminfo.current=Текущее измерение "%s" (id '%d')
 asjcore.commands.diminfo.list=%d. "%s" с id '%d'
@@ -36,9 +39,9 @@ asjcore.commands.tpdim.worlderr=Ошибка инициализации изме
 
 commands.summon.usage.new=/summon <имя> [['x'кол-во]] [x] [y] [z] [нбт]
 
-key.keyNI.desc=Переключить взаимодействие с сущностями
-key.keyNI.is.false=[ASJCore] Взаимодействие с сущностями включено
-key.keyNI.is.true=[ASJCore] Взаимодействие с сущностями отключено
+asjcore.noEntityInteract=Переключить взаимодействие с сущностями
+asjcore.noEntityInteract.is.false=[ASJCore] Взаимодействие с сущностями включено
+asjcore.noEntityInteract.is.true=[ASJCore] Взаимодействие с сущностями отключено
 
 attribute.name.asjpatcher.reachDistance=Досягаемость
 

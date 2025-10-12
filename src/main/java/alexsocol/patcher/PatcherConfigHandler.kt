@@ -29,6 +29,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var explosions = true
 	var fixCapeRotations = true
 	var fixInGameModOptions = true
+	var fixItemCollision = true
 	var floatingTrapDoors = true
 	var flyFastDig = true
 	var ignoreIllegalStates = false
@@ -39,6 +40,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var maxParticles = 4000
 	var orthoProjection = false
 	var portalHook = true
+	var removeStreamKeys = true
 	var respawnInEnd = false
 	var respawnInNether = false
 	var ridingHandRotationDisable = false
@@ -85,6 +87,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		explosions = loadProp(CATEGORY_GENERAL, "explosions", explosions, false, "Set this to false to disable explosions")
 		fixCapeRotations = loadProp(CATEGORY_GENERAL, "fixCapeRotations", fixCapeRotations, true, "Set this to false to disable limits for cape rotations")
 		fixInGameModOptions = loadProp(CATEGORY_GENERAL, "fixInGameModOptions", fixInGameModOptions, false, "Set this to false to disable in-game mod options gui fix")
+		fixItemCollision = loadProp(CATEGORY_GENERAL, "fixItemCollision", fixItemCollision, true, "Set this to false to disable item collision on complex blocks fix")
 		floatingTrapDoors = loadProp(CATEGORY_GENERAL, "floatingTrapDoors", floatingTrapDoors, true, "Set this to false to forbid trapdoors to remain free-floating (as in vanilla, may break some world structures)")
 		flyFastDig = loadProp(CATEGORY_GENERAL, "flyFastDig", flyFastDig, false, "Set this to false to make block break speed 5 times slower when flying with creative-like flight not in creative")
 		ignoreIllegalStates = loadProp(CATEGORY_GENERAL, "ignoreIllegalStates", ignoreIllegalStates, false, "Set this to true to ignore illegal player states (players won't be kicked)")
@@ -95,6 +98,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		maxParticles = loadProp(CATEGORY_GENERAL, "maxParticles", maxParticles, true, "How many [any] particles can there be at one time (defaults to vanilla value)")
 		orthoProjection = loadProp(CATEGORY_GENERAL, "orthoProjection", orthoProjection, false, "Set this to true to enable orthographic projection (no perspective)")
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
+		removeStreamKeys = loadProp(CATEGORY_GENERAL, "removeStreamKeys", removeStreamKeys, true, "Set this to false to keep useless streamer keys (compat with ReBind mod)")
 		respawnInEnd = loadProp(CATEGORY_GENERAL, "respawnInEnd", respawnInEnd, false, "Set this to true to allow respawning in the end")
 		respawnInNether = loadProp(CATEGORY_GENERAL, "respawnInNether", respawnInNether, false, "Set this to true to allow respawning in the nether")
 		ridingHandRotationDisable = loadProp(CATEGORY_GENERAL, "ridingHandRotationDisable", ridingHandRotationDisable, false, "Set this to true to disable FPV hand rotation while riding")
