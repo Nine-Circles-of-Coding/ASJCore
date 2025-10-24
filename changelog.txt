@@ -1,2 +1,8 @@
+Innovations:
+ Rescaled F3 profiler
+ Renderer for blocks with shader
+ More logging
+
 Fixes:
- Client langs optimization for mods with alternative localization
+ Fix of crash when player is loading to dimension from removed mod
+ Options->Controls crash

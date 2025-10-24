@@ -16,6 +16,7 @@ import cofh.asmhooks.HooksCore
 import com.emoniph.witchery.dimension.WorldProviderDreamWorld
 import cpw.mods.fml.client.*
 import cpw.mods.fml.common.Loader
+import cpw.mods.fml.common.network.handshake.NetworkDispatcher
 import cpw.mods.fml.common.registry.*
 import cpw.mods.fml.relauncher.*
 import cpw.mods.fml.server.FMLServerHandler
@@ -59,7 +60,7 @@ import net.minecraft.server.*
 import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.server.gui.MinecraftServerGui
 import net.minecraft.server.integrated.IntegratedServer
-import net.minecraft.server.management.*
+import net.minecraft.server.management.ItemInWorldManager
 import net.minecraft.stats.*
 import net.minecraft.stats.StatList.*
 import net.minecraft.tileentity.*
@@ -1295,28 +1296,8 @@ object ASJHookHandler {
 	
 	// move player from non-existent dimension
 	@JvmStatic
-	@Hook(injectOnExit = true)
-	fun readPlayerDataFromFile(scm: ServerConfigurationManager, player: EntityPlayerMP?, @ReturnValue result: NBTTagCompound?): NBTTagCompound? {
-		player ?: return result
-		val dim = player.dimension
-		if (DimensionManager.isDimensionRegistered(dim)) return result
-		
-		player.dimension = 0
-		
-		val (x, y, z) = DimensionManager.getWorld(0).spawnPoint
-		ASJUtilities.sendToDimensionWithoutPortal(player, 0, x + 0.5, y.D, z + 0.5)
-		
-		if (result == null) return null
-		
-		result.setInteger("Dimension", 0)
-		val pos = NBTTagList()
-		pos.appendTag(NBTTagDouble(x + 0.5))
-		pos.appendTag(NBTTagDouble(y.D))
-		pos.appendTag(NBTTagDouble(z + 0.5))
-		result.setTag("Pos", pos)
-		
-		return result
-	}
+	@Hook(injectOnExit = true, returnCondition = ON_TRUE, intReturnConstant = 0)
+	fun serverInitiateHandshake(nd: NetworkDispatcher, @ReturnValue result: Int) = !DimensionManager.isDimensionRegistered(result)
 	
 	
 	// fix player shadow render
@@ -1429,6 +1410,7 @@ object ASJHookHandler {
 		
 		if (!::emptyKey.isInitialized) {
 			emptyKey = KeyBinding("", 0, "")
+			KeyBinding.getKeybinds().remove("")
 		}
 		
 		thiz.field_152396_an = emptyKey
@@ -1698,5 +1680,32 @@ object ASJHookHandler {
 	@Hook(targetMethod = "<init>", injectOnExit = true)
 	fun EntityCreeper(thiz: EntityCreeper, world: World?) {
 		thiz.height -= 0.15f
+	}
+	
+	
+	// rescale F3 profiler
+	@JvmStatic
+	@Hook(targetMethod = "displayDebugInfo")
+	fun displayDebugInfoPre(mc: Minecraft, deltaTime: Long) {
+		if (!PatcherConfigHandler.rescaleProfiler) return
+		
+		prevDisplayWidth = mc.displayWidth
+		prevDisplayHeight = mc.displayHeight
+		
+		val res = ScaledResolution(mc, prevDisplayWidth, prevDisplayHeight)
+		mc.displayWidth = res.scaledWidth
+		mc.displayHeight = res.scaledHeight
+	}
+	
+	var prevDisplayWidth = 0
+	var prevDisplayHeight = 0
+	
+	@JvmStatic
+	@Hook(targetMethod = "displayDebugInfo", injectOnExit = true)
+	fun displayDebugInfoPost(mc: Minecraft, deltaTime: Long) {
+		if (!PatcherConfigHandler.rescaleProfiler) return
+		
+		mc.displayWidth = prevDisplayWidth
+		mc.displayHeight = prevDisplayHeight
 	}
 }

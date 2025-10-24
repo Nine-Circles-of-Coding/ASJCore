@@ -41,6 +41,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var orthoProjection = false
 	var portalHook = true
 	var removeStreamKeys = true
+	var rescaleProfiler = true
 	var respawnInEnd = false
 	var respawnInNether = false
 	var ridingHandRotationDisable = false
@@ -99,6 +100,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		orthoProjection = loadProp(CATEGORY_GENERAL, "orthoProjection", orthoProjection, false, "Set this to true to enable orthographic projection (no perspective)")
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
 		removeStreamKeys = loadProp(CATEGORY_GENERAL, "removeStreamKeys", removeStreamKeys, true, "Set this to false to keep useless streamer keys (compat with ReBind mod)")
+		rescaleProfiler = loadProp(CATEGORY_GENERAL, "rescaleProfiler", rescaleProfiler, false, "Set this to false to keep profiler HUD not scalable with GUI scale setting")
 		respawnInEnd = loadProp(CATEGORY_GENERAL, "respawnInEnd", respawnInEnd, false, "Set this to true to allow respawning in the end")
 		respawnInNether = loadProp(CATEGORY_GENERAL, "respawnInNether", respawnInNether, false, "Set this to true to allow respawning in the nether")
 		ridingHandRotationDisable = loadProp(CATEGORY_GENERAL, "ridingHandRotationDisable", ridingHandRotationDisable, false, "Set this to true to disable FPV hand rotation while riding")

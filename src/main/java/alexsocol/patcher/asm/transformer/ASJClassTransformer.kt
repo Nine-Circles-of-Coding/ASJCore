@@ -486,6 +486,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	}
 	
 	// FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK YOU
+	// Not HookReplacer because Cauldron-based servers are shit
 	private fun fixEntityCollision() = tree(0, 0) { cn ->
 		val mn = cn.methods.find { it.name == "func_145771_j" || (it.name == "j" && it.desc == "(DDD)Z") } ?: return@tree
 		

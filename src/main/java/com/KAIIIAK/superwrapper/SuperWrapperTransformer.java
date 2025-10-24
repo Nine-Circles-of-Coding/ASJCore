@@ -120,15 +120,21 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				classNode.accept(classWriter);
 				byte[] bytes = classWriter.toByteArray();
 				
-				if (KASMLib.has2DumpChangedClasses) {
-					File file = new File("ASJCoreDumpClasses/SuperWrapper/" + transformedName.replaceAll("\\.", "/") + ".class");
-					file.getParentFile().mkdirs();
-					IOUtils.write(bytes, Files.newOutputStream(file.toPath()));
-				}
-				if (KASMLib.has2DumpUnchangedClasses) {
-					File file = new File("ASJCoreDumpClasses/SuperWrapper/" + transformedName.replaceAll("\\.", "/") + "UNCHANGED.class");
-					file.getParentFile().mkdirs();
-					IOUtils.write(basicClass, Files.newOutputStream(file.toPath()));
+				try {
+					if (KASMLib.has2DumpChangedClasses) dump:{
+						File file = new File("ASJCoreDumpClasses/SuperWrapper/" + transformedName.replaceAll("\\.", "/") + ".class");
+						if (!file.getParentFile().mkdirs())
+							break dump; // don't crash if can't dump
+						IOUtils.write(bytes, Files.newOutputStream(file.toPath()));
+					}
+					if (KASMLib.has2DumpUnchangedClasses) dump:{
+						File file = new File("ASJCoreDumpClasses/SuperWrapper/" + transformedName.replaceAll("\\.", "/") + "UNCHANGED.class");
+						if (!file.getParentFile().mkdirs())
+							break dump; // don't crash if can't dump
+						IOUtils.write(basicClass, Files.newOutputStream(file.toPath()));
+					}
+				} catch (Exception e) {
+					logger.trace("Can't dump " + transformedName + " class: " + e.getMessage());
 				}
 				
 				return bytes;
@@ -165,6 +171,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 	 */
 	@SuppressWarnings({"DataFlowIssue", "unused"})
 	public static void registerSuperWrapperContainer(String clazz) {
+		logger.debug("Parsing SuperWrappers container " + clazz);
 		try {
 			registerSuperWrapperContainer(IOUtils.toByteArray(SuperWrapperTransformer.class.getResourceAsStream('/' + clazz.replace('.', '/') + ".class")));
 		} catch (IOException e) {
@@ -261,6 +268,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				
 				registeredContainers.add(container);
 				found = true;
+				logger.trace("Registered SuperWrapper method " + methodNode.name + methodNode.desc);
 			}
 			
 			if (!found) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", classNode.name));

@@ -184,6 +184,7 @@ public class HookContainerParser {
 		}
 		
 		transformer.registerHook(builder.build());
+		HookClassTransformer.logger.trace("Registered hook method " + currentMethodName + currentMethodDesc);
 	}
 	
 	private void invalidHook(String message) {

@@ -187,11 +187,12 @@ public class HookReplacerWorker extends KASMWorker {
 	public static List<ChangesHolder> registeredMethods = new ArrayList<>();
 	
 	public static void registerHookReplacerContainer(String clazz) {
+		logger.debug("Parsing HookReplacer container " + clazz);
 		Opt.it(HookReplacerWorker.class.getResourceAsStream('/' + clazz.replace('.', '/') + ".class"), it -> {
 			try {
 				registerHookReplacerContainer(IOUtils.toByteArray(it));
 			} catch (IOException e) {
-				logger.error(String.format("Can not parse hooks container %s", clazz), e);
+				logger.error(String.format("Can not parse HookReplacer container %s", clazz), e);
 				throw new RuntimeException(e);
 			}
 		});
@@ -233,7 +234,7 @@ public class HookReplacerWorker extends KASMWorker {
 					}
 				}
 				
-				logger.debug(String.format("Found HookReplacer annotation: %s.%s%s", classNode.name, methodNode.name, methodNode.desc));
+				logger.trace(String.format("Found HookReplacer annotation: %s.%s%s", classNode.name, methodNode.name, methodNode.desc));
 				
 				Type methodType = Type.getMethodType(methodNode.desc);
 				Type[] argTypes = methodType.getArgumentTypes();
@@ -285,29 +286,29 @@ public class HookReplacerWorker extends KASMWorker {
 				removeStoreLoad(from);
 				removeStoreLoad(to);
 				
-				if (!from.isEmpty()) {
-					String methodName = targetMethodFromAnnotation != null ? targetMethodFromAnnotation : methodNode.name;
-					ChangesHolder changesHolder = new ChangesHolder(argTypes[0], methodName);
-					changesHolder.instToReplace.put(from, to);
-					
-					if (!correctStaticIndexes) {
-						changesHolder.instToReplaceForStaticSrc.put(getWithStaticIndexes(from), getWithStaticIndexes(to));
-						changesHolder.correctStaticIndexes = false;
-					}
-					
-					Type[] methodParams = new Type[argTypes.length - 1];
-					System.arraycopy(argTypes, 1, methodParams, 0, methodParams.length);
-					changesHolder.methodParams = methodParams;
-					
-					changesHolder.methodReturn = methodType.getReturnType();
-					
-					registeredMethods.add(changesHolder);
-					
-					logger.debug(String.format("HookReplacer at %s.%s%s registered!", classNode.name, methodNode.name, methodNode.desc));
+				if (from.isEmpty()) continue;
+				
+				String methodName = targetMethodFromAnnotation != null ? targetMethodFromAnnotation : methodNode.name;
+				ChangesHolder changesHolder = new ChangesHolder(argTypes[0], methodName);
+				changesHolder.instToReplace.put(from, to);
+				
+				if (!correctStaticIndexes) {
+					changesHolder.instToReplaceForStaticSrc.put(getWithStaticIndexes(from), getWithStaticIndexes(to));
+					changesHolder.correctStaticIndexes = false;
 				}
+				
+				Type[] methodParams = new Type[argTypes.length - 1];
+				System.arraycopy(argTypes, 1, methodParams, 0, methodParams.length);
+				changesHolder.methodParams = methodParams;
+				
+				changesHolder.methodReturn = methodType.getReturnType();
+				
+				registeredMethods.add(changesHolder);
+				
+				logger.trace(String.format("HookReplacer at %s.%s%s registered!", classNode.name, methodNode.name, methodNode.desc));
 			}
 		} catch (Exception e) {
-			logger.error("Can not parse hooks container", e);
+			logger.error("Can not parse HookReplacer container", e);
 			throw new RuntimeException(e);
 		}
 	}

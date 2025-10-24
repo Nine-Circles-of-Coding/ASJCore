@@ -32,10 +32,10 @@ class ASJASM: IClassTransformer {
 		@JvmStatic
 		fun registerFieldHookContainer(className: String) {
 			try {
-				logger.debug("Parsing field hooks container $className")
+				logger.debug("Parsing HookField container $className")
 				parseFieldHookContainer(ASJASM::class.java.getResourceAsStream("/${className.replace('.', '/')}.class")?.readBytes() ?: throw NullPointerException("Can't read data from ${className}.class"))
 			} catch (e: Exception) {
-				logger.error("Can not parse field hooks container $className", e)
+				logger.error("Can not parse HookField container $className", e)
 				throw e
 			}
 		}
