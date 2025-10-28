@@ -12,6 +12,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.potion.Potion
 import net.minecraft.server.gui.StatsComponent
+import net.minecraft.tileentity.*
 import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeGenJungle
 import net.minecraft.world.gen.feature.*
@@ -151,3 +152,14 @@ fun fixGapSmall(rb: RenderBlocks, block: BlockPane, x: Int, y: Int, z: Int): Boo
 
 fun javaStreamsAreShitSB(elements: Array<String>) = ByteArray(elements.size) { elements[it].trim().dropLast(1).toByte() }
 fun javaStreamsAreShitSI(elements: Array<String>) = IntArray(elements.size) { elements[it].trim().toInt() }
+
+@HookReplacer(targetMethod = "func_145891_a")
+fun fixHopperHoppingZone(tile: TileEntityHopper, hopper: IHopper?): Boolean {
+	startFROM()
+	POPLine();POP(1.0)
+	POPLine();startTO()
+	POPLine();POP(0.5)
+	POPLine();stop()
+	
+	return false
+}

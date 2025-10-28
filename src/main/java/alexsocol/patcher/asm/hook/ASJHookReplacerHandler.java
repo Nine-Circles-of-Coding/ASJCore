@@ -73,7 +73,7 @@ public class ASJHookReplacerHandler {
 				d0 = 9.0D;
 			}
 			startTO();
-			d0 = Math.pow(nhps.playerEntity.theItemInWorldManager.getBlockReachDistance(), 2);
+			d0 = Math.pow(PlayerReachDistanceHandler.getReachDistance(nhps.playerEntity), 2);
 			stop();
 		}
 	}
@@ -83,7 +83,7 @@ public class ASJHookReplacerHandler {
 		startFROM();
 		POPLine();POP(iiwm.blockReachDistance);
 		POPLine();startTO();
-		POPLine();POP(iiwm.thisPlayerMP.getEntityAttribute(PlayerReachDistanceHandler.INSTANCE.getReachDistance()).getAttributeValue());
+		POPLine();POP(PlayerReachDistanceHandler.getReachDistance(iiwm.thisPlayerMP));
 		POPLine();stop();
 		
 		return 0;
@@ -94,7 +94,7 @@ public class ASJHookReplacerHandler {
 		startFROM();
 		POPLine();iiwm.blockReachDistance = distance;
 		POPLine();startTO();
-		POPLine();iiwm.thisPlayerMP.getEntityAttribute(PlayerReachDistanceHandler.INSTANCE.getReachDistance()).setBaseValue(distance);
+		POPLine();PlayerReachDistanceHandler.setReachDistance(iiwm.thisPlayerMP, distance);
 		POPLine();stop();
 	}
 	

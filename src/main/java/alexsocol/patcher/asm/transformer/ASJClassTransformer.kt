@@ -30,7 +30,8 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.command.server.CommandSummon"                      -> core { `CommandSummon$ClassVisitor`(it) }
 			"net.minecraft.entity.Entity"                                     -> {
 				if (PatcherConfigHandler.fixItemCollision)
-					this.basicClass = fixEntityCollision()
+					if (ASJClassTransformer::class.java.getResourceAsStream("/Reika/DragonAPI/Instantiable/Event/EntityPushOutOfBlocksEvent.class") == null)
+						this.basicClass = fixEntityCollision()
 				
 				core { `Entity$ClassVisitor`(it) }
 			}
@@ -43,6 +44,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.server.management.ItemInWorldManager"              -> core { `ItemInWorldManager$ClassVisitor`(it) }
 			"net.minecraft.tileentity.TileEntityFurnace"                      -> core { `TileEntityFurnace$ClassVisitor`(it) }
 			"net.minecraft.world.World"                                       -> core { `World$ClassVisitor`(it) }
+			"Reika.DragonAPI.Instantiable.Event.EntityPushOutOfBlocksEvent"   -> if (PatcherConfigHandler.fixItemCollision) fixEntityCollisionDragonAPI() else this.basicClass
 			"thaumcraft.common.blocks.BlockCustomOre"                         -> core { `BlockCustomOre$ClassVisitor`(it) }
 			"thaumcraft.common.tiles.TileInfusionMatrix"                      -> fixInfusionMatrix()
 			else                                                              -> this.basicClass
@@ -490,12 +492,22 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	private fun fixEntityCollision() = tree(0, 0) { cn ->
 		val mn = cn.methods.find { it.name == "func_145771_j" || (it.name == "j" && it.desc == "(DDD)Z") } ?: return@tree
 		
+		replaceEntityCollisionCheck(mn, "o", "q", 16, 7, 8, 9)
+	}
+	
+	private fun fixEntityCollisionDragonAPI() = tree { cn ->
+		val mn = cn.methods.find { it.name == "fire" } ?: return@tree
+		
+		replaceEntityCollisionCheck(mn, "field_70170_p", "func_147469_q", 1, 2, 3, 4)
+	}
+	
+	private fun replaceEntityCollisionCheck(mn: MethodNode, worldObjOBFName: String, @Suppress("LocalVariableName" /*STFU BITCH*/) func_147469_qOBFName: String, listIndex: Int, iIndex: Int, jIndex: Int, kIndex: Int) {
 		val i = object: Iterable<AbstractInsnNode> {
 			override fun iterator() = mn.instructions.iterator()
 		}
 		
 		run {
-			val aload = i.find { it is VarInsnNode && it.opcode == ALOAD && it.`var` == 16 && it.next?.let { next -> next is MethodInsnNode && next.name == "isEmpty" } == true } ?: return@run
+			val aload = i.find { it is VarInsnNode && it.opcode == ALOAD && it.`var` == listIndex && it.next?.let { next -> next is MethodInsnNode && next.name == "isEmpty" } == true } ?: return@run
 			mn.instructions.insertBefore(aload, VarInsnNode(ALOAD, 0))
 			mn.instructions.set(aload.next, MethodInsnNode(
 				INVOKESTATIC,
@@ -509,11 +521,11 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		run {
 			val aload = i.find {
 				it is VarInsnNode && it.opcode == ALOAD && it.`var` == 0 && it.next?.let { next ->
-					next is FieldInsnNode && next.name == (if (OBF) "o" else "worldObj") && next.next?.let { nnext ->
-						nnext is VarInsnNode && nnext.opcode == ILOAD && nnext.`var` == 7 && nnext.next?.let { nnnext ->
-							nnnext is VarInsnNode && nnnext.opcode == ILOAD && nnnext.`var` == 8 && nnnext.next?.let { nnnnext ->
-								nnnnext is VarInsnNode && nnnnext.opcode == ILOAD && nnnnext.`var` == 9 && nnnnext.next?.let { nnnnnext ->
-									nnnnnext is MethodInsnNode && nnnnnext.name == (if (OBF) "q" else "func_147469_q")
+					next is FieldInsnNode && next.name == (if (OBF) worldObjOBFName else "worldObj") && next.next?.let { nnext ->
+						nnext is VarInsnNode && nnext.opcode == ILOAD && nnext.`var` == iIndex && nnext.next?.let { nnnext ->
+							nnnext is VarInsnNode && nnnext.opcode == ILOAD && nnnext.`var` == jIndex && nnnext.next?.let { nnnnext ->
+								nnnnext is VarInsnNode && nnnnext.opcode == ILOAD && nnnnext.`var` == kIndex && nnnnext.next?.let { nnnnnext ->
+									nnnnnext is MethodInsnNode && nnnnnext.name == (if (OBF) func_147469_qOBFName else "func_147469_q")
 								} == true
 							} == true
 						} == true
@@ -529,5 +541,4 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			mn.instructions.set(aload, InsnNode(ICONST_0))
 		}
 	}
-	
 }

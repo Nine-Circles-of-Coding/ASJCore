@@ -1,8 +1,4 @@
-Innovations:
- Rescaled F3 profiler
- Renderer for blocks with shader
- More logging
-
 Fixes:
- Fix of crash when player is loading to dimension from removed mod
- Options->Controls crash
+ fixItemCollision compat with DragonAPI
+ Reach distance stacking with Botania and Star Miner
+ Hoppers not hopping inside of itself

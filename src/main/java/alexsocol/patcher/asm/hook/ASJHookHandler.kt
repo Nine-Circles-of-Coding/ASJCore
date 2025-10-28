@@ -14,6 +14,7 @@ import biomesoplenty.common.blocks.BlockBOPLog
 import biomesoplenty.common.itemblocks.ItemBlockLog
 import cofh.asmhooks.HooksCore
 import com.emoniph.witchery.dimension.WorldProviderDreamWorld
+import com.google.common.collect.HashMultimap
 import cpw.mods.fml.client.*
 import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.network.handshake.NetworkDispatcher
@@ -23,6 +24,7 @@ import cpw.mods.fml.server.FMLServerHandler
 import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import gloomyfolken.hooklib.asm.ReturnCondition.*
+import jp.mc.ancientred.starminer.core.entity.EntityLivingGravitized
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.client.Minecraft
@@ -75,6 +77,7 @@ import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11.*
 import org.objectweb.asm.Opcodes
 import ru.vamig.worldengine.*
+import vazkii.botania.client.core.handler.BotaniaPlayerController
 import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.io.File
@@ -1326,7 +1329,25 @@ object ASJHookHandler {
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
-	fun getBlockReachDistance(pcmp: PlayerControllerMP) = (mc.thePlayer?.getEntityAttribute(PlayerReachDistanceHandler.reachDistance)?.attributeValue ?: PlayerReachDistanceHandler.reachDistance.defaultValue).F
+	fun getBlockReachDistance(pcmp: PlayerControllerMP) = PlayerReachDistanceHandler.getReachDistance(mc.thePlayer).F
+	
+	// remove client reach handling from Botania
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun setReachDistanceExtension(handler: BotaniaPlayerController, f: Float) = Unit
+	
+	// change starminer extra reach
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun init(e: EntityLivingGravitized) {
+		ASJReflectionHelper.setValue(e, true, "hasInitServerPlayer")
+		@Suppress("USELESS_IS_CHECK") if (e !is EntityPlayerMP) return
+		
+		e.getAttributeMap().applyAttributeModifiers(HashMultimap.create<String, AttributeModifier>().apply {
+			put(PlayerReachDistanceHandler.reachDistance.attributeUnlocalizedName, AttributeModifier(UUID.fromString("30eb815c-094d-45fb-a6e3-6864482f9bf5"), "StarMiner Gravitized Reach", 2.0, 0))
+		})
+	}
+	
 	
 	// fix for https://bugs.mojang.com/browse/MC-1519
 	@SideOnly(Side.CLIENT)
