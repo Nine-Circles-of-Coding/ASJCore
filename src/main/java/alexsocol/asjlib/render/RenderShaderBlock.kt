@@ -12,7 +12,7 @@ import net.minecraft.world.IBlockAccess
 import net.minecraftforge.client.event.RenderWorldEvent
 import net.minecraftforge.common.util.ForgeDirection
 
-class RenderShaderBlock(val shaderId: Int, @get:JvmName("getRenderIdProp") /* stupid kotlin -_- */ val renderId: Int): ISimpleBlockRenderingHandler {
+class RenderShaderBlock(@get:JvmName("getRenderIdProp") /* stupid kotlin -_- */ val renderId: Int, val shaderId: Int, val getShaderCallback: ((block: Boolean) -> ((Int) -> Unit)?)? = null): ISimpleBlockRenderingHandler {
 	
 	val cache: HashMultimap<Int, BlockPos> = HashMultimap.create()
 	
@@ -33,7 +33,7 @@ class RenderShaderBlock(val shaderId: Int, @get:JvmName("getRenderIdProp") /* st
 		
 		glTranslatef(-0.5f)
 		
-		ASJShaderHelper.useShader(shaderId)
+		ASJShaderHelper.useShader(shaderId, getShaderCallback?.invoke(false))
 		tes.startDrawingQuads()
 		
 		tes.setNormal(0f, -1f, 0f)
@@ -66,7 +66,7 @@ class RenderShaderBlock(val shaderId: Int, @get:JvmName("getRenderIdProp") /* st
 		val passCache = cache.get(e.pass) ?: return
 		if (passCache.isEmpty()) return
 		
-		ASJShaderHelper.useShader(shaderId)
+		ASJShaderHelper.useShader(shaderId, getShaderCallback?.invoke(true))
 		
 		val tes = Tessellator.instance
 		tes.startDrawingQuads()

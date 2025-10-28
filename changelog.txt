@@ -1,4 +1,3 @@
-Fixes:
- fixItemCollision compat with DragonAPI
- Reach distance stacking with Botania and Star Miner
- Hoppers not hopping inside of itself
+Innovations:
+ Changed LWJGL classloader from *system* to LaunchClassLoader
+ Trick for checking fog mode in shaders 

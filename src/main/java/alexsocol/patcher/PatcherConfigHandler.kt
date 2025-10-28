@@ -11,6 +11,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	
 	var addAir = false
 	var addBlocks = false
+	var allowLWJGLTransform = true
 	var textIDs = false
 	
 	var bucketSounds = true
@@ -70,6 +71,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	override fun readProperties() {
 		addAir = loadProp(CATEGORY_DANGER, "addAir", addAir, true, "Set this to true to add air item")
 		addBlocks = loadProp(CATEGORY_DANGER, "addBlocks", addBlocks, true, "Set this to true to add items for technical blocks")
+		allowLWJGLTransform = loadProp(CATEGORY_DANGER, "allowLWJGLTransform", allowLWJGLTransform, true, "Allows transforming LWJGL classes by changing class loader. Turn this off if you have any visual issues")
 		textIDs = loadProp(CATEGORY_DANGER, "textIDs", textIDs, false, "Set this to true to enable text item IDs instead of numeric for storing in NBT")
 		
 		bucketSounds = loadProp(CATEGORY_GENERAL, "bucketSounds", bucketSounds, false, "Set this to false to disable sounds from buckets")

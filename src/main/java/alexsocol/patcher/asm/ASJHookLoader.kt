@@ -13,6 +13,7 @@ import com.KAIIIAK.superwrapper.SuperWrapperTransformer.registerSuperWrapperCont
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
 import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
+import net.minecraft.launchwrapper.*
 import java.io.File
 
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
@@ -40,6 +41,9 @@ class ASJHookLoader: HookLoader() {
 		init {
 			PatcherConfigHandler.loadConfig(File("config/ASJCore.cfg"))
 //			KASMLib.has2DumpChangedClasses = true
+			
+			if (PatcherConfigHandler.allowLWJGLTransform)
+				ASJReflectionHelper.getValue<LaunchClassLoader, MutableSet<String>>(Launch.classLoader, "classLoaderExceptions")?.remove("org.lwjgl.")
 		}
 	}
 	

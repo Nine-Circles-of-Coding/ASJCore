@@ -74,6 +74,7 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader
 import net.minecraftforge.common.*
 import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.fluids.IFluidBlock
+import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.objectweb.asm.Opcodes
 import ru.vamig.worldengine.*
@@ -1728,5 +1729,21 @@ object ASJHookHandler {
 		
 		mc.displayWidth = prevDisplayWidth
 		mc.displayHeight = prevDisplayHeight
+	}
+	
+	
+	// Allow checking fog mode by 'density > 0'
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(isMandatory = false, injectOnExit = true)
+	fun glFogi(static: GL11?, pname: Int, param: Int) {
+		if (pname != GL_FOG_MODE) return
+		
+		if (param == GL_LINEAR) {
+			glFogf(GL_FOG_DENSITY, 0f)
+		} else if (param == GL_EXP || param == GL_EXP2) {
+			glFogf(GL_FOG_START, 0f)
+			glFogf(GL_FOG_END, 0f)
+		}
 	}
 }
