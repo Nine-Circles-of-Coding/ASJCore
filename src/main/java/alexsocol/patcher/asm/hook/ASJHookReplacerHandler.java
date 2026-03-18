@@ -12,6 +12,7 @@ import net.minecraft.client.resources.FileResourcePack;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.monster.EntityWitch;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagByteArray;
@@ -20,17 +21,22 @@ import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.play.client.C02PacketUseEntity;
 import net.minecraft.server.management.ItemInWorldManager;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.gen.structure.ComponentScatteredFeaturePieces;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.Project;
 
 import java.io.File;
+import java.util.Random;
 import java.util.Set;
 
 import static com.KAIIIAK.classManipulators.HookReplacer.Replacer.*;
 
 @SuppressWarnings({"unused", "ConstantValue", "UnusedAssignment", "JavaExistingMethodCanBeUsed", "DataFlowIssue"})
+//@formatter:off
 public class ASJHookReplacerHandler {
 	
 	// reach distance
@@ -105,16 +111,25 @@ public class ASJHookReplacerHandler {
 		startFROM();
 		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
 		POPLine();startTO();
-		POPLine();selectProjection(er, f);
+		POPLine();selectProjection(er, f, er.farPlaneDistance * 2F);
 		POPLine();stop();
 	}
 	
-	public static void selectProjection(EntityRenderer er, float f) {
+	@HookReplacer(targetMethod = "setupCameraTransform")
+	public static void setupCameraTransformOF(EntityRenderer er, float f, int i) {
+		startFROM();
+		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
+		POPLine();startTO();
+		POPLine();selectProjection(er, f, FLOAD("4"));
+		POPLine();stop();
+	}
+	
+	public static void selectProjection(EntityRenderer er, float f, float clipDistance) {
 		if (PatcherConfigHandler.INSTANCE.getOrthoProjection()) {
 			double mod = er.getFOVModifier(f, true) * 2;
-			GL11.glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05F, er.farPlaneDistance * 2F);
+			GL11.glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05F, clipDistance);
 		} else {
-			Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
+			Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, clipDistance);
 		}
 	}
 	
@@ -208,4 +223,21 @@ public class ASJHookReplacerHandler {
 		
 		return null;
 	}
+	
+	@HookReplacer
+	public static boolean addComponentParts(ComponentScatteredFeaturePieces.SwampHut hut, World world, Random rand, StructureBoundingBox box) {
+		startFROM();
+		POPLine();world.spawnEntityInWorld(ALOAD("11"));
+		POPLine();startTO();
+		POPLine();fixWitchDespawn(world, ALOAD("11"));
+		POPLine();stop();
+		
+		return false;
+	}
+	
+	public static void fixWitchDespawn(World world, EntityWitch witch) {
+		witch.func_110163_bv();
+		world.spawnEntityInWorld(witch);
+	}
 }
+//@formatter:on

@@ -3,7 +3,7 @@ apply plugin: 'kotlin'
 apply plugin: 'idea'
 
 buildscript {
-	ext.kotlinVersion = '2.1.21'
+	ext.kotlinVersion = '2.3.20'
 	
 	repositories {
 		mavenCentral()
@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.5.2.2"
+version = "1.6.0.0"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -92,7 +92,7 @@ idea {
 	module {
 		inheritOutputDirs = false
 		outputDir = file('build/classes/main/')
-		excludeDirs += file('minecraft')
+		excludeDirs += file(project.minecraft.runDir)
 	}
 }
 
@@ -106,6 +106,7 @@ tasks.register('deobfJar', Jar) {
 	classifier 'deobf'
 
 	from sourceSets.main.output
+    from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
 	manifest.attributes(jar.manifest.getAttributes())
 }
 

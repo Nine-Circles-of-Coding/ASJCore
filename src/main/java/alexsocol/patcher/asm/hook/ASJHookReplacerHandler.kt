@@ -8,17 +8,23 @@ import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
 import net.minecraft.block.BlockPane
 import net.minecraft.client.gui.*
 import net.minecraft.client.renderer.*
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.*
 import net.minecraft.entity.effect.EntityLightningBolt
+import net.minecraft.entity.item.EntityXPOrb
+import net.minecraft.entity.monster.EntityZombie
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.inventory.ContainerRepair
 import net.minecraft.potion.Potion
 import net.minecraft.server.gui.StatsComponent
 import net.minecraft.tileentity.*
+import net.minecraft.util.DamageSource
 import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeGenJungle
 import net.minecraft.world.gen.feature.*
 import java.awt.*
 import java.util.*
 
+//@formatter:off
 // fix oak leaves on jungle shrubs
 @HookReplacer
 fun func_150567_a(target: BiomeGenJungle, rand: Random): WorldGenAbstractTree? {
@@ -163,3 +169,69 @@ fun fixHopperHoppingZone(tile: TileEntityHopper, hopper: IHopper?): Boolean {
 	
 	return false
 }
+
+@HookReplacer(targetMethod = "updateRepairOutput")
+fun changeAnvilCostLimit(con: ContainerRepair) {
+	startFROM();POP(40);startTO();POP(maxAnvilCost());stop()
+}
+
+@HookReplacer(targetMethod = "updateRepairOutput")
+fun changeAnvilCostLower(con: ContainerRepair) {
+	startFROM();POP(39);startTO();POP(maxAnvilCost() - 1);stop()
+}
+
+@HookReplacer(targetMethod = "drawGuiContainerForegroundLayer")
+fun changeAnvilCostLimit(gui: GuiRepair, mx: Int, mz: Int) {
+	startFROM();POP(40);startTO();POP(maxAnvilCost());stop()
+}
+
+fun maxAnvilCost() = PatcherConfigHandler.anvilLevelLimit
+
+@HookReplacer(targetMethod = "onCollideWithPlayer")
+fun changeXpCooldown(xp: EntityXPOrb, player: EntityPlayer) {
+	startFROM();POP(2);startTO();POP(xpCooldown());stop()
+}
+
+fun xpCooldown() = PatcherConfigHandler.xpCooldown
+
+// MC-219981
+@HookReplacer(targetMethod = "onSpawnWithEgg")
+fun fixLeaderHealth(thiz: EntityZombie, data: IEntityLivingData): IEntityLivingData? {
+	startFROM()
+	POPLine();thiz.func_146070_a(true)
+	POPLine();startTO()
+	POPLine();thiz.func_146070_a(true)
+	POPLine();thiz.health = thiz.maxHealth
+	POPLine();stop()
+	
+	return null
+}
+
+@HookReplacer(targetMethod = "attackEntityFrom")
+fun fixPigZombieAidType(thiz: EntityZombie, src: DamageSource?, amount: Float): Boolean {
+	startFROM()
+	POPLine();POP(EntityZombie(thiz.worldObj))
+	POPLine();startTO()
+	POPLine();POP(getAidEntity(thiz))
+	POPLine();stop()
+	
+	return false
+}
+
+fun getAidEntity(thiz: EntityZombie) = try {
+	thiz.javaClass.getConstructor(World::class.java).apply { setAccessible(true) }.newInstance(thiz.worldObj) as EntityZombie
+} catch (e: Exception) {
+	EntityZombie(thiz.worldObj) // увы
+}
+
+@HookReplacer(targetMethod = "onLivingUpdate")
+fun fixBabyZombieNotBurning(thiz: EntityZombie) {
+	startFROM()
+	POPLine();POP(thiz.isChild)
+	POPLine();startTO()
+	POPLine();POP(checkChildBurning(thiz))
+	POPLine();stop()
+}
+
+fun checkChildBurning(thiz: EntityZombie) = !PatcherConfigHandler.burningZombieChildren && thiz.isChild
+//@formatter:on

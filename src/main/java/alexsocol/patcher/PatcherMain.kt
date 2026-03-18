@@ -5,7 +5,6 @@ import alexsocol.asjlib.command.*
 import alexsocol.asjlib.render.ASJShaderHelper
 import alexsocol.patcher.PatcherMain.MODID
 import alexsocol.patcher.asm.ASJHookLoader
-import alexsocol.patcher.asm.hook.NoEntityInteractionHandler
 import alexsocol.patcher.crafting.CraftingHandler
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
@@ -66,7 +65,7 @@ object PatcherMain {
 		BlockTrapDoor.disableValidation = PatcherConfigHandler.floatingTrapDoors
 		
 		if (ASJUtilities.isClient) {
-			NoEntityInteractionHandler.eventFML()
+			KeyBindingHandler.eventFML()
 			PatcherEventHandlerClient.eventForge()
 			ASJShaderHelper.registerHandlers()
 			if (!ASJHookLoader.OBF) ClientCommandHandler.instance.registerCommand(CommandResources)
@@ -80,6 +79,7 @@ object PatcherMain {
 	
 	@Mod.EventHandler
 	fun onServerStarting(e: FMLServerStartingEvent) {
+		e.registerServerCommand(CommandChunkMap)
 		e.registerServerCommand(CommandDimInfo)
 		e.registerServerCommand(CommandDimTP)
 		e.registerServerCommand(CommandExplode)

@@ -50,7 +50,10 @@ public class HookClassTransformer {
 				boolean java7 = majorVersion > 50;
 				
 				ClassReader cr = new ClassReader(bytecode);
-				ClassWriter cw = createClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
+				// KAIIIAK
+				boolean java8Interface = majorVersion > 51 && (cr.getAccess() & Opcodes.ACC_INTERFACE) != 0;
+				// KAIIIAK
+				ClassWriter cw = createClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES | (java8Interface ? ClassWriter.COMPUTE_MAXS : 0) : ClassWriter.COMPUTE_MAXS);
 				HookInjectorClassVisitor hooksWriter = createInjectorClassVisitor(cw, hooks);
 				cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 				bytecode = cw.toByteArray();

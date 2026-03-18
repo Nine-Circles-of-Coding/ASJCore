@@ -16,6 +16,7 @@ public class SuperWrapperTransformerContainer {
 	public String signatureForInsetMethod = null;
 	public String[] exceptionsForInsetMethod = null;
 	public boolean callThis = true;
+	public boolean isInterface = false;
 	
 	public String desc = "";
 	public String targetMethod = "";
@@ -50,6 +51,10 @@ public class SuperWrapperTransformerContainer {
 	
 	public void setCallThis(boolean callThis) {
 		this.callThis = callThis;
+	}
+	
+	public void setIsInterface(boolean isInterface) {
+		this.isInterface = isInterface;
 	}
 	
 	public void setDesc(String desc) {

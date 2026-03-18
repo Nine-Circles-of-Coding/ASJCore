@@ -11,8 +11,11 @@ object NetworkHandler {
 		get() = field++
 	
 	init {
+		network.registerMessage(MessageChunkMap, MessageChunkMap::class.java, nextId, Side.CLIENT)
 		network.registerMessage(MessageClipboard, MessageClipboard::class.java, nextId, Side.CLIENT)
 		network.registerMessage(MessageWolkJpeg, MessageWolkJpeg::class.java, nextId, Side.CLIENT)
 		network.registerMessage(MessageUUID, MessageUUID::class.java, nextId, Side.CLIENT)
+		
+		network.registerMessage(MessageTpRequest, MessageTpRequest::class.java, nextId, Side.SERVER)
 	}
 }

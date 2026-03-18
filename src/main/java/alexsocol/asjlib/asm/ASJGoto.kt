@@ -46,7 +46,7 @@ class ASJGoto: IClassTransformer {
 					val lTarget = (iN1.previous as? LdcInsnNode)?.cst as? String ?: continue
 					if (lTarget != lName) continue
 					
-					mn.instructions.insert(iN1, JumpInsnNode(Opcodes.GOTO, label as LabelNode))
+					mn.instructions.insert(iN1, JumpInsnNode(Opcodes.GOTO, label))
 					
 					mn.instructions.remove(iN1.previous)
 					mn.instructions.remove(iN1)

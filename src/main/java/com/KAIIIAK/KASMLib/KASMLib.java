@@ -1,11 +1,13 @@
 package com.KAIIIAK.KASMLib;
 
-import alexsocol.patcher.PatcherConfigHandler;
+import alexsocol.patcher.PatcherPreConfigHandler;
 import com.KAIIIAK.nullsafety.Opt;
 import gloomyfolken.hooklib.asm.HookLogger;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.commons.io.IOUtils;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.io.File;
@@ -216,7 +218,7 @@ public class KASMLib implements IClassTransformer {
 				asmWorker.workDataEnd();
 			}
 			if (cng > 0) {
-				if (PatcherConfigHandler.INSTANCE.getLogDebug())
+				if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
 					logger.debug(String.format("Trying to make %d changes in %s(%s)", cng, name, transformedName));
 				classNode.accept(classWriter);
 

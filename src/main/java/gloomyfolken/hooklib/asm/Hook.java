@@ -1,5 +1,7 @@
 package gloomyfolken.hooklib.asm;
 
+import org.objectweb.asm.Opcodes;
+
 import java.lang.annotation.*;
 
 /**
@@ -31,6 +33,25 @@ public @interface Hook {
 	 * @author KAIIIAK
 	 */
 	String superClass() default "";
+	
+	/**
+	 * Произвольный набор текстовых ASM инструкций, который будет распаршен и вставлен до вызова хук-метода.
+	 * @author KAIIIAK
+	 */
+	String[] arbitraryPreAsmText() default {};
+	
+	/**
+	 * Произвольный набор текстовых ASM инструкций, который будет распаршен и вставлен после вызова хук-метода.
+	 * @author KAIIIAK
+	 */
+	String[] arbitraryPostAsmText() default {};
+	
+	/**
+	 * Модификатор доступа создаваемого метода
+	 * (public/package/protected/private)
+	 * @author AlexSocol
+	 */
+	int access() default Opcodes.ACC_PUBLIC;
 	
 	/**
 	 * Делает создаваемый метод абстрактным

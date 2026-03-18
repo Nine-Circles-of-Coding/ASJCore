@@ -70,4 +70,8 @@ public @interface SuperWrapper {
 	 */
 	boolean callThis() default true;
  
+	/**
+	 * Если true то будет использоваться INVOKEINTERFACE для вызова генерируемого метода 
+	 */
+	boolean isInterface() default false;
 }

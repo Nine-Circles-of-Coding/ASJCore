@@ -58,11 +58,11 @@ public class SuperWrapperTransformer implements IClassTransformer {
 							newInstructions.add(new VarInsnNode(argumentTypes[i].getOpcode(ILOAD), i));
 						
 						newInstructions.add(new MethodInsnNode(
-								INVOKEVIRTUAL,
+								container.isInterface ? INVOKEINTERFACE : INVOKEVIRTUAL,
 								container.targetClass.getInternalName(),
 								container.getInsertMethodName(),
 								container.getInsertMethodDesc(),
-								false
+								container.isInterface
 						));
 						
 						if (methodType.getReturnType() == Type.VOID_TYPE) {
@@ -198,6 +198,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				String methodPostfixFromAnnotation = null;
 				String methodPrefixFromAnnotation = null;
 				Boolean callThis = true;
+				Boolean isInterface = false;
 				
 				List<AnnotationNode> annotations = new ArrayList<>();
 				if (methodNode.visibleAnnotations != null) annotations.addAll(methodNode.visibleAnnotations);
@@ -238,6 +239,9 @@ public class SuperWrapperTransformer implements IClassTransformer {
 						if (annotationArgs.containsKey("callThis")) {
 							callThis = (Boolean) annotationArgs.get("callThis");
 						}
+						if (annotationArgs.containsKey("isInterface")) {
+							isInterface = (Boolean) annotationArgs.get("isInterface");
+						}
 					}
 					
 					containsAnnotation = true;
@@ -263,6 +267,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				container.setSignatureForInsertMethod(signatureFromAnnotation != null ? signatureFromAnnotation : methodNode.signature == null ? null : methodNode.signature.replaceFirst("\\(L" + container.targetClass.getInternalName() + ";", "("));
 				container.setExceptionsForInsetMethod(exceptionsFromAnnotation != null ? exceptionsFromAnnotation : methodNode.exceptions);
 				container.setCallThis(callThis);
+				container.setIsInterface(isInterface);
 				container.setDesc(methodNode.desc);
 				container.setTargetMethod(targetMethodFromAnnotation != null ? targetMethodFromAnnotation : methodNode.name);
 				

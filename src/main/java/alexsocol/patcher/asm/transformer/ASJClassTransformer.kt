@@ -2,7 +2,7 @@
 
 package alexsocol.patcher.asm.transformer
 
-import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.*
 import alexsocol.patcher.asm.ASJHookLoader.Companion.OBF
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
@@ -11,7 +11,7 @@ import org.objectweb.asm.tree.*
 class ASJClassTransformer: ASJAbstractClassTransformer() {
 	
 	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
-		if (transformedName != "alexsocol.patcher.asm.ASJClassTransformer\$ClassVisitorPotionMethodPublicizer") try {
+		if (transformedName != $$"alexsocol.patcher.asm.ASJClassTransformer$ClassVisitorPotionMethodPublicizer") try {
 			val cr = ClassReader(this.basicClass)
 			val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
 			val cv = ClassVisitorPotionMethodPublicizer(cw, transformedName)
@@ -29,7 +29,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.client.particle.EffectRenderer"                    -> core { `EffectRenderer$ClassVisitor`(it) }
 			"net.minecraft.command.server.CommandSummon"                      -> core { `CommandSummon$ClassVisitor`(it) }
 			"net.minecraft.entity.Entity"                                     -> {
-				if (PatcherConfigHandler.fixItemCollision)
+				if (PatcherPreConfigHandler.fixItemCollision)
 					if (ASJClassTransformer::class.java.getResourceAsStream("/Reika/DragonAPI/Instantiable/Event/EntityPushOutOfBlocksEvent.class") == null)
 						this.basicClass = fixEntityCollision()
 				
@@ -44,7 +44,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			"net.minecraft.server.management.ItemInWorldManager"              -> core { `ItemInWorldManager$ClassVisitor`(it) }
 			"net.minecraft.tileentity.TileEntityFurnace"                      -> core { `TileEntityFurnace$ClassVisitor`(it) }
 			"net.minecraft.world.World"                                       -> core { `World$ClassVisitor`(it) }
-			"Reika.DragonAPI.Instantiable.Event.EntityPushOutOfBlocksEvent"   -> if (PatcherConfigHandler.fixItemCollision) fixEntityCollisionDragonAPI() else this.basicClass
+			"Reika.DragonAPI.Instantiable.Event.EntityPushOutOfBlocksEvent"   -> if (PatcherPreConfigHandler.fixItemCollision) fixEntityCollisionDragonAPI() else this.basicClass
 			"thaumcraft.common.blocks.BlockCustomOre"                         -> core { `BlockCustomOre$ClassVisitor`(it) }
 			"thaumcraft.common.tiles.TileInfusionMatrix"                      -> fixInfusionMatrix()
 			else                                                              -> this.basicClass
@@ -152,7 +152,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 					when (PatcherConfigHandler.maxParticles) {
 						in Byte.MIN_VALUE..Byte.MAX_VALUE   -> super.visitIntInsn(BIPUSH, PatcherConfigHandler.maxParticles)
 						in Short.MIN_VALUE..Short.MAX_VALUE -> super.visitIntInsn(SIPUSH, PatcherConfigHandler.maxParticles)
-						else                                -> super.visitLdcInsn(Integer(PatcherConfigHandler.maxParticles))
+						else                                -> super.visitLdcInsn(PatcherConfigHandler.maxParticles)
 					}
 				} else super.visitIntInsn(opcode, operand)
 			}
@@ -304,11 +304,11 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		private inner class `C17PacketCustomPayload$MethodVisitor`(mv: MethodVisitor): MethodVisitor(ASM5, mv) {
 			
 			override fun visitIntInsn(opcode: Int, operand: Int) {
-				if (opcode == SIPUSH && operand == 32767) {
-					super.visitLdcInsn(Int.MAX_VALUE)
-				} else if (opcode == LDC) {
-					super.visitLdcInsn("Sorry hook not worked :(")
-				} else super.visitIntInsn(opcode, operand)
+				when (opcode) {
+					SIPUSH if operand == 32767 -> super.visitLdcInsn(Int.MAX_VALUE)
+					LDC                        -> super.visitLdcInsn("Sorry hook not worked :(")
+					else                       -> super.visitIntInsn(opcode, operand)
+				}
 			}
 			
 			override fun visitMethodInsn(opcode: Int, owner: String?, name: String?, desc: String?, itf: Boolean) {

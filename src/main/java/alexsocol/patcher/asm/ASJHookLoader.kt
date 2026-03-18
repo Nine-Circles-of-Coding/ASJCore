@@ -2,7 +2,7 @@ package alexsocol.patcher.asm
 
 import alexsocol.asjlib.ASJReflectionHelper
 import alexsocol.asjlib.asm.*
-import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.PatcherPreConfigHandler
 import alexsocol.patcher.asm.transformer.*
 import alexsocol.patcher.asm.worker.InterfaceAppenderWorker
 import com.KAIIIAK.KASMLib.KASMLib
@@ -14,7 +14,6 @@ import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
 import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
 import net.minecraft.launchwrapper.*
-import java.io.File
 
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
 // -username=AlexSocol
@@ -39,10 +38,9 @@ class ASJHookLoader: HookLoader() {
 		val OBF = ASJReflectionHelper.getStaticValue<CoreModManager, Boolean>(CoreModManager::class.java, "deobfuscatedEnvironment") != true
 		
 		init {
-			PatcherConfigHandler.loadConfig(File("config/ASJCore.cfg"))
-//			KASMLib.has2DumpChangedClasses = true
+			KASMLib.has2DumpChangedClasses = System.getProperty("KASMlib.dumpChangedClasses").toBoolean()
 			
-			if (PatcherConfigHandler.allowLWJGLTransform)
+			if (PatcherPreConfigHandler.allowLWJGLTransform)
 				ASJReflectionHelper.getValue<LaunchClassLoader, MutableSet<String>>(Launch.classLoader, "classLoaderExceptions")?.remove("org.lwjgl.")
 		}
 	}
@@ -67,14 +65,14 @@ class ASJHookLoader: HookLoader() {
 		registerHookContainer("alexsocol.patcher.asm.hook.BiomeDictionaryForWEHooks")
 		registerHookContainer("alexsocol.patcher.asm.hook.NoEntityInteractionHandler")
 		
-		if (PatcherConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.hook.BlockButtonExtender")
-		if (PatcherConfigHandler.deleteRealms) registerHookContainer("alexsocol.patcher.asm.hook.RealmsDeleter")
+		if (PatcherPreConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.hook.BlockButtonExtender")
+		if (PatcherPreConfigHandler.deleteRealms) registerHookContainer("alexsocol.patcher.asm.hook.RealmsDeleter")
 		
 		registerHookContainer("alexsocol.patcher.asm.hook.ArmorFixes")
 		
 		if (OBF || System.getProperty("asjcore.fieldhooks", "false").toBoolean()) {
 			ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.hook.ASJFieldHookHandler")
-			if (PatcherConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
+			if (PatcherPreConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
 		}
 		
 		registerPostTransformer(KASMLib(false))
@@ -89,10 +87,10 @@ class ASJHookLoader: HookLoader() {
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
 		
-		if (PatcherConfigHandler.fixItemCollision) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ItemCollisionFix")
+		if (PatcherPreConfigHandler.fixItemCollision) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ItemCollisionFix")
 		
-		if (PatcherConfigHandler.fixCapeRotations) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.CapeRotationsFix")
+		if (PatcherPreConfigHandler.fixCapeRotations) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.CapeRotationsFix")
 		
-		if (PatcherConfigHandler.deleteRealms) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.RealmsDeleterHR")
+		if (PatcherPreConfigHandler.deleteRealms) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.RealmsDeleterHR")
 	}
 }

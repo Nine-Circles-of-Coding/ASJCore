@@ -43,32 +43,33 @@ class ASJASM: IClassTransformer {
 		private fun parseFieldHookContainer(basicClass: ByteArray) {
 			val cr = ClassReader(basicClass)
 			val cn = ClassNode()
+			
 			cr.accept(cn, 0)
+			
 			for (fn in cn.fields) {
-				var flag = false
 				var targetClassName = ""
-				if (fn.visibleAnnotations != null && fn.visibleAnnotations.isNotEmpty()) {
-					for (an in fn.visibleAnnotations) {
-						if (an.desc == Type.getDescriptor(HookField::class.java)) {
-							flag = true
-							if (an.values != null && an.values.isNotEmpty()) {
-								var i = 0
-								while (i < an.values.size) {
-									if (an.values[i] == "targetClassName") {
-										targetClassName = an.values[i + 1].toString()
-										break
-									}
-									i += 2
-								}
-							}
+				var targetFieldName = fn.name
+				
+				if (fn.visibleAnnotations.isNullOrEmpty()) continue
+				
+				for (an in fn.visibleAnnotations) {
+					if (an.desc != Type.getDescriptor(HookField::class.java)) continue
+					if (an.values.isNullOrEmpty()) continue
+					
+					var i = 0
+					while (i < an.values.size) {
+						if (an.values[i] == "targetClassName") {
+							targetClassName = an.values[i + 1].toString()
+						} else if (an.values[i] == "targetFieldName") {
+							val tfn = an.values[i + 1].toString()
+							if (tfn.isNotEmpty()) targetFieldName = tfn
 						}
-						if (flag && targetClassName.isNotEmpty()) break
+						
+						i += 2
 					}
+					
+					fieldsMap.computeIfAbsent(targetClassName) { ArrayList() } += FieldData(fn.access, targetFieldName, fn.desc)
 				}
-				
-				if (!flag || targetClassName.isEmpty()) continue
-				
-				fieldsMap.computeIfAbsent(targetClassName) { ArrayList() } += FieldData(fn.access, fn.name, fn.desc)
 			}
 		}
 	}

@@ -80,14 +80,13 @@ object CommandSchema: ASJCommandBase() {
 			if (name != null) try {
 				val id = name.toInt()
 				name = getUniqueName(Block.getBlockById(id))
-			} catch (ignore: NumberFormatException) {
-			}
+			} catch (_: NumberFormatException) {}
 			
 			dumpTo(file, sender, name)
 			
 			val link = ChatComponentText(file.path)
-			link.getChatStyle().setChatClickEvent(ClickEvent(ClickEvent.Action.OPEN_FILE, file.parentFile.absolutePath))
-			link.getChatStyle().setUnderlined(true)
+			link.chatStyle.chatClickEvent = ClickEvent(ClickEvent.Action.OPEN_FILE, file.parentFile.absolutePath)
+			link.chatStyle.underlined = true
 			sender.addChatMessage(ChatComponentTranslation("asjcore.commands.schema.dumpOk", link))
 		} catch (e: Exception) {
 			ASJUtilities.say(sender, "asjcore.commands.schema.dumpNo", e.message ?: "")
@@ -138,9 +137,9 @@ object CommandSchema: ASJCommandBase() {
 					world.getTileEntity(x, y, z)?.let {
 						nbt = NBTTagCompound()
 						it.writeToNBT(nbt)
-						nbt!!.removeTag("x")
-						nbt!!.removeTag("y")
-						nbt!!.removeTag("z")
+						nbt.removeTag("x")
+						nbt.removeTag("y")
+						nbt.removeTag("z")
 					}
 					
 					if (map.containsKey(key)) map[key]?.add(LocationElement(mx.dif(x), my.dif(y), mz.dif(z), meta, nbt))

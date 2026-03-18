@@ -1,8 +1,12 @@
 package gloomyfolken.hooklib.asm;
 
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HookInjectorClassVisitor extends ClassVisitor {
 	
@@ -27,6 +31,11 @@ public class HookInjectorClassVisitor extends ClassVisitor {
 	
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+		// KAIIIAK
+		boolean hookingAbstract = hooks.stream().anyMatch(hook -> isTargetMethod(hook, name, desc) && !hook.isAbstract()) && (access & Opcodes.ACC_ABSTRACT) != 0;
+		if (hookingAbstract) access &= ~Opcodes.ACC_ABSTRACT;
+		// KAIIIAK
+		
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		for (AsmHook hook : hooks) {
 			if (isTargetMethod(hook, name, desc) && !injectedHooks.contains(hook)) {
@@ -36,6 +45,15 @@ public class HookInjectorClassVisitor extends ClassVisitor {
 				injectedHooks.add(hook);
 			}
 		}
+		
+		// KAIIIAK
+		if (hookingAbstract) {
+			mv.visitCode();
+			mv.visitMaxs(0, 0);
+			mv.visitEnd();
+		}
+		// KAIIIAK
+		
 		return mv;
 	}
 	
@@ -43,7 +61,7 @@ public class HookInjectorClassVisitor extends ClassVisitor {
 	public void visitEnd() {
 		for (AsmHook hook : hooks) {
 			if (hook.getCreateMethod() && !injectedHooks.contains(hook)) {
-				hook.createMethod(this, hook.isStatic(), hook.isAbstract(), hook.getSuperClass());
+				hook.createMethod(this);
 			}
 		}
 		super.visitEnd();

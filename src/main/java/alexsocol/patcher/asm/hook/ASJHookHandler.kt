@@ -39,6 +39,7 @@ import net.minecraft.client.resources.I18n
 import net.minecraft.client.settings.*
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
+import net.minecraft.crash.CrashReport
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.*
 import net.minecraft.entity.DataWatcher.WatchableObject
@@ -627,7 +628,9 @@ object ASJHookHandler {
 		}
 	}
 	
+	@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 	private val message_f = ASJReflectionHelper.getField(java.lang.Throwable::class.java, "detailMessage")
+	@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 	private val stackTrace_f = ASJReflectionHelper.getField(java.lang.Throwable::class.java, "stackTrace")
 	
 	
@@ -987,7 +990,7 @@ object ASJHookHandler {
 	
 	@JvmStatic
 	fun createScrollBar(orientation: Int): JScrollBar {
-		class CustomScrollBar(): JScrollBar(orientation) {
+		class CustomScrollBar: JScrollBar(orientation) {
 			init {
 				setUI(BasicScrollBarUI())
 				setBackground(Color.DARK_GRAY)
@@ -1123,6 +1126,9 @@ object ASJHookHandler {
 			filled = block.getFilledPercentage(entity.worldObj, i, j, k)
 		} else if (block is BlockLiquid) {
 			filled = 1 - BlockLiquid.getLiquidHeightPercent(entity.worldObj.getBlockMetadata(i, j, k) - 1)
+			
+			if (entity.worldObj.getBlock(i, j + 1, k).material === material)
+				filled = 1f
 		}
 		
 		if (filled >= 0) return d0 < (j + filled)
@@ -1341,8 +1347,8 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun init(e: EntityLivingGravitized) {
-		ASJReflectionHelper.setValue(e, true, "hasInitServerPlayer")
-		@Suppress("USELESS_IS_CHECK") if (e !is EntityPlayerMP) return
+		ASJReflectionHelper.setValue(EntityLivingGravitized::class.java, e, true, "hasInitServerPlayer")
+		@Suppress("IMPOSSIBLE_IS_CHECK_WARNING", "KotlinConstantConditions") if (e !is EntityPlayerMP) return
 		
 		e.getAttributeMap().applyAttributeModifiers(HashMultimap.create<String, AttributeModifier>().apply {
 			put(PlayerReachDistanceHandler.reachDistance.attributeUnlocalizedName, AttributeModifier(UUID.fromString("30eb815c-094d-45fb-a6e3-6864482f9bf5"), "StarMiner Gravitized Reach", 2.0, 0))

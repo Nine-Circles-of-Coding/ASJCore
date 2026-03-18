@@ -1,6 +1,6 @@
 package gloomyfolken.hooklib.asm;
 
-import alexsocol.patcher.PatcherConfigHandler;
+import alexsocol.patcher.PatcherPreConfigHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,13 +28,13 @@ public interface HookLogger {
 		
 		@Override
 		public void trace(String message) {
-			if (PatcherConfigHandler.INSTANCE.getLogTrace())
+			if (PatcherPreConfigHandler.INSTANCE.getLogTrace())
 				System.out.println("[TRACE] " + message);
 		}
 		
 		@Override
 		public void debug(String message) {
-			if (PatcherConfigHandler.INSTANCE.getLogDebug())
+			if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
 				System.out.println("[DEBUG] " + message);
 		}
 		
@@ -65,13 +65,13 @@ public interface HookLogger {
 		
 		@Override
 		public void trace(String message) {
-			if (PatcherConfigHandler.INSTANCE.getLogTrace())
+			if (PatcherPreConfigHandler.INSTANCE.getLogTrace())
 				logger.finest(message);
 		}
 		
 		@Override
 		public void debug(String message) {
-			if (PatcherConfigHandler.INSTANCE.getLogDebug())
+			if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
 				logger.fine(message);
 		}
 		
@@ -101,14 +101,14 @@ public interface HookLogger {
 		
 		@Override
 		public void trace(String message) {
-			if (PatcherConfigHandler.INSTANCE.getLogTrace())
+			if (PatcherPreConfigHandler.INSTANCE.getLogTrace())
 				// piece of inconfigurable shit
 				logger.info(message);
 		}
 		
 		@Override
 		public void debug(String message) {
-			if (PatcherConfigHandler.INSTANCE.getLogDebug())
+			if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
 				// piece of inconfigurable shit
 				logger.info(message);
 		}

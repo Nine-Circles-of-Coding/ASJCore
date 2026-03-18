@@ -40,11 +40,21 @@ asjcore.commands.tpdim.worlderr=Dimension Initialization Error
 commands.summon.usage.new=/summon <EntityName> [['x'count]] [x] [y] [z] [dataTag]
 
 asjcore.noEntityInteract=Toggle Entity Interaction
-asjcore.noEntityInteract.is.false=[ASJCore] Entity interaction enabled
-asjcore.noEntityInteract.is.true=[ASJCore] Entity interaction disabled
+asjcore.orthoProjection=Toggle Projection
+asjcore.noEntityInteract.false=[ASJCore] Entity interaction enabled
+asjcore.noEntityInteract.true=[ASJCore] Entity interaction disabled
 
 attribute.name.asjpatcher.reachDistance=Reach Distance
 
 options.snooper.view.new=Snooper Data...
 
 gui.stats.new=Statistics were disabled in ASJCore config
+
+gui.chunkmap.chunk=Chunk at %s
+gui.chunkmap.tp=Rightclick to teleport
+gui.chunkmap.type.current=You are here
+gui.chunkmap.type.forced=Forced (by %s)
+gui.chunkmap.type.loaded=Loaded
+gui.chunkmap.type.spawnarea=Spawn area
+gui.chunkmap.type.spawnpoint=Spawn point
+gui.chunkmap.type.worldspawn=World spawn

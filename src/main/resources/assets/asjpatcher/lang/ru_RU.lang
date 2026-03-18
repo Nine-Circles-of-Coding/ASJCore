@@ -40,9 +40,21 @@ asjcore.commands.tpdim.worlderr=Ошибка инициализации изме
 commands.summon.usage.new=/summon <имя> [['x'кол-во]] [x] [y] [z] [нбт]
 
 asjcore.noEntityInteract=Переключить взаимодействие с сущностями
-asjcore.noEntityInteract.is.false=[ASJCore] Взаимодействие с сущностями включено
-asjcore.noEntityInteract.is.true=[ASJCore] Взаимодействие с сущностями отключено
+asjcore.orthoProjection=Переключить проекцию
+asjcore.noEntityInteract.false=[ASJCore] Взаимодействие с сущностями включено
+asjcore.noEntityInteract.true=[ASJCore] Взаимодействие с сущностями отключено
 
 attribute.name.asjpatcher.reachDistance=Досягаемость
 
 options.snooper.view.new=Данные Snooper...
+
+gui.stats.new=Статистика отключена в конфиге ASJCore
+
+gui.chunkmap.chunk=Чанк %s
+gui.chunkmap.tp=ПКМ для телепортации
+gui.chunkmap.type.current=Вы здесь
+gui.chunkmap.type.forced=Принудительно загружен (%s)
+gui.chunkmap.type.loaded=Загружен
+gui.chunkmap.type.spawnarea=Зона мирового спавна
+gui.chunkmap.type.spawnpoint=Точка спавна
+gui.chunkmap.type.worldspawn=Мировой спавн

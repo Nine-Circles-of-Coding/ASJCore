@@ -1,6 +1,6 @@
 package com.KAIIIAK.KASMLib.workers;
 
-import alexsocol.patcher.PatcherConfigHandler;
+import alexsocol.patcher.PatcherPreConfigHandler;
 import com.KAIIIAK.KASMLib.KASMWorker;
 import com.KAIIIAK.KASMLib.util.KASMUtil;
 import com.KAIIIAK.KASMLib.util.ReflectionLikeUtil;
@@ -30,7 +30,7 @@ public class ReflectionLikeWorker extends KASMWorker {
 	
 	@Override
 	public boolean workClass(ClassNode classNode) {
-		for (String ignClassName : Opt.it(PatcherConfigHandler.INSTANCE.getIgnoredClasses())) {
+		for (String ignClassName : Opt.it(PatcherPreConfigHandler.INSTANCE.getIgnoredClasses())) {
 			if ((className.contains(ignClassName) || transformedClassName.contains(ignClassName))) {
 				ignoreClass = true;
 				break;
@@ -68,7 +68,7 @@ public class ReflectionLikeWorker extends KASMWorker {
 			if (annotationNode.desc.contains("GameRegistry$ObjectHolder")) return false;
 		}
 		
-		if (PatcherConfigHandler.INSTANCE.getAllPublic()) {
+		if (PatcherPreConfigHandler.INSTANCE.getAllPublic()) {
 			int access = fieldNode.access;
 			
 			fieldNode.access |= ACC_PUBLIC;
@@ -84,7 +84,7 @@ public class ReflectionLikeWorker extends KASMWorker {
 	public boolean workMethod(ClassNode classNode, MethodNode methodNode) {
 		if(ignoreClass) return false;
 		
-		if (PatcherConfigHandler.INSTANCE.getAllPublic()) {
+		if (PatcherPreConfigHandler.INSTANCE.getAllPublic()) {
 			int access = methodNode.access;
 			
 			methodNode.access |= ACC_PUBLIC;
