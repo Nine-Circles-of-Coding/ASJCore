@@ -59,10 +59,10 @@ public class MinecraftClassTransformer extends HookClassTransformer implements I
 	}
 	
 	@Override
-	public byte[] transform(String oldName, String newName, byte[] bytecode) {
-		bytecode = transform(newName, bytecode);
+	public byte[] transform(String name, String transformedName, byte[] bytecode) {
+		bytecode = transform(transformedName, bytecode);
 		for (IClassTransformer postTransformer : postTransformers) {
-			bytecode = postTransformer.transform(oldName, newName, bytecode);
+			bytecode = postTransformer.transform(name, transformedName, bytecode);
 		}
 		return bytecode;
 	}
