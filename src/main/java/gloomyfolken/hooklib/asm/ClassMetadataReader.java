@@ -24,7 +24,8 @@ public class ClassMetadataReader {
 			HookClassTransformer.logger.error("Error:", e);
 		}
 	}
-	
+
+	// Принимает className как с '/', так и с '.'
 	public byte[] getClassData(String className) throws IOException {
 		String classResourceName = '/' + className.replace('.', '/') + ".class";
 		return IOUtils.toByteArray(ClassMetadataReader.class.getResourceAsStream(classResourceName));
