@@ -61,34 +61,37 @@ public class DeobfuscationMetadataReader extends ClassMetadataReader {
 		}
 		return srgName.equals(mcpName);
 	}
-
+	
 	private static final Deque<String> currentTransformChain = new ArrayDeque<>();
-
+	
 	private static byte[] getTransformedBytes(String type) throws IOException {
 		String obfName = unmap(type);
 		byte[] bytes = Launch.classLoader.getClassBytes(obfName);
 		if (bytes == null) {
 			throw new RuntimeException("Bytes for " + obfName + " not found");
 		}
-
+		
 		// Вызов метода в котором мы находимся скорее всего происходит из трансформера, поэтому вызов runTransformers
 		// без предостережений может создать бесконечный цикл трансформирования одного и того же класса.
 		// Возвращаем оригинальные байты класса, если для него мы уже вызвали runTransformers, но снова оказались здесь
 		if (currentTransformChain.contains(type)) {
 			return bytes;
 		}
-
+		
 		currentTransformChain.addLast(type);
 		try {
+			HookClassTransformer.skipTransformation = true;
 			bytes = (byte[]) runTransformers.invoke(Launch.classLoader, obfName, type.replace('/', '.'), bytes);
 		} catch (Exception e) {
 			HookClassTransformer.logger.error("Error:", e);
+		} finally {
+			HookClassTransformer.skipTransformation = false;
 		}
 		currentTransformChain.removeLast();
-
+		
 		return bytes;
 	}
-
+	
 	// возвращает из необфусцированного названия типа обфусцированное
 	private static String unmap(String type) {
 		if (HookLibPlugin.getObfuscated()) {

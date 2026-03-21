@@ -31,8 +31,15 @@ public class HookClassTransformer {
 		containerParser.parseHooks(classData);
 	}
 	
+	/*
+	* Флаг для предотвращения рекурсивного трансформирования при поиске супер-метода
+	* - добавлено с исправлением имён трансформируемых классов на использования '/' как разделитель вместо '.' 
+	*/  
+	public static boolean skipTransformation = false;
+	
 	public byte[] transform(String className, byte[] bytecode) {
 		if (bytecode == null) return null;
+		if (skipTransformation) return bytecode;
 		
 		List<AsmHook> hooks = hooksMap.get(className);
 		

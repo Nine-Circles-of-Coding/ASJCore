@@ -1,18 +1,2 @@
-Innovations:
- /chunkmap command for chunk debugging
- Divided config into Core mod and FML mod instances
- Moved anvil cost limit to config
- Moved XP absorption cooldown to config
- Config to make zombie children burn in daylight
- 
- Access modifiers for methods created with hooklib
- Ability to insert asm text to insert before/after hook
- Updated kotlin to 2.3.20
- 
 Fixes:
- Ortho projection with OptiFine
- Witches from huts despawn
- Not drowning in vertical water
- MC-219981
- Zombie-based mobs summoning regular zombies for aid
- Allowed calls to com.mojang.realmsclient.gui.ChatFormatting when realms are disabled because lot of mods do this for no reason
+ Recursive class transformation by hooklib
