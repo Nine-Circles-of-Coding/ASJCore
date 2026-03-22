@@ -41,12 +41,6 @@ public class KASMLib implements IClassTransformer {
 			ClassReader classReader = new ClassReader(basicClass);
 			ClassNode classNode = new ClassNode();
 			classReader.accept(classNode, 0);
-			ClassWriter classWriter;
-			
-			if (withRecalc)
-				classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-			else
-				classWriter = new ClassWriter(classReader, 0);
 			
 			long cng = 0;
 			
@@ -220,6 +214,8 @@ public class KASMLib implements IClassTransformer {
 			if (cng > 0) {
 				if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
 					logger.debug(String.format("Trying to make %d changes in %s(%s)", cng, name, transformedName));
+
+				ClassWriter classWriter = new ClassWriter(classReader, withRecalc ? ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES : 0);
 				classNode.accept(classWriter);
 
 				byte[] bytes = classWriter.toByteArray();
