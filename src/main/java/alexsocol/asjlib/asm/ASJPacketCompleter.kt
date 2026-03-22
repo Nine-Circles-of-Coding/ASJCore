@@ -2,15 +2,16 @@ package alexsocol.asjlib.asm
 
 import alexsocol.patcher.asm.transformer.*
 import com.google.common.collect.Lists
-import net.minecraft.launchwrapper.Launch
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
 
 class ASJPacketCompleter: ASJAbstractClassTransformer() {
-	
+
+	private val ASJPacketClasses = hashSetOf("alexsocol/asjlib/network/ASJPacket")
+
 	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
-		if (!isASJPacket(basicClass)) return basicClass;
+		if (!isASJPacket(basicClass)) return basicClass
 
 		try {
 			val cr = ClassReader(basicClass)
@@ -51,19 +52,19 @@ class ASJPacketCompleter: ASJAbstractClassTransformer() {
 
 		return basicClass
 	}
-	
+
+	// Transformation order is guaranteed to be from the deepest superclass (java/lang/Object) to its subclasses
 	private fun isASJPacket(classBytes: ByteArray): Boolean {
 		try {
 			val classReader = ClassReader(classBytes)
 			val superClassName = classReader.superName
 
-			if (superClassName == "alexsocol/asjlib/network/ASJPacket") return true
-
-			if (superClassName != null) {
-				return isASJPacket(Launch.classLoader.getClassBytes(superClassName))
+			if (ASJPacketClasses.contains(superClassName)) {
+				ASJPacketClasses.add(classReader.className)
+				return true
 			}
 		} catch (ignore: Throwable) {}
-		
+
 		return false
 	}
 	
