@@ -2,7 +2,7 @@ package alexsocol.asjlib.asm
 
 import alexsocol.patcher.asm.transformer.*
 import com.google.common.collect.Lists
-import org.apache.commons.io.IOUtils
+import net.minecraft.launchwrapper.Launch
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
@@ -15,7 +15,7 @@ class ASJPacketCompleter: ASJAbstractClassTransformer() {
 			val cn = ClassNode()
 			cr.accept(cn, 0)
 			
-			if (isASJPacket(mutableListOf(transformedName), basicClass)) {
+			if (isASJPacket(basicClass)) {
 				logger.debug("Expanding ASJPacket $transformedName")
 				val fs = BooleanArray(5) // <init>, fromBytes, toBytes, fromCustomBytes, toCustomBytes
 				for (mt in cn.methods) {
@@ -54,7 +54,7 @@ class ASJPacketCompleter: ASJAbstractClassTransformer() {
 		return basicClass
 	}
 	
-	private fun isASJPacket(classNames: MutableList<String>, classBytes: ByteArray): Boolean {
+	private fun isASJPacket(classBytes: ByteArray): Boolean {
 		try {
 			val classReader = ClassReader(classBytes)
 			val superClassName = classReader.superName
@@ -62,18 +62,11 @@ class ASJPacketCompleter: ASJAbstractClassTransformer() {
 			if (superClassName == "alexsocol/asjlib/network/ASJPacket") return true
 
 			if (superClassName != null) {
-				classNames.add(superClassName)
-				return isASJPacket(classNames, getClassData(superClassName))
+				return isASJPacket(Launch.classLoader.getClassBytes(superClassName))
 			}
 		} catch (ignore: Throwable) {}
 		
 		return false
-	}
-	
-	private fun getClassData(className: String): ByteArray {
-		val classResourceName = "/${className.replace('.', '/')}.class"
-		val stream = ASJPacketCompleter::class.java.getResourceAsStream(classResourceName) ?: throw NullPointerException("Cannot read class `$className` (Path: `$classResourceName`)")
-		return IOUtils.toByteArray(stream)
 	}
 	
 	private fun makeConstructor(cl: ClassNode) {
