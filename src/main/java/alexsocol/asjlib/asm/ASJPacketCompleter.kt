@@ -57,12 +57,10 @@ class ASJPacketCompleter: ASJAbstractClassTransformer() {
 	private fun isASJPacket(classNames: MutableList<String>, classBytes: ByteArray): Boolean {
 		try {
 			val classReader = ClassReader(classBytes)
-			val classNode = ClassNode()
-			
-			classReader.accept(classNode, 0)
-			if (classNode.superName == "alexsocol/asjlib/network/ASJPacket") return true
-			
-			val superClassName = classNode.superName
+			val superClassName = classReader.superName
+
+			if (superClassName == "alexsocol/asjlib/network/ASJPacket") return true
+
 			if (superClassName != null) {
 				classNames.add(superClassName)
 				return isASJPacket(classNames, getClassData(superClassName))
