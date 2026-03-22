@@ -13,9 +13,8 @@ class ASJGoto: IClassTransformer {
 		if (basicClass == null || basicClass.isEmpty()) return basicClass
 		
 		val cr = ClassReader(basicClass)
-		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
 		val cn = ClassNode()
-		cr.accept(cn, ClassReader.EXPAND_FRAMES)
+		cr.accept(cn, 0)
 		
 		var applied = false
 		
@@ -55,7 +54,8 @@ class ASJGoto: IClassTransformer {
 		}
 		
 		if (!applied) return basicClass
-		
+
+		val cw = ClassWriter(ClassWriter.COMPUTE_MAXS or ClassWriter.COMPUTE_FRAMES)
 		cn.accept(cw)
 		return cw.toByteArray()
 	}

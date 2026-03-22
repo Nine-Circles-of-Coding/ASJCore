@@ -12,11 +12,19 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	
 	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
 		if (transformedName != $$"alexsocol.patcher.asm.ASJClassTransformer$ClassVisitorPotionMethodPublicizer") try {
-			val cr = ClassReader(this.basicClass)
-			val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
-			val cv = ClassVisitorPotionMethodPublicizer(cw, transformedName)
-			cr.accept(cv, ClassReader.EXPAND_FRAMES)
-			this.basicClass = cw.toByteArray()
+			// first quick pass without parsing code to determine whether we need to transform something
+			var cr = ClassReader(this.basicClass)
+			var cv = ClassVisitorPotionMethodPublicizer(null, transformedName)
+			cr.accept(cv, ClassReader.SKIP_CODE or ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+
+			if (cv.transformed) {
+				// second pass with real writing
+				val cw = ClassWriter(0)
+				cr = ClassReader(this.basicClass)
+				cv = ClassVisitorPotionMethodPublicizer(cw, transformedName)
+				cr.accept(cv, 0)
+				this.basicClass = cw.toByteArray()
+			}
 		} catch (e: Throwable) {
 			logger.error("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error):", e)
 		}
@@ -51,17 +59,21 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
-	private inner class ClassVisitorPotionMethodPublicizer(cv: ClassVisitor, val className: String): ClassVisitor(ASM5, cv) {
-		
-		override fun visitMethod(acc: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
+	private inner class ClassVisitorPotionMethodPublicizer(cv: ClassVisitor?, val className: String): ClassVisitor(ASM5, cv) {
+
+		var transformed = false
+
+		override fun visitMethod(acc: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor? {
 			var access = acc
 			if (name == (if (OBF) "b" else "onFinishedPotionEffect") && desc == (if (OBF) "(Lrw;)V" else "(Lnet/minecraft/potion/PotionEffect;)V")) {
 				logger.debug("Publicizing onFinishedPotionEffect: $name$desc for $className")
 				access = ACC_PUBLIC
+				transformed = true
 			}
 			if (name == (if (OBF) "a" else "onChangedPotionEffect") && desc == (if (OBF) "(Lrw;Z)V" else "(Lnet/minecraft/potion/PotionEffect;Z)V")) {
 				logger.debug("Publicizing onChangedPotionEffect: $name$desc for $className")
 				access = ACC_PUBLIC
+				transformed = true
 			}
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
