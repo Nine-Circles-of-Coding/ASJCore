@@ -2,80 +2,70 @@ package alexsocol.asjlib.asm
 
 import alexsocol.patcher.asm.transformer.*
 import com.google.common.collect.Lists
-import org.apache.commons.io.IOUtils
 import org.objectweb.asm.*
 import org.objectweb.asm.Opcodes.*
 import org.objectweb.asm.tree.*
 
 class ASJPacketCompleter: ASJAbstractClassTransformer() {
-	
+
+	private val ASJPacketClasses = hashSetOf("alexsocol/asjlib/network/ASJPacket")
+
 	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
+		if (!isASJPacket(basicClass)) return basicClass
+
 		try {
 			val cr = ClassReader(basicClass)
 			val cn = ClassNode()
 			cr.accept(cn, 0)
-			
-			if (isASJPacket(mutableListOf(transformedName), basicClass)) {
-				logger.debug("Expanding ASJPacket $transformedName")
-				val fs = BooleanArray(5) // <init>, fromBytes, toBytes, fromCustomBytes, toCustomBytes
-				for (mt in cn.methods) {
-					if (mt.name == "<init>" && mt.desc == "()V") {
-						fs[0] = true
-					} else
-					if (mt.name == "fromBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
-						fs[1] = true
-					} else
-					if (mt.name == "toBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
-						fs[2] = true
-					} else
-					if (mt.name == "fromCustomBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
-						fs[3] = true
-					} else
-					if (mt.name == "toCustomBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
-						fs[4] = true
-					}
+
+			logger.debug("Expanding ASJPacket $transformedName")
+			val fs = BooleanArray(5) // <init>, fromBytes, toBytes, fromCustomBytes, toCustomBytes
+			for (mt in cn.methods) {
+				if (mt.name == "<init>" && mt.desc == "()V") {
+					fs[0] = true
+				} else
+				if (mt.name == "fromBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
+					fs[1] = true
+				} else
+				if (mt.name == "toBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
+					fs[2] = true
+				} else
+				if (mt.name == "fromCustomBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
+					fs[3] = true
+				} else
+				if (mt.name == "toCustomBytes" && mt.desc == "(Lio/netty/buffer/ByteBuf;)V") {
+					fs[4] = true
 				}
-				
-				if (!fs[0]) makeConstructor(cn)
-				if (!fs[1]) makeFromBytes(cn, fs[3])
-				if (!fs[2]) makeToBytes(cn, fs[4])
-				
-				val cw = ClassWriter(ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS)
-				cn.accept(cw)
-				
-				return cw.toByteArray()
 			}
+
+			if (!fs[0]) makeConstructor(cn)
+			if (!fs[1]) makeFromBytes(cn, fs[3])
+			if (!fs[2]) makeToBytes(cn, fs[4])
+
+			val cw = ClassWriter(ClassWriter.COMPUTE_FRAMES or ClassWriter.COMPUTE_MAXS)
+			cn.accept(cw)
+
+			return cw.toByteArray()
 		} catch (e: Throwable) {
 			logger.error("Something went wrong while transforming class $transformedName. Ignore if everything is OK (this is NOT ASJCore error):", e)
-			
-			return basicClass
 		}
-		
+
 		return basicClass
 	}
-	
-	private fun isASJPacket(classNames: MutableList<String>, classBytes: ByteArray): Boolean {
+
+	// Transformation order is guaranteed to be from the deepest superclass (java/lang/Object) to its subclasses
+	private fun isASJPacket(classBytes: ByteArray): Boolean {
 		try {
 			val classReader = ClassReader(classBytes)
-			val classNode = ClassNode()
-			
-			classReader.accept(classNode, 0)
-			if (classNode.superName == "alexsocol/asjlib/network/ASJPacket") return true
-			
-			val superClassName = classNode.superName
-			if (superClassName != null) {
-				classNames.add(superClassName)
-				return isASJPacket(classNames, getClassData(superClassName))
+			val superClassName = classReader.superName
+
+			if (ASJPacketClasses.contains(superClassName)) {
+				ASJPacketClasses.add(classReader.className)
+				return true
 			}
 		} catch (ignore: Throwable) {}
-		
+
 		return false
-	}
-	
-	private fun getClassData(className: String): ByteArray {
-		val classResourceName = "/${className.replace('.', '/')}.class"
-		val stream = ASJPacketCompleter::class.java.getResourceAsStream(classResourceName) ?: throw NullPointerException("Cannot read class `$className` (Path: `$classResourceName`)")
-		return IOUtils.toByteArray(stream)
 	}
 	
 	private fun makeConstructor(cl: ClassNode) {

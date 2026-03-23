@@ -31,11 +31,19 @@ public class SuperWrapperTransformer implements IClassTransformer {
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] basicClass) {
 		if (basicClass == null) return null;
-		
+
+		boolean needToTransform = false;
+		for (SuperWrapperTransformerContainer container : registeredContainers) {
+			if (name.equals(container.containerClassName) || name.equals(container.targetClass.getInternalName())) {
+				needToTransform = true;
+				break;
+			}
+		}
+		if (!needToTransform) return basicClass;
+
 		ClassReader classReader = new ClassReader(basicClass);
 		ClassNode classNode = new ClassNode();
 		classReader.accept(classNode, 0);
-		ClassWriter classWriter = new ClassWriter(classReader, 0);
 		long cng = 0;
 		
 		for (SuperWrapperTransformerContainer container : registeredContainers) {
@@ -117,6 +125,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 			logger.debug("Trying to make " + cng + " changes in " + name + "(" + transformedName + ")");
 			
 			try {
+				ClassWriter classWriter = new ClassWriter(classReader, 0);
 				classNode.accept(classWriter);
 				byte[] bytes = classWriter.toByteArray();
 				
