@@ -66,12 +66,12 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		override fun visitMethod(acc: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor? {
 			var access = acc
 			if (name == (if (OBF) "b" else "onFinishedPotionEffect") && desc == (if (OBF) "(Lrw;)V" else "(Lnet/minecraft/potion/PotionEffect;)V")) {
-				logger.debug("Publicizing onFinishedPotionEffect: $name$desc for $className")
+				if (cv != null) logger.debug("Publicizing onFinishedPotionEffect: $name$desc for $className")
 				access = ACC_PUBLIC
 				transformed = true
 			}
 			if (name == (if (OBF) "a" else "onChangedPotionEffect") && desc == (if (OBF) "(Lrw;Z)V" else "(Lnet/minecraft/potion/PotionEffect;Z)V")) {
-				logger.debug("Publicizing onChangedPotionEffect: $name$desc for $className")
+				if (cv != null) logger.debug("Publicizing onChangedPotionEffect: $name$desc for $className")
 				access = ACC_PUBLIC
 				transformed = true
 			}
@@ -102,12 +102,15 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
+	// allow single class to handle multiple packets
 	private inner class `DefaultChannelPipeline$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
 			val mv = super.visitMethod(access, name, desc, signature, exceptions)
 			
 			if (name == "checkDuplicateName") {
+				logger.debug("Visiting DefaultChannelPipeline#checkDuplicateName: $name$desc")
+				
 				mv.visitCode()
 				val l0 = Label()
 				mv.visitLabel(l0)
@@ -223,6 +226,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
+	// check block and not material
 	private inner class `ItemGlassBottle$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
@@ -251,6 +255,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 		}
 	}
 	
+	// JSON -> NBTTagByteArray support
 	private inner class `JsonToNBT$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {

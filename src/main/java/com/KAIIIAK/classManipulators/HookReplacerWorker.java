@@ -107,6 +107,10 @@ public class HookReplacerWorker extends KASMWorker {
 	
 	//TODO check start
 	public void workMethodChanges(MethodNode methodNode, ChangesHolder changes) {
+		if (logger.isTraceEnabled())
+			for (int i = 0; i < methodNode.instructions.size(); i++)
+				logger.trace(String.format("methodNode.instructions.get(%d) = %s", i, getStringRepresentation(methodNode.instructions.get(i))));
+		
 		for (Map.Entry<List<AbstractInsnNode>, List<AbstractInsnNode>> entry : Opt.it(((methodNode.access & Opcodes.ACC_STATIC) != 0) && !changes.correctStaticIndexes ? changes.instToReplaceForStaticSrc.entrySet() : changes.instToReplace.entrySet())) {
 			List<AbstractInsnNode> fromList = entry.getKey();
 			List<AbstractInsnNode> toList = entry.getValue();

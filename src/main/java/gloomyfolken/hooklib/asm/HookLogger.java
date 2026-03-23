@@ -4,9 +4,18 @@ import alexsocol.patcher.PatcherPreConfigHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("unused")
 public interface HookLogger {
 	
+	default boolean isTraceEnabled() {
+		return PatcherPreConfigHandler.INSTANCE.getLogTrace();
+	}
+	
 	void trace(String message);
+	
+	default boolean isDebugEnabled() {
+		return PatcherPreConfigHandler.INSTANCE.getLogDebug();
+	}
 	
 	void debug(String message);
 	
@@ -28,13 +37,13 @@ public interface HookLogger {
 		
 		@Override
 		public void trace(String message) {
-			if (PatcherPreConfigHandler.INSTANCE.getLogTrace())
+			if (isTraceEnabled())
 				System.out.println("[TRACE] " + message);
 		}
 		
 		@Override
 		public void debug(String message) {
-			if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
+			if (isDebugEnabled())
 				System.out.println("[DEBUG] " + message);
 		}
 		
@@ -65,13 +74,13 @@ public interface HookLogger {
 		
 		@Override
 		public void trace(String message) {
-			if (PatcherPreConfigHandler.INSTANCE.getLogTrace())
+			if (isTraceEnabled())
 				logger.finest(message);
 		}
 		
 		@Override
 		public void debug(String message) {
-			if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
+			if (isDebugEnabled())
 				logger.fine(message);
 		}
 		
@@ -101,14 +110,14 @@ public interface HookLogger {
 		
 		@Override
 		public void trace(String message) {
-			if (PatcherPreConfigHandler.INSTANCE.getLogTrace())
+			if (isTraceEnabled())
 				// piece of inconfigurable shit
 				logger.info(message);
 		}
 		
 		@Override
 		public void debug(String message) {
-			if (PatcherPreConfigHandler.INSTANCE.getLogDebug())
+			if (isDebugEnabled())
 				// piece of inconfigurable shit
 				logger.info(message);
 		}
