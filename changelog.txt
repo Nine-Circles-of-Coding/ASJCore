@@ -1,2 +1,2 @@
-Fixes:
- Recursive class transformation by hooklib
+Innovations:
+  Compatibility with Angelica and LWJGL3ify

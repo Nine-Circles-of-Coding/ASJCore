@@ -1,6 +1,6 @@
 package alexsocol.patcher.asm.hook;
 
-import alexsocol.patcher.PatcherConfigHandler;
+import alexsocol.patcher.compat.AngelicaCompat;
 import alexsocol.patcher.handler.PlayerReachDistanceHandler;
 import com.KAIIIAK.classManipulators.HookReplacer;
 import cpw.mods.fml.relauncher.Side;
@@ -26,7 +26,6 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.structure.ComponentScatteredFeaturePieces;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.Project;
 
 import java.io.File;
@@ -111,7 +110,7 @@ public class ASJHookReplacerHandler {
 		startFROM();
 		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
 		POPLine();startTO();
-		POPLine();selectProjection(er, f, er.farPlaneDistance * 2F);
+		POPLine();AngelicaCompat.selectProjection(er, f, er.farPlaneDistance * 2F);
 		POPLine();stop();
 	}
 	
@@ -120,17 +119,8 @@ public class ASJHookReplacerHandler {
 		startFROM();
 		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
 		POPLine();startTO();
-		POPLine();selectProjection(er, f, FLOAD("4"));
+		POPLine();AngelicaCompat.selectProjection(er, f, FLOAD("4"));
 		POPLine();stop();
-	}
-	
-	public static void selectProjection(EntityRenderer er, float f, float clipDistance) {
-		if (PatcherConfigHandler.INSTANCE.getOrthoProjection()) {
-			double mod = er.getFOVModifier(f, true) * 2;
-			GL11.glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05F, clipDistance);
-		} else {
-			Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, clipDistance);
-		}
 	}
 	
 	// bind smooth camera key

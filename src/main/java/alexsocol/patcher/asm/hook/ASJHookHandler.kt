@@ -4,6 +4,7 @@ import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.compat.AngelicaCompat
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
@@ -39,7 +40,6 @@ import net.minecraft.client.resources.I18n
 import net.minecraft.client.settings.*
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
-import net.minecraft.crash.CrashReport
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.*
 import net.minecraft.entity.DataWatcher.WatchableObject
@@ -76,7 +76,7 @@ import net.minecraftforge.common.*
 import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL11.*
+import org.lwjglx.opengl.GL11 as XGL11
 import org.objectweb.asm.Opcodes
 import ru.vamig.worldengine.*
 import vazkii.botania.client.core.handler.BotaniaPlayerController
@@ -740,7 +740,7 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun deleteDisplayLists(gla: GLAllocation?, id: Int) {
-		if (GLAllocation.mapDisplayLists.contains(id)) glDeleteLists(id, GLAllocation.mapDisplayLists.remove(id) as Int)
+		if (GLAllocation.mapDisplayLists.contains(id)) AngelicaCompat.deleteDisplayLists(id)
 	}
 	
 	// fix for file: URI scheme crash 
@@ -802,7 +802,7 @@ object ASJHookHandler {
 	@Hook(returnCondition = ON_TRUE)
 	fun renderVignette(gui: GuiIngame, vignetteBrightness: Float, width: Int, height: Int): Boolean {
 		val disable = !PatcherConfigHandler.vignette
-		if (disable) OpenGlHelper.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, 1, 0)
+		if (disable) AngelicaCompat.renderVignette()
 		return disable
 	}
 	
@@ -1171,8 +1171,7 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(targetMethod = "func_147044_g")
 	fun drawActivePotionEffectsPre(gui: InventoryEffectRenderer) {
-		glEnable(GL_BLEND)
-		OpenGlHelper.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+		AngelicaCompat.drawActivePotionEffectsPre()
 	}
 	
 	
@@ -1742,14 +1741,10 @@ object ASJHookHandler {
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
 	@Hook(isMandatory = false, injectOnExit = true)
-	fun glFogi(static: GL11?, pname: Int, param: Int) {
-		if (pname != GL_FOG_MODE) return
-		
-		if (param == GL_LINEAR) {
-			glFogf(GL_FOG_DENSITY, 0f)
-		} else if (param == GL_EXP || param == GL_EXP2) {
-			glFogf(GL_FOG_START, 0f)
-			glFogf(GL_FOG_END, 0f)
-		}
-	}
+	fun glFogi(static: GL11?, pname: Int, param: Int) = AngelicaCompat.glFogiHook(pname, param)
+	
+	@SideOnly(Side.CLIENT)
+	@JvmStatic
+	@Hook(isMandatory = false, injectOnExit = true, targetMethod = "glFogi")
+	fun xglFogi(static: XGL11?, pname: Int, param: Int) = AngelicaCompat.glFogiHook(pname, param)
 }

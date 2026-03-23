@@ -19,9 +19,9 @@ import net.minecraft.launchwrapper.*
 // -username=AlexSocol
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 @IFMLLoadingPlugin.TransformerExclusions(
-	"alexsocol.patcher.asm.transformer",
 	"alexsocol.asjlib.asm",
 	"alexsocol.patcher.asm.transformer",
+	"com.KAIIIAK.asm",
 	"com.KAIIIAK.classManipulators",
 	"com.KAIIIAK.ignorer",
 	"com.KAIIIAK.KASMLib",
@@ -40,8 +40,17 @@ class ASJHookLoader: HookLoader() {
 		init {
 			KASMLib.has2DumpChangedClasses = System.getProperty("KASMlib.dumpChangedClasses").toBoolean()
 			
-			if (PatcherPreConfigHandler.allowLWJGLTransform)
-				ASJReflectionHelper.getValue<LaunchClassLoader, MutableSet<String>>(Launch.classLoader, "classLoaderExceptions")?.remove("org.lwjgl.")
+			if (PatcherPreConfigHandler.allowLWJGLTransform) {
+				fun allowLWJGLTransform(set: String) {
+					ASJReflectionHelper.getValue<LaunchClassLoader, MutableSet<String>>(Launch.classLoader, set)?.apply {
+						remove("org.lwjgl.")
+						remove("org.lwjglx.")
+					}
+				}
+				
+				allowLWJGLTransform("classLoaderExceptions")
+				allowLWJGLTransform("transformerExceptions")
+			}
 		}
 	}
 	
