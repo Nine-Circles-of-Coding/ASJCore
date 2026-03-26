@@ -11,10 +11,11 @@ class ASJPacketCompleter: ASJAbstractClassTransformer() {
 	private val ASJPacketClasses = hashSetOf("alexsocol/asjlib/network/ASJPacket")
 	
 	override fun transform(transformedName: String, basicClass: ByteArray): ByteArray {
-		if (!isASJPacket(basicClass)) return basicClass
+		val cr = ClassReader(basicClass)
+		
+		if (!isASJPacket(cr.className, cr.superName)) return basicClass
 		
 		try {
-			val cr = ClassReader(basicClass)
 			val cn = ClassNode()
 			cr.accept(cn, 0)
 			
@@ -46,16 +47,11 @@ class ASJPacketCompleter: ASJAbstractClassTransformer() {
 	}
 	
 	// Transformation order is guaranteed to be from the deepest superclass (java/lang/Object) to its subclasses
-	private fun isASJPacket(classBytes: ByteArray): Boolean {
-		try {
-			val classReader = ClassReader(classBytes)
-			val superClassName = classReader.superName
-			
-			if (ASJPacketClasses.contains(superClassName)) {
-				ASJPacketClasses.add(classReader.className)
-				return true
-			}
-		} catch (_: Throwable) {}
+	private fun isASJPacket(className: String, superName: String): Boolean {
+		if (ASJPacketClasses.contains(superName)) {
+			ASJPacketClasses.add(className)
+			return true
+		}
 		
 		return false
 	}

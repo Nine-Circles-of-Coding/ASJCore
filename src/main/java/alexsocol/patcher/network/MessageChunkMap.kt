@@ -37,8 +37,6 @@ class MessageChunkMap(var loaded: Set<ChunkCoordIntPair>, var forced: Map<ChunkC
 			write(buf, worldSpawn!!.posY)
 			write(buf, worldSpawn!!.posZ)
 		}
-		
-		write(buf, forceWorldSpawn)
 	}
 	
 	override fun fromCustomBytes(buf: ByteBuf) {
@@ -47,8 +45,6 @@ class MessageChunkMap(var loaded: Set<ChunkCoordIntPair>, var forced: Map<ChunkC
 		
 		if (readZ(buf)) spawnpoint = ChunkCoordinates(readI(buf), readI(buf), readI(buf))
 		if (readZ(buf)) worldSpawn = ChunkCoordinates(readI(buf), readI(buf), readI(buf))
-		
-		forceWorldSpawn = readZ(buf)
 	}
 	
 	companion object: IMessageHandler<MessageChunkMap, IMessage?> {

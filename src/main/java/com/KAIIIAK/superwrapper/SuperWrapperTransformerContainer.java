@@ -7,7 +7,8 @@ import java.util.List;
 public class SuperWrapperTransformerContainer {
 	
 	public String containerClassName;
-	public Type targetClass;
+	public String targetClass;
+	public String targetClassInternal;
 	public String methodName;
 	public Type[] targetMethodArgs;
 	public Type targetMethodRet;
@@ -21,9 +22,10 @@ public class SuperWrapperTransformerContainer {
 	public String desc = "";
 	public String targetMethod = "";
 	
-	public SuperWrapperTransformerContainer(String containerClassName, Type targetClass, String methodName, Type[] targetMethodArgs, Type targetMethodRet) {
+	public SuperWrapperTransformerContainer(String containerClassName, String targetInternal, String methodName, Type[] targetMethodArgs, Type targetMethodRet) {
 		this.containerClassName = containerClassName;
-		this.targetClass = targetClass;
+		this.targetClass = targetInternal.replace('/', '.');
+		this.targetClassInternal = targetInternal;
 		this.methodName = methodName;
 		this.targetMethodArgs = targetMethodArgs;
 		this.targetMethodRet = targetMethodRet;

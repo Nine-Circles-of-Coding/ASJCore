@@ -8,7 +8,6 @@ object InterfaceAppenderWorker: KASMWorker() {
 	val additionalInterfaces = HashMap<String, HashSet<String>>()
 	
 	@JvmStatic
-	@Suppress("unused")
 	fun registerAdditionalInterface(target: String, iface: String) {
 		additionalInterfaces.computeIfAbsent(target.replace('.', '/')) { HashSet() }.add(iface.replace('.', '/'))
 	}

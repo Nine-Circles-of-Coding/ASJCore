@@ -31,16 +31,17 @@ public class SuperWrapperTransformer implements IClassTransformer {
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] basicClass) {
 		if (basicClass == null) return null;
-
+		
 		boolean needToTransform = false;
 		for (SuperWrapperTransformerContainer container : registeredContainers) {
-			if (name.equals(container.containerClassName) || name.equals(container.targetClass.getInternalName())) {
+			if (transformedName.equals(container.containerClassName) || transformedName.equals(container.targetClassInternal.replace('/', '.'))) {
 				needToTransform = true;
 				break;
 			}
 		}
+		
 		if (!needToTransform) return basicClass;
-
+		
 		ClassReader classReader = new ClassReader(basicClass);
 		ClassNode classNode = new ClassNode();
 		classReader.accept(classNode, 0);
@@ -48,8 +49,9 @@ public class SuperWrapperTransformer implements IClassTransformer {
 		
 		for (SuperWrapperTransformerContainer container : registeredContainers) {
 			try {
-				if (container.containerClassName.equals(classNode.name)) {
-					if (classNode.methods == null) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", classNode.name));
+				if (container.containerClassName.equals(transformedName)) {
+					if (classNode.methods == null)
+						throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", transformedName));
 					
 					logger.debug("Patching SuperWrapper container " + transformedName);
 					
@@ -67,7 +69,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 						
 						newInstructions.add(new MethodInsnNode(
 								container.isInterface ? INVOKEINTERFACE : INVOKEVIRTUAL,
-								container.targetClass.getInternalName(),
+								container.targetClassInternal,
 								container.getInsertMethodName(),
 								container.getInsertMethodDesc(),
 								container.isInterface
@@ -83,8 +85,8 @@ public class SuperWrapperTransformer implements IClassTransformer {
 						
 						cng++;
 					}
-				} else if (classNode.name.equals(container.targetClass.getInternalName())) {
-					logger.debug("Injecting synthetic super bridge " + container.getInsertMethodName() + " to " + classNode.name);
+				} else if (transformedName.equals(container.targetClassInternal.replace('/', '.'))) {
+					logger.debug("Injecting synthetic super bridge " + container.getInsertMethodName() + " to " + transformedName);
 					
 					if (classNode.methods == null)
 						classNode.methods = new ArrayList<>();
@@ -92,7 +94,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 					MethodNode newMethod = new MethodNode(ACC_PUBLIC, container.getInsertMethodName(), container.getInsertMethodDesc(), container.signatureForInsetMethod, container.exceptionsForInsetMethod);
 					newMethod.instructions = new InsnList();
 					InsnList instructions = newMethod.instructions;
-					instructions.add(new VarInsnNode(container.targetClass.getOpcode(ILOAD), 0));
+					instructions.add(new VarInsnNode(ALOAD, 0));
 					for (int i = 0; i < container.targetMethodArgs.length; i++) {
 						instructions.add(new VarInsnNode(container.targetMethodArgs[i].getOpcode(ILOAD), i + 1));
 					}
@@ -101,7 +103,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 					
 					instructions.add(new MethodInsnNode(
 							container.callThis ? INVOKESPECIAL : INVOKEVIRTUAL,
-							container.targetClass.getInternalName(),
+							container.targetClassInternal,
 							targetMethod,
 							container.getInsertMethodDesc(),
 							false
@@ -195,7 +197,8 @@ public class SuperWrapperTransformer implements IClassTransformer {
 			ClassNode classNode = new ClassNode();
 			classReader.accept(classNode, 0);
 			
-			if (classNode.methods == null) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", classNode.name));
+			String className = classNode.name.replace('/', '.');
+			if (classNode.methods == null) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", className));
 			
 			boolean found = false;
 			
@@ -225,7 +228,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				for (AnnotationNode annotationNode : annotations) {
 					if (!SUPERWRAPPER_DESC.equals(annotationNode.desc)) continue;
 					
-					if ((methodNode.access & ACC_STATIC) != ACC_STATIC) throw new IllegalArgumentException(String.format("SuperWrapper method %s$%s must be static!", classNode.name, methodNode.name));
+					if ((methodNode.access & ACC_STATIC) != ACC_STATIC) throw new IllegalArgumentException(String.format("SuperWrapper method %s$%s must be static!", className, methodNode.name));
 					
 					if (annotationNode.values != null) {
 						Map<String, Object> annotationArgs = SomeUtil.convertListToMap(annotationNode.values);
@@ -263,17 +266,17 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				Type methodType = Type.getMethodType(methodNode.desc);
 				Type[] argTypes = methodType.getArgumentTypes();
 				
-				if (argTypes.length == 0) throw new IllegalArgumentException(String.format("SuperWrapper method %s$%s must have target class as first argument!", classNode.name, methodNode.name));
+				if (argTypes.length == 0) throw new IllegalArgumentException(String.format("SuperWrapper method %s$%s must have target class as first argument!", className, methodNode.name));
 				
 				Type[] newDescTypes = new Type[argTypes.length - 1];
 				System.arraycopy(argTypes, 1, newDescTypes, 0, newDescTypes.length);
 				Type newDescReturnType = methodType.getReturnType();
 				
-				SuperWrapperTransformerContainer container = new SuperWrapperTransformerContainer(classNode.name, argTypes[0], methodNode.name, newDescTypes, newDescReturnType);
+				SuperWrapperTransformerContainer container = new SuperWrapperTransformerContainer(className, argTypes[0].getInternalName(), methodNode.name, newDescTypes, newDescReturnType);
 				container.setPrefixForInsertMethod(methodPrefixFromAnnotation == null ? "Super__" : methodPrefixFromAnnotation);
 				container.setPostfixForInsertMethod(methodPostfixFromAnnotation == null ? "__Wrapper" : methodPostfixFromAnnotation);
 				
-				container.setSignatureForInsertMethod(signatureFromAnnotation != null ? signatureFromAnnotation : methodNode.signature == null ? null : methodNode.signature.replaceFirst("\\(L" + container.targetClass.getInternalName() + ";", "("));
+				container.setSignatureForInsertMethod(signatureFromAnnotation != null ? signatureFromAnnotation : methodNode.signature == null ? null : methodNode.signature.replaceFirst("\\(L" + container.targetClassInternal + ";", "("));
 				container.setExceptionsForInsetMethod(exceptionsFromAnnotation != null ? exceptionsFromAnnotation : methodNode.exceptions);
 				container.setCallThis(callThis);
 				container.setIsInterface(isInterface);
@@ -285,7 +288,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				logger.trace("Registered SuperWrapper method " + methodNode.name + methodNode.desc);
 			}
 			
-			if (!found) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", classNode.name));
+			if (!found) throw new IllegalArgumentException(String.format("SuperWrapper container %s must have at least one SuperWrapper method", className));
 		} catch (Exception e) {
 			logger.error("Cannot parse SuperWrappers container's bytes", e);
 			throw e;

@@ -5,6 +5,7 @@ import alexsocol.asjlib.math.BlockPos
 import alexsocol.asjlib.render.RenderGlowingLayerBlock.Companion.renderers
 import com.google.common.collect.HashMultimap
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler
+import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
 import net.minecraft.block.Block
 import net.minecraft.client.renderer.*
@@ -12,7 +13,7 @@ import net.minecraft.world.IBlockAccess
 import net.minecraftforge.client.event.RenderWorldEvent
 import net.minecraftforge.common.util.ForgeDirection
 
-class RenderShaderBlock(@get:JvmName("getRenderIdProp") /* stupid kotlin -_- */ val renderId: Int, val shaderId: Int, val getShaderCallback: ((block: Boolean) -> ((Int) -> Unit)?)? = null): ISimpleBlockRenderingHandler {
+open class RenderShaderBlock(@get:JvmName("getRenderIdProp") /* stupid kotlin -_- */ val renderId: Int, val shaderId: Int, val getShaderCallback: ((block: Boolean) -> ((Int) -> Unit)?)? = null): ISimpleBlockRenderingHandler {
 	
 	val cache: HashMultimap<Int, BlockPos> = HashMultimap.create()
 	
@@ -21,7 +22,13 @@ class RenderShaderBlock(@get:JvmName("getRenderIdProp") /* stupid kotlin -_- */ 
 	}
 	
 	override fun renderWorldBlock(world: IBlockAccess, x: Int, y: Int, z: Int, block: Block, modelId: Int, renderer: RenderBlocks): Boolean {
-		cache.put(block.renderBlockPass, BlockPos(block, x, y, z))
+		if (angelicaLoaded) { // no shader in world :(
+			block.setBlockBoundsBasedOnState(world, x, y, z)
+			renderer.setRenderBoundsFromBlock(block)
+			renderer.renderStandardBlock(block, x, y, z)
+		} else
+			cache.put(block.renderBlockPass, BlockPos(block, x, y, z))
+		
 		return true
 	}
 	
@@ -73,6 +80,7 @@ class RenderShaderBlock(@get:JvmName("getRenderIdProp") /* stupid kotlin -_- */ 
 		
 		val dirs = ForgeDirection.VALID_DIRECTIONS.withIndex()
 		passCache.forEach { (block, x, y, z) ->
+			block.setBlockBoundsBasedOnState(e.renderBlocks.blockAccess, x, y, z)
 			e.renderBlocks.setRenderBoundsFromBlock(block)
 			
 			for ((side, d) in dirs) {
@@ -96,5 +104,9 @@ class RenderShaderBlock(@get:JvmName("getRenderIdProp") /* stupid kotlin -_- */ 
 		
 		passCache.clear()
 		cache.removeAll(e.pass)
+	}
+	
+	companion object {
+		val angelicaLoaded by lazy { Loader.isModLoaded("angelica") }
 	}
 }
