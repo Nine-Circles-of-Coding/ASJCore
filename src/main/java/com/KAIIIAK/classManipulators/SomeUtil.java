@@ -1,6 +1,7 @@
 package com.KAIIIAK.classManipulators;
 
 import com.KAIIIAK.KASMLib.KASMLib;
+import com.KAIIIAK.nullsafety.Opt;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -149,37 +150,37 @@ public class SomeUtil {
 			FieldInsnNode secondFieldInsn = (FieldInsnNode) second;
 			
 			return firstFieldInsn.getOpcode() == secondFieldInsn.getOpcode() &&
-						   Objects.equals(firstFieldInsn.owner, secondFieldInsn.owner) &&
-						   Objects.equals(firstFieldInsn.name, secondFieldInsn.name) &&
-						   Objects.equals(firstFieldInsn.desc, secondFieldInsn.desc);
+					Objects.equals(firstFieldInsn.owner, secondFieldInsn.owner) &&
+					Objects.equals(firstFieldInsn.name, secondFieldInsn.name) &&
+					Objects.equals(firstFieldInsn.desc, secondFieldInsn.desc);
 		} else if (first instanceof FrameNode) {
 			FrameNode firstFrameNode = (FrameNode) first;
 			FrameNode secondFrameNode = (FrameNode) second;
 			
 			// Compare the frame type and local/stack values
 			return firstFrameNode.getOpcode() == secondFrameNode.getOpcode() &&
-				   (firstFrameNode.type != secondFrameNode.type || // Ochen unsafe huinya (c) KAIIIAK
-				   (Objects.equals(firstFrameNode.local, secondFrameNode.local) && Objects.equals(firstFrameNode.stack, secondFrameNode.stack)));
+					(firstFrameNode.type != secondFrameNode.type || // Ochen unsafe huinya (c) KAIIIAK
+							(Objects.equals(firstFrameNode.local, secondFrameNode.local) && Objects.equals(firstFrameNode.stack, secondFrameNode.stack)));
 		} else if (first instanceof IincInsnNode) {
 			IincInsnNode firstIincInsn = (IincInsnNode) first;
 			IincInsnNode secondIincInsn = (IincInsnNode) second;
 			
 			return firstIincInsn.var == secondIincInsn.var &&
-						   firstIincInsn.incr == secondIincInsn.incr;
+					firstIincInsn.incr == secondIincInsn.incr;
 		} else if (first instanceof IntInsnNode) {
 			IntInsnNode firstIntInsn = (IntInsnNode) first;
 			IntInsnNode secondIntInsn = (IntInsnNode) second;
 			
 			return firstIntInsn.getOpcode() == secondIntInsn.getOpcode() &&
-						   firstIntInsn.operand == secondIntInsn.operand;
+					firstIntInsn.operand == secondIntInsn.operand;
 		} else if (first instanceof InvokeDynamicInsnNode) {
 			InvokeDynamicInsnNode firstInvokeDynamicInsn = (InvokeDynamicInsnNode) first;
 			InvokeDynamicInsnNode secondInvokeDynamicInsn = (InvokeDynamicInsnNode) second;
 			
 			return Objects.equals(firstInvokeDynamicInsn.name, secondInvokeDynamicInsn.name) &&
-						   Objects.equals(firstInvokeDynamicInsn.desc, secondInvokeDynamicInsn.desc) &&
-						   Objects.equals(firstInvokeDynamicInsn.bsm, secondInvokeDynamicInsn.bsm) &&
-						   Arrays.equals(firstInvokeDynamicInsn.bsmArgs, secondInvokeDynamicInsn.bsmArgs);
+					Objects.equals(firstInvokeDynamicInsn.desc, secondInvokeDynamicInsn.desc) &&
+					Objects.equals(firstInvokeDynamicInsn.bsm, secondInvokeDynamicInsn.bsm) &&
+					Arrays.equals(firstInvokeDynamicInsn.bsmArgs, secondInvokeDynamicInsn.bsmArgs);
 		} else if (first instanceof LdcInsnNode) {
 			LdcInsnNode firstLdcInsn = (LdcInsnNode) first;
 			LdcInsnNode secondLdcInsn = (LdcInsnNode) second;
@@ -193,34 +194,34 @@ public class SomeUtil {
 			LookupSwitchInsnNode secondLookupSwitchInsn = (LookupSwitchInsnNode) second;
 			
 			return Objects.equals(firstLookupSwitchInsn.dflt, secondLookupSwitchInsn.dflt) &&
-						   Objects.equals(firstLookupSwitchInsn.keys, secondLookupSwitchInsn.keys) &&
-						   Objects.equals(firstLookupSwitchInsn.labels, secondLookupSwitchInsn.labels);
+					Objects.equals(firstLookupSwitchInsn.keys, secondLookupSwitchInsn.keys) &&
+					Objects.equals(firstLookupSwitchInsn.labels, secondLookupSwitchInsn.labels);
 		} else if (first instanceof MultiANewArrayInsnNode) {
 			MultiANewArrayInsnNode firstMultiANewArrayInsn = (MultiANewArrayInsnNode) first;
 			MultiANewArrayInsnNode secondMultiANewArrayInsn = (MultiANewArrayInsnNode) second;
 			
 			return Objects.equals(firstMultiANewArrayInsn.desc, secondMultiANewArrayInsn.desc) &&
-						   firstMultiANewArrayInsn.dims == secondMultiANewArrayInsn.dims;
+					firstMultiANewArrayInsn.dims == secondMultiANewArrayInsn.dims;
 		} else if (first instanceof TableSwitchInsnNode) {
 			TableSwitchInsnNode firstTableSwitchInsn = (TableSwitchInsnNode) first;
 			TableSwitchInsnNode secondTableSwitchInsn = (TableSwitchInsnNode) second;
 			
 			return Objects.equals(firstTableSwitchInsn.dflt, secondTableSwitchInsn.dflt) &&
-						   firstTableSwitchInsn.min == secondTableSwitchInsn.min &&
-						   firstTableSwitchInsn.max == secondTableSwitchInsn.max &&
-						   Objects.equals(firstTableSwitchInsn.labels, secondTableSwitchInsn.labels);
+					firstTableSwitchInsn.min == secondTableSwitchInsn.min &&
+					firstTableSwitchInsn.max == secondTableSwitchInsn.max &&
+					Objects.equals(firstTableSwitchInsn.labels, secondTableSwitchInsn.labels);
 		} else if (first instanceof TypeInsnNode) {
 			TypeInsnNode firstTypeInsn = (TypeInsnNode) first;
 			TypeInsnNode secondTypeInsn = (TypeInsnNode) second;
 			
 			return firstTypeInsn.getOpcode() == secondTypeInsn.getOpcode() &&
-						   Objects.equals(firstTypeInsn.desc, secondTypeInsn.desc);
+					Objects.equals(firstTypeInsn.desc, secondTypeInsn.desc);
 		} else if (first instanceof VarInsnNode) {
 			VarInsnNode firstVarInsn = (VarInsnNode) first;
 			VarInsnNode secondVarInsn = (VarInsnNode) second;
 			
 			return firstVarInsn.getOpcode() == secondVarInsn.getOpcode() &&
-						   firstVarInsn.var == secondVarInsn.var;
+					firstVarInsn.var == secondVarInsn.var;
 		} else if (first instanceof MethodInsnNode) {
 			MethodInsnNode firstMethodInsn = (MethodInsnNode) first;
 			MethodInsnNode secondMethodInsn = (MethodInsnNode) second;
@@ -250,4 +251,34 @@ public class SomeUtil {
 	public static Map<String, Object> convertListToMap(List<Object> list) {
 		return IntStream.range(0, list.size() / 2).boxed().collect(Collectors.toMap(i -> (String) list.get(i * 2), i -> list.get(i * 2 + 1)));
 	}
+	
+	public static List<AbstractInsnNode> toList(InsnList insnList) {
+		List<AbstractInsnNode> ret = new ArrayList<>();
+		if (insnList == null || insnList.size() == 0) return ret;
+		for (int i = 0; i < insnList.size(); i++) {
+			ret.add(insnList.get(i));
+		}
+		return ret;
+	}
+	
+	public static List<AbstractInsnNode> toListCopy(InsnList insnList) {
+		return copyListInstrs(toList(insnList));
+	}
+	
+	public static List<AbstractInsnNode> copyListInstrs(List<AbstractInsnNode> list) {
+		List<AbstractInsnNode> ret = new ArrayList<>();
+		for (AbstractInsnNode node : Opt.it(list)) {
+			ret.add(copyInsnNode(node));
+		}
+		return ret;
+	}
+	
+	public static InsnList toInsnList(List<AbstractInsnNode> list) {
+		InsnList ret = new InsnList();
+		for (AbstractInsnNode node : Opt.it(list)) {
+			ret.add(node);
+		}
+		return ret;
+	}
+	
 }

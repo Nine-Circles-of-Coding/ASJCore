@@ -1,6 +1,6 @@
 package alexsocol.patcher.handler
 
-import alexsocol.asjlib.*
+import alexsocol.asjlib.ASJUtilities
 import alexsocol.patcher.PatcherConfigHandler
 import cpw.mods.fml.common.eventhandler.*
 import cpw.mods.fml.common.registry.GameRegistry

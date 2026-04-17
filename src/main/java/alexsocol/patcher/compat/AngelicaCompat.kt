@@ -1,10 +1,9 @@
 package alexsocol.patcher.compat
 
 import alexsocol.asjlib.D
-import alexsocol.patcher.PatcherConfigHandler.orthoProjection
+import alexsocol.patcher.handler.KeyBindingHandler
 import net.minecraft.client.renderer.*
 import org.lwjgl.opengl.GL11.*
-import org.lwjgl.util.glu.Project
 
 /**
  * Intermediate class for calls that should be remapped by Angelica
@@ -29,13 +28,12 @@ object AngelicaCompat {
 	}
 	
 	@JvmStatic
-	fun selectProjection(er: EntityRenderer, f: Float, clipDistance: Float) {
-		if (orthoProjection) {
-			val mod = er.getFOVModifier(f, true) * 2.0
-			glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05, clipDistance.D)
-		} else {
-			Project.gluPerspective(er.getFOVModifier(f, true), er.mc.displayWidth.toFloat() / er.mc.displayHeight.toFloat(), 0.05f, clipDistance)
-		}
+	fun switchToOrtho(er: EntityRenderer, f: Float, clipDistance: Float) {
+		if (!KeyBindingHandler.orthoProjectionState) return
+		
+		glLoadIdentity()
+		val mod = er.getFOVModifier(f, true) * 2.0
+		glOrtho(er.mc.displayWidth / -mod, er.mc.displayWidth / mod, er.mc.displayHeight / -mod, er.mc.displayHeight / mod, 0.05, clipDistance.D)
 	}
 	
 	fun glFogiHook(pname: Int, param: Int) {

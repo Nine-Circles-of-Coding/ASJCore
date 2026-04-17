@@ -306,6 +306,7 @@ public class ASJReflectionHelper {
 		Field[] fields = clazz.getDeclaredFields();
 		for (Field field : fields) {
 			if (name.equals(field.getName())) {
+				field.setAccessible(true);
 				return field;
 			}
 		}
@@ -342,6 +343,7 @@ public class ASJReflectionHelper {
 		for (String fieldName : fieldNames) {
 			for (Field field : fields) {
 				if (fieldName.equals(field.getName())) {
+					field.setAccessible(true);
 					return field;
 				}
 			}
@@ -404,7 +406,9 @@ public class ASJReflectionHelper {
 	 * @return the field
 	 */
 	public static Field getField(Class clazz, int fieldID) {
-		return clazz.getDeclaredFields()[fieldID];
+		Field field = clazz.getDeclaredFields()[fieldID];
+		field.setAccessible(true);
+		return field;
 	}
 	
 	@Nullable

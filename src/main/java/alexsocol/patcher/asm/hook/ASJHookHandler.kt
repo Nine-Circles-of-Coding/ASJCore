@@ -76,7 +76,6 @@ import net.minecraftforge.common.*
 import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11
-import org.lwjglx.opengl.GL11 as XGL11
 import org.objectweb.asm.Opcodes
 import ru.vamig.worldengine.*
 import vazkii.botania.client.core.handler.BotaniaPlayerController
@@ -87,6 +86,7 @@ import java.util.*
 import javax.swing.*
 import javax.swing.plaf.basic.BasicScrollBarUI
 import kotlin.math.*
+import org.lwjglx.opengl.GL11 as XGL11
 
 @Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST", "DEPRECATION")
 object ASJHookHandler {
@@ -661,7 +661,7 @@ object ASJHookHandler {
 		return false
 	}
 	
-	// nightvision twinkling fix
+//	// nightvision twinkling fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun getNightVisionBrightness(render: EntityRenderer, player: EntityPlayer, partialTicks: Float): Float {

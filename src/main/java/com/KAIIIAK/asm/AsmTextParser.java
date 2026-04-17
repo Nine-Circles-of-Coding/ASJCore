@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 @SuppressWarnings("UnnecessaryUnicodeEscape")
 public final class AsmTextParser {
 	
-	private static final Map<String, Integer> OPCODES;
+	public static final Map<String, Integer> OPCODES;
 	
 	static {
 		OPCODES = new HashMap<>();

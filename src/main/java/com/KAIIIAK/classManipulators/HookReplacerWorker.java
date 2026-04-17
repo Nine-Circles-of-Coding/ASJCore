@@ -1,229 +1,275 @@
 package com.KAIIIAK.classManipulators;
 
-import com.KAIIIAK.KASMLib.KASMWorker;
+import com.KAIIIAK.KASMLib.KASMLib;
 import com.KAIIIAK.KASMLib.util.KASMUtil;
+import com.KAIIIAK.asm.AsmTextParser;
+import com.KAIIIAK.classManipulators.Tools.FlexiblePatternReplace;
 import com.KAIIIAK.nullsafety.Opt;
 import com.KAIIIAK.superwrapper.McpToSrg;
-import com.google.common.collect.ImmutableMap;
+import gloomyfolken.hooklib.asm.HookClassTransformer;
 import gloomyfolken.hooklib.asm.HookLogger;
+import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.KAIIIAK.classManipulators.SomeUtil.copyListInstrs;
 import static com.KAIIIAK.classManipulators.SomeUtil.getStringRepresentation;
-import static org.objectweb.asm.Opcodes.*;
 
-public class HookReplacerWorker extends KASMWorker {
+public class HookReplacerWorker implements IClassTransformer {
 	
 	public static HookLogger logger = new HookLogger.Log4JLogger("HookReplacer");
 	
-	public static KASMWorker inst = KASMUtil.inst();
-	
-	public List<ChangesHolder> methodsToChange = new ArrayList<>();
-	
-	{
-		withRecalc = true;
-	}
-	
 	@Override
-	public void workDataStart() {
-		super.workDataStart();
-		methodsToChange.clear();
-	}
-	
-	@Override
-	public boolean workClass(ClassNode classNode) {
-		for (ChangesHolder changesHolder : Opt.it(registeredMethods)) {
-			if (classNode.name.equals(changesHolder.clazz.getInternalName()) || className.equals(changesHolder.clazz.getInternalName()) || transformedClassName.equals(changesHolder.clazz.getClassName())) {
-				logger.debug("Found Class to hook into " + transformedClassName);
-				methodsToChange.add(changesHolder);
+	public byte[] transform(String name, String transformedName, byte[] basicClass) {
+		if (basicClass == null)
+			return null;
+		
+		ClassReader cr = new ClassReader(basicClass);
+		Pair<Type, TreeMap<Integer, List<ChangesHolder>>> data = getCorrespondingChangesHolder(name, transformedName, cr);
+		if (data == null)
+			return basicClass;
+		
+		TreeMap<Integer, List<ChangesHolder>> registeredChanges = data.getValue();
+		
+		try {
+			if (KASMLib.has2DumpUnchangedClasses) {
+				File file = new File("ASJCoreDumpClasses/HookReplacer/" + transformedName.replaceAll("\\.", "/") + "UNCHANGED.class");
+				file.getParentFile().mkdirs();
+				
+				IOUtils.write(basicClass, Files.newOutputStream(file.toPath()));
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+		logger.debug("Found Class to hook-replace into " + transformedName);
+		TreeMap<Integer, List<ChangesHolder>> registeredChangesCopy = deepCopy(registeredChanges);
+		
+		ClassNode cn = new ClassNode();
+		cr.accept(cn, 0);
+		
+		AtomicInteger changes = new AtomicInteger(0);
+		
+		for (MethodNode methodNode : Opt.it(cn.methods)) {
+			logger.debug(String.format("Testing method %s", methodNode.name));
+			processMethod(cn.methods, methodNode, registeredChangesCopy, changes);
+		}
+		
+		boolean crash = false;
+		for (List<ChangesHolder> listChangesHolder : Opt.it(registeredChangesCopy.values())) {
+			for (ChangesHolder changesHolder : Opt.it(listChangesHolder)) {
+				// because I expect to have changesHolder deleted after their full processing, so if isMandatory and still in the list that means that it was not processed...
+				if (!changesHolder.isMandatory) continue;
+				
+				logger.error("Mandatory replacer not injected: " + changesHolder);
+				crash = true;
 			}
 		}
 		
-		return false;
-	}
-	
-	@Override
-	public boolean workMethod(ClassNode classNode, MethodNode methodNode) {
-		List<ChangesHolder> found = new ArrayList<>();
+		if (crash) throw new RuntimeException("Mandatory replacer(s) not injected, check logs");
 		
-		for (ChangesHolder changesHolder : Opt.it(methodsToChange)) {
-			String actualName = McpToSrg.getTargetMethodMatchingNameAndDesc(classNode.methods, changesHolder.methodName, Type.getMethodDescriptor(changesHolder.methodReturn, changesHolder.methodParams));
-			
-			logger.debug(String.format("Testing method %s to be equal to %s", methodNode.name, actualName));
-			
-			if (methodNode.name.equals(actualName)) {
-				logger.debug(String.format("Found method to hook into %s", methodNode.name));
-				Type methodType = Type.getMethodType(methodNode.desc);
-				if (!methodType.getReturnType().equals(changesHolder.methodReturn)) continue;
-				logger.debug(String.format("Found method to hook into with a correct return type %s", methodNode.name));
-				Type[] argTypes = methodType.getArgumentTypes();
-				if (!isTypesSame(argTypes, changesHolder.methodParams)) continue;
-				logger.debug(String.format("Found method to hook into with a correct method params %s", methodNode.name));
-				workMethodChanges(methodNode, changesHolder);
-				
-				found.add(changesHolder);
-			}
+		if (!HookClassTransformer.skipTransformation) {
+			TreeMap<Integer, List<ChangesHolder>> map = notInjectedHookReplacers.get(data.getKey());
+			map.clear();
+			map.putAll(registeredChangesCopy);
 		}
 		
-		if (!found.isEmpty())
-			methodsToChange.removeAll(found);
-		
-		return false;
-	}
-	
-	public boolean isTypesSame(Type[] types1, Type[] types2) {
-		if (types1.length != types2.length) return false;
-		
-		for (int i = 0; i < types1.length; i++) {
-			if (!types1[i].equals(types2[i])) return false;
-		}
-		
-		return true;
-	}
-	
-	public static List<AbstractInsnNode> getWithStaticIndexes(List<AbstractInsnNode> list) {
-		List<AbstractInsnNode> buff = new ArrayList<>();
-		for (AbstractInsnNode node : Opt.it(list)) {
-			if (!(node instanceof VarInsnNode) || node.getOpcode() == Opcodes.RET) {
-				buff.add(node);
-				continue;
-			}
+		if (changes.get() > 0) {
+			logger.debug(String.format("Trying to make %s changes in %s", changes, transformedName));
 			
-			VarInsnNode varNode = (VarInsnNode) node;
-			buff.add(new VarInsnNode(varNode.getOpcode(), varNode.var - 1));
-		}
-		
-		return buff;
-	}
-	
-	//TODO check start
-	public void workMethodChanges(MethodNode methodNode, ChangesHolder changes) {
-		if (logger.isTraceEnabled())
-			for (int i = 0; i < methodNode.instructions.size(); i++)
-				logger.trace(String.format("methodNode.instructions.get(%d) = %s", i, getStringRepresentation(methodNode.instructions.get(i))));
-		
-		for (Map.Entry<List<AbstractInsnNode>, List<AbstractInsnNode>> entry : Opt.it(((methodNode.access & Opcodes.ACC_STATIC) != 0) && !changes.correctStaticIndexes ? changes.instToReplaceForStaticSrc.entrySet() : changes.instToReplace.entrySet())) {
-			List<AbstractInsnNode> fromList = entry.getKey();
-			List<AbstractInsnNode> toList = entry.getValue();
+			ClassWriter cw = new ClassWriter(0);
+			cn.accept(cw);
+			byte[] result = cw.toByteArray();
 			
-			for (int i = 0; i < fromList.size(); i++)
-				logger.trace(String.format("fromList.get(%d) = %s", i, getStringRepresentation(fromList.get(i))));
-			
-			for (int i = 0; i < toList.size(); i++)
-				logger.trace(String.format("toList.get(%d) = %s", i, getStringRepresentation(toList.get(i))));
-			
-			AbstractInsnNode[] fromArray = fromList.toArray(new AbstractInsnNode[0]);
-			
-			InsnList instructions = methodNode.instructions;
-			int index = findInstructions(instructions, fromArray, 0);
-			
-			while (index >= 0) {
-				removeInstructions(instructions, index, fromArray.length);
-				
-				InsnList toList2 = new InsnList();
-				
-				for (AbstractInsnNode abstractInsnNode : Opt.it(toList)) {
-					toList2.add(SomeUtil.copyInsnNode(abstractInsnNode));
-				}
-				
-				instructions.insertBefore(instructions.get(index), toList2);
-				
-				logger.debug(String.format("Replaced insns at index %s", index));
-				
-				this.changes++;
-				index = findInstructions(instructions, fromArray, index + 1);
-			}
-		}
-	}
-	
-	private int findInstructions(InsnList instructions, AbstractInsnNode[] fromArray, int startFromIndex) {
-		if (fromArray == null || fromArray.length == 0 || instructions == null || instructions.size() == 0) return -1;
-		
-		AbstractInsnNode[] mainInstructions = instructions.toArray();
-		AbstractInsnNode first = fromArray[0];
-		
-		List<Integer> all = findAll(mainInstructions, first);
-		markHere:
-		for (Integer firstIndex : Opt.it(all)) {
-			if (firstIndex < startFromIndex) continue;
-			
-			if (firstIndex + fromArray.length - 1 > (mainInstructions.length - 1)) continue;
-			
-			for (int i = 0; i < fromArray.length; i++) {
-				if (!SomeUtil.myEquals(mainInstructions[i + firstIndex], fromArray[i])) continue markHere;
-			}
-			
-			return firstIndex;
-		}
-		return -1;
-		
-	}
-	
-	private List<Integer> findAll(AbstractInsnNode[] instructions, AbstractInsnNode first) {
-		List<Integer> list = new ArrayList<>();
-		for (int i = 0; i < instructions.length; i++) {
-			if (SomeUtil.myEquals(instructions[i], first)) {
-				list.add(i);
-			}
-		}
-		return list;
-	}
-	
-	private void removeInstructions(InsnList instructions, int startIndex, int count) {
-		for (int i = 0; i < count; i++) {
-			instructions.remove(instructions.get(startIndex));
-		}
-	}
-	//TODO check end
-	
-	public static List<ChangesHolder> registeredMethods = new ArrayList<>();
-	
-	public static void registerHookReplacerContainer(String clazz) {
-		logger.debug("Parsing HookReplacer container " + clazz);
-		Opt.it(HookReplacerWorker.class.getResourceAsStream('/' + clazz.replace('.', '/') + ".class"), it -> {
 			try {
-				registerHookReplacerContainer(IOUtils.toByteArray(it));
-			} catch (IOException e) {
-				logger.error(String.format("Can not parse HookReplacer container %s", clazz), e);
-				throw new RuntimeException(e);
-			}
-		});
+				if (KASMLib.has2DumpChangedClasses) {
+					File file = new File("ASJCoreDumpClasses/HookReplacer/" + transformedName.replaceAll("\\.", "/") + ".class");
+					file.getParentFile().mkdirs();
+					
+					IOUtils.write(result, Files.newOutputStream(file.toPath()));
+				}
+			} catch (IOException ignored) {}
+			
+			logger.debug(String.format("Finished replacing for %s", transformedName));
+			return result;
+		}
+		
+		return basicClass;
 	}
 	
-	public static void registerHookReplacerContainer(byte[] clazzBytes) {
+	private void processMethod(List<MethodNode> methods, MethodNode method, TreeMap<Integer, List<ChangesHolder>> registeredChanges, AtomicInteger changes) {
+		for (List<ChangesHolder> listChangesHolder : registeredChanges.values()) {
+			Iterator<ChangesHolder> iterator = listChangesHolder.iterator();
+			while (iterator.hasNext()) {
+				ChangesHolder changesHolder = iterator.next();
+				if (!matchesTarget(methods, method, changesHolder)) continue;
+				
+				logger.debug(String.format("Trying to apply replacer: %s (for method: %s)", changesHolder, method.name));
+				
+				if (applyChange(method, changesHolder)) {
+					iterator.remove();
+					changes.getAndIncrement();
+				}
+			}
+		}
+	}
+	
+	private boolean applyChange(MethodNode method, ChangesHolder ch) {
+		if (method.instructions == null)
+			throw new RuntimeException(String.format("For some weird reasons %s.%s%s hasn't got instructions at all!", ch.targetClass, ch.targetMethodName, method.desc));
+		
+		if (ch.from == null)
+			throw new RuntimeException(String.format("For some weird reasons %s.%s%s hasn't got FROM instructions at all!", ch.containerClass, ch.containerMethod, method.desc));
+		
+		if (logger.isTraceEnabled()) {
+			for (int i = 0; i < method.instructions.size(); i++)
+				logger.trace(String.format("methodNode.instructions.get(%d) = %s", i, getStringRepresentation(method.instructions.get(i))));
+			
+			for (int i = 0; i < ch.from.size(); i++)
+				logger.trace(String.format("fromList.get(%d) = %s", i, getStringRepresentation(ch.from.get(i))));
+			
+			if (ch.to != null && !ch.to.isEmpty()) {
+				for (int i = 0; i < ch.to.size(); i++)
+					logger.trace(String.format("toList.get(%d) = %s", i, getStringRepresentation(ch.to.get(i))));
+			} else {
+				logger.trace("toList is empty!");
+			}
+		}
+		
+		List<AbstractInsnNode> instr = SomeUtil.toList(method.instructions);
+		FlexiblePatternReplace.ReplaceResult<AbstractInsnNode> result =
+				FlexiblePatternReplace.replaceMatches(
+						instr,
+						ch.from,
+						node -> (ch.ignoreLines && node instanceof LineNumberNode) || (ch.ignoreLabels && node instanceof LabelNode), // true - ignore
+						SomeUtil::myEquals,
+						(node, ctx) -> {},
+						null,
+						ctx -> copyListInstrs(ch.to),
+						ch.matchIndex
+				);
+		
+		
+		if (result.matchesReplaced > 0) {
+			method.instructions.clear();
+			result.result.forEach(method.instructions::add);
+			
+			logger.debug("Replaced insns at indexes: " + result.getReplacedRangesFormatedString());
+			if (!result.successfullyFully) {
+				logger.debug(String.format("Replacer (%s) applied NOT fully! (for method: %s)", ch, method.name));
+			}
+		}
+		
+		if (result.successfullyFully) {
+			logger.debug(String.format("Replacer (%s) applied fully! (for method: %s)", ch, method.name));
+		}
+		
+		return result.successfullyFully;
+	}
+	
+	private boolean matchesTarget(List<MethodNode> methods, MethodNode method, ChangesHolder ch) {
+		String actualName = McpToSrg.getTargetMethodMatchingNameAndDesc(methods, ch.targetMethodName, Type.getMethodDescriptor(ch.targetMethodReturn, ch.targetMethodParams));
+		return method.name.equals(actualName) && method.desc.equals(Type.getMethodDescriptor(ch.targetMethodReturn, ch.targetMethodParams));
+	}
+	
+	private TreeMap<Integer, List<ChangesHolder>> deepCopy(TreeMap<Integer, List<ChangesHolder>> map) {
+		TreeMap<Integer, List<ChangesHolder>> deepCopy = new TreeMap<>();
+		
+		for (Map.Entry<Integer, List<ChangesHolder>> entry : map.entrySet()) {
+			List<ChangesHolder> copiedList = new ArrayList<>();
+			for (ChangesHolder holder : entry.getValue()) {
+				copiedList.add(holder.copy());
+			}
+			deepCopy.put(entry.getKey(), copiedList);
+		}
+		
+		return deepCopy;
+	}
+	
+	private Pair<Type, TreeMap<Integer, List<ChangesHolder>>> getCorrespondingChangesHolder(String name, String transformedName, ClassReader basicClass) {
+		String[] candidates = {name.replace('.', '/'), transformedName.replace('.', '/'), basicClass.getClassName()};
+		for (String internalName : candidates) {
+			Type type = Type.getObjectType(internalName);
+			TreeMap<Integer, List<ChangesHolder>> changes = registeredChangesHolders.get(type);
+			if (changes != null)
+				return Pair.of(type, changes);
+		}
+		return null;
+	}
+	
+	// target class to <priority to all hooks with this priority>
+	public static Map<Type, TreeMap<Integer, List<ChangesHolder>>> registeredChangesHolders = new HashMap<>();
+	public static Map<Type, TreeMap<Integer, List<ChangesHolder>>> notInjectedHookReplacers = new HashMap<>();
+	
+	static void registerChangesHolder(ChangesHolder ch) {
+		registeredChangesHolders
+				.computeIfAbsent(ch.targetClass, type -> new TreeMap<>())
+				.computeIfAbsent(ch.priority, ArrayList::new)
+				.add(ch);
+		
+		notInjectedHookReplacers
+				.computeIfAbsent(ch.targetClass, type -> new TreeMap<>())
+				.computeIfAbsent(ch.priority, ArrayList::new)
+				.add(ch);
+	}
+	
+	public static void registerHookReplacerContainer(byte[] clazzBytes, String clazzName) {
+		try {
+			if (KASMLib.has2DumpUnchangedClasses) {
+				File file = new File("ASJCoreDumpClasses/HookReplacerContainer/" + clazzName.replaceAll("\\.", "/") + "UNCHANGED.class");
+				file.getParentFile().mkdirs();
+				
+				IOUtils.write(clazzBytes, Files.newOutputStream(file.toPath()));
+			}
+		} catch (IOException ignored) {}
+		
+		clazzBytes = KASMUtil.applyAllPossibleTransformers(clazzName, clazzName, clazzBytes);// because transformers does not apply by default from raw (class.getResource()) class bytes
+		
+		try {
+			if (KASMLib.has2DumpChangedClasses) {
+				File file = new File("ASJCoreDumpClasses/HookReplacerContainer/" + clazzName.replaceAll("\\.", "/") + ".class");
+				file.getParentFile().mkdirs();
+				
+				IOUtils.write(clazzBytes, Files.newOutputStream(file.toPath()));
+			}
+		} catch (IOException ignored) {}
+		
 		try {
 			ClassReader classReader = new ClassReader(clazzBytes);
 			ClassNode classNode = new ClassNode();
 			classReader.accept(classNode, 0);
+			
 			for (MethodNode methodNode : Opt.it(classNode.methods)) {
-				AnnotationNode hookReplacerAnnotation = null;
-				for (AnnotationNode annotationNode : Opt.it(methodNode.visibleAnnotations)) {
-					if (annotationNode.desc.contains("HookReplacer")) {
-						hookReplacerAnnotation = annotationNode;
-						break;
-					}
-				}
-				for (AnnotationNode annotationNode : Opt.it(methodNode.invisibleAnnotations)) {
-					if (annotationNode.desc.contains("HookReplacer")) {
-						hookReplacerAnnotation = annotationNode;
-						break;
-					}
-				}
+				AnnotationNode hookReplacerAnnotation = getHookReplacerAnnotation(methodNode);
 				
 				if (hookReplacerAnnotation == null)
 					continue;
 				
+				logger.trace(String.format("Found HookReplacer annotation: %s.%s%s", classNode.name, methodNode.name, methodNode.desc));
+				
+				if ((methodNode.access & Opcodes.ACC_STATIC) == 0)
+					throw new RuntimeException(String.format("HookReplacer method %s.%s%s must be static!", classNode.name, methodNode.name, methodNode.desc));
+				
+				boolean removePop = false;
 				String targetMethodFromAnnotation = null;
 				boolean correctStaticIndexes = false;
+				int[] matchIndex = {};
+				boolean isMandatory = true;
+				boolean ignoreLines = true;
+				boolean ignoreLabels = true;
+				int priority = 0;
 				
 				if (hookReplacerAnnotation.values != null) {
 					Map<String, Object> annotationArgs = SomeUtil.convertListToMap(hookReplacerAnnotation.values);
@@ -233,9 +279,33 @@ public class HookReplacerWorker extends KASMWorker {
 					if (annotationArgs.containsKey("correctStaticIndexes")) {
 						correctStaticIndexes = (boolean) annotationArgs.get("correctStaticIndexes");
 					}
+					if (annotationArgs.containsKey("isMandatory")) {
+						isMandatory = (boolean) annotationArgs.get("isMandatory");
+					}
+					if (annotationArgs.containsKey("removePop")) {
+						removePop = (boolean) annotationArgs.get("removePop");
+					}
+					if (annotationArgs.containsKey("ignoreLines")) {
+						ignoreLines = (boolean) annotationArgs.get("ignoreLines");
+					}
+					if (annotationArgs.containsKey("ignoreLabels")) {
+						ignoreLabels = (boolean) annotationArgs.get("ignoreLabels");
+					}
+					if (annotationArgs.containsKey("priority")) {
+						priority = (int) annotationArgs.get("priority");
+					}
+					if (annotationArgs.containsKey("matchIndex")) {
+						Object val = annotationArgs.get("matchIndex");
+						if (val instanceof int[]) {
+							matchIndex = (int[]) val;
+						} else if (val instanceof List) {
+							List<?> listVal = (List<?>) val;
+							matchIndex = listVal.stream()
+									.mapToInt(o -> ((Number) o).intValue())
+									.toArray();
+						}
+					}
 				}
-				
-				logger.trace(String.format("Found HookReplacer annotation: %s.%s%s", classNode.name, methodNode.name, methodNode.desc));
 				
 				Type methodType = Type.getMethodType(methodNode.desc);
 				Type[] argTypes = methodType.getArgumentTypes();
@@ -244,17 +314,26 @@ public class HookReplacerWorker extends KASMWorker {
 				
 				ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
 				
-				ArrayList<AbstractInsnNode> from = new ArrayList<>();
-				ArrayList<AbstractInsnNode> to = new ArrayList<>();
+				List<AbstractInsnNode> from = new ArrayList<>();
+				List<AbstractInsnNode> to = new ArrayList<>();
 				
 				boolean isInsideFromBlock = false;
 				boolean isInsideToBlock = false;
 				
 				while (iterator.hasNext()) {
 					AbstractInsnNode insnNode = iterator.next();
+					if (removePop && (isInsideFromBlock || isInsideToBlock) && insnNode instanceof InsnNode && (insnNode.getOpcode() == Opcodes.POP || insnNode.getOpcode() == Opcodes.POP2))
+						continue;
+					
+					if (ignoreLabels && (isInsideFromBlock || isInsideToBlock) && insnNode instanceof LabelNode)
+						continue;
+					
+					if (ignoreLines && (isInsideFromBlock || isInsideToBlock) && insnNode instanceof LineNumberNode)
+						continue;
+					
 					if (insnNode instanceof MethodInsnNode
-								&& insnNode.getOpcode() == Opcodes.INVOKESTATIC
-								&& Type.getInternalName(HookReplacer.Replacer.class).equals(((MethodInsnNode) insnNode).owner)) {
+							&& insnNode.getOpcode() == Opcodes.INVOKESTATIC
+							&& Type.getInternalName(HookReplacer.Replacer.class).equals(((MethodInsnNode) insnNode).owner)) {
 						MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
 						switch (methodInsnNode.name) {
 							case "startFROM":
@@ -284,60 +363,75 @@ public class HookReplacerWorker extends KASMWorker {
 				removePOP(to);
 				removeLines(from);
 				removeLines(to);
-				removeStoreLoad(from);
-				removeStoreLoad(to);
 				
 				if (from.isEmpty()) continue;
 				
 				String methodName = targetMethodFromAnnotation != null ? targetMethodFromAnnotation : methodNode.name;
 				ChangesHolder changesHolder = new ChangesHolder(argTypes[0], methodName);
-				changesHolder.instToReplace.put(from, to);
 				
-				if (!correctStaticIndexes) {
-					changesHolder.instToReplaceForStaticSrc.put(getWithStaticIndexes(from), getWithStaticIndexes(to));
-					changesHolder.correctStaticIndexes = false;
+				if (correctStaticIndexes) {
+					from = getWithStaticIndexes(from);
+					to = getWithStaticIndexes(to);
 				}
+				
+				removeStoreLoad(from);
+				removeStoreLoad(to);
+				
+				changesHolder.from = from;
+				changesHolder.to = to;
 				
 				Type[] methodParams = new Type[argTypes.length - 1];
 				System.arraycopy(argTypes, 1, methodParams, 0, methodParams.length);
-				changesHolder.methodParams = methodParams;
+				changesHolder.targetMethodParams = methodParams;
 				
-				changesHolder.methodReturn = methodType.getReturnType();
+				changesHolder.targetMethodReturn = methodType.getReturnType();
 				
-				registeredMethods.add(changesHolder);
-				
+				changesHolder.matchIndex = matchIndex;
+				changesHolder.isMandatory = isMandatory;
+				changesHolder.ignoreLines = ignoreLines;
+				changesHolder.ignoreLabels = ignoreLabels;
+				changesHolder.priority = priority;
+				changesHolder.containerClass = clazzName;
+				changesHolder.containerMethod = methodNode.name;
+				registerChangesHolder(changesHolder);
 				logger.trace(String.format("HookReplacer at %s.%s%s registered!", classNode.name, methodNode.name, methodNode.desc));
 			}
 		} catch (Exception e) {
-			logger.error("Can not parse HookReplacer container", e);
 			throw new RuntimeException(e);
 		}
+	}
+	
+	private static AnnotationNode getHookReplacerAnnotation(MethodNode methodNode) {
+		for (AnnotationNode annotationNode : Opt.it(methodNode.invisibleAnnotations)) {
+			if ("Lcom/KAIIIAK/classManipulators/HookReplacer;".equals(annotationNode.desc)) {
+				return annotationNode;
+			}
+		}
+		for (AnnotationNode annotationNode : Opt.it(methodNode.visibleAnnotations)) {
+			if ("Lcom/KAIIIAK/classManipulators/HookReplacer;".equals(annotationNode.desc)) {
+				return annotationNode;
+			}
+		}
+		return null;
 	}
 	
 	private static void removePOP(List<AbstractInsnNode> list) {
 		if (!list.isEmpty()) {
 			list.removeIf(node -> node instanceof MethodInsnNode
-										  && node.getOpcode() == Opcodes.INVOKESTATIC
-										  && Type.getInternalName(HookReplacer.Replacer.class).equals(((MethodInsnNode) node).owner)
-										  && ((MethodInsnNode) node).name.equals("POP"));
-		}
-		
-		if (!list.isEmpty()) {
-			AbstractInsnNode last = list.get(list.size() - 1);
-			if (last instanceof InsnNode && last.getOpcode() == Opcodes.POP) {
-				list.remove(last);
-			}
+					&& node.getOpcode() == Opcodes.INVOKESTATIC
+					&& Type.getInternalName(HookReplacer.Replacer.class).equals(((MethodInsnNode) node).owner)
+					&& ((MethodInsnNode) node).name.equals("POP"));
 		}
 	}
 	
-	private static void removeLines(ArrayList<AbstractInsnNode> list) {
+	private static void removeLines(List<AbstractInsnNode> list) {
 		List<AbstractInsnNode> listToRemove = new ArrayList<>();
 		for (int i = 0; i < list.size(); i++) {
 			AbstractInsnNode node = list.get(i);
 			if (node instanceof MethodInsnNode
-						&& node.getOpcode() == Opcodes.INVOKESTATIC
-						&& Type.getInternalName(HookReplacer.Replacer.class).equals(((MethodInsnNode) node).owner)
-						&& ((MethodInsnNode) node).name.equals("POPLine")) {
+					&& node.getOpcode() == Opcodes.INVOKESTATIC
+					&& Type.getInternalName(HookReplacer.Replacer.class).equals(((MethodInsnNode) node).owner)
+					&& ((MethodInsnNode) node).name.equals("POPLine")) {
 				listToRemove.add(node);
 				if ((i - 1) >= 0) {
 					AbstractInsnNode nodeBefore = list.get(i - 1);
@@ -354,11 +448,21 @@ public class HookReplacerWorker extends KASMWorker {
 		list.removeAll(listToRemove);
 	}
 	
-	private static void removeStoreLoad(ArrayList<AbstractInsnNode> list) {
+	/**
+	 * WARNING! Should be called AFTER removePOP() method here due to
+	 * AsmTextParser.OPCODES contains all opcodes including POP but POP should be handled in another way
+	 *
+	 */
+	private static void removeStoreLoad(List<AbstractInsnNode> list) {
 		List<AbstractInsnNode> newList = new ArrayList<>();
+		boolean shouldRemoveCheckCast = false;
 		
-		for (int i = 0; i < list.size(); i++) {
-			AbstractInsnNode node = list.get(i);
+		for (AbstractInsnNode node : list) {
+			if (shouldRemoveCheckCast) {
+				shouldRemoveCheckCast = false;
+				if (node instanceof TypeInsnNode && node.getOpcode() == Opcodes.CHECKCAST) continue;
+			}
+			
 			if (!(node instanceof MethodInsnNode)) {
 				newList.add(node);
 				continue;
@@ -367,8 +471,8 @@ public class HookReplacerWorker extends KASMWorker {
 			MethodInsnNode mnode = ((MethodInsnNode) node);
 			
 			if (node.getOpcode() != Opcodes.INVOKESTATIC ||
-						!Type.getInternalName(HookReplacer.Replacer.class).equals(mnode.owner) ||
-						!loadStoreInsns.containsKey(mnode.name)) {
+					!Type.getInternalName(HookReplacer.Replacer.class).equals(mnode.owner) ||
+					!AsmTextParser.OPCODES.containsKey(mnode.name)) {
 				newList.add(mnode);
 				continue;
 			}
@@ -376,24 +480,34 @@ public class HookReplacerWorker extends KASMWorker {
 			LdcInsnNode varIndex = (LdcInsnNode) newList.remove(newList.size() - 1);
 			int var = Integer.parseInt(varIndex.cst.toString());
 			
-			newList.add(new VarInsnNode(loadStoreInsns.get(mnode.name), var));
-			if (mnode.name.equals("ALOAD")) i++;
+			newList.add(new VarInsnNode(AsmTextParser.OPCODES.get(mnode.name), var));
+			if (mnode.name.equals("ALOAD")) shouldRemoveCheckCast = true;
 		}
 		
 		list.clear();
 		list.addAll(newList);
 	}
 	
-	// why Java is so shitty? (c) AlexSocol
-	private static ImmutableMap<String, Integer> loadStoreInsns = ImmutableMap.<String, Integer>builder()
-																		  .put("ILOAD", ILOAD)
-																		  .put("LLOAD", LLOAD)
-																		  .put("FLOAD", FLOAD)
-																		  .put("DLOAD", DLOAD)
-																		  .put("ALOAD", ALOAD)
-																		  .put("ISTORE", ISTORE)
-																		  .put("LSTORE", LSTORE)
-																		  .put("FSTORE", FSTORE)
-																		  .put("DSTORE", DSTORE)
-																		  .put("ASTORE", ASTORE).build();
+	public static List<AbstractInsnNode> getWithStaticIndexes(List<AbstractInsnNode> list) {
+		List<AbstractInsnNode> buff = new ArrayList<>();
+		for (AbstractInsnNode node : Opt.it(list)) {
+			if (!(node instanceof VarInsnNode) || node.getOpcode() == Opcodes.RET) {
+				buff.add(node);
+				continue;
+			}
+			
+			VarInsnNode varNode = (VarInsnNode) node;
+			buff.add(new VarInsnNode(varNode.getOpcode(), varNode.var - 1));
+		}
+		return buff;
+	}
+	
+	public static void registerHookReplacerContainer(String clazz) {
+		String resource = '/' + clazz.replace('.', '/') + ".class";
+		try (InputStream resourceStream = HookReplacerWorker.class.getResourceAsStream(resource)) {
+			registerHookReplacerContainer(IOUtils.toByteArray(resourceStream), clazz);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }

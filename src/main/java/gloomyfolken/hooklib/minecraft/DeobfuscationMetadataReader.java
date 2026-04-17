@@ -1,12 +1,12 @@
 package gloomyfolken.hooklib.minecraft;
 
+import com.KAIIIAK.KASMLib.util.KASMUtil;
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import gloomyfolken.hooklib.asm.ClassMetadataReader;
 import gloomyfolken.hooklib.asm.HookClassTransformer;
 import net.minecraft.launchwrapper.*;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -14,18 +14,6 @@ import java.util.Deque;
  * Еще больше костылей вдобавок к ClassMetadataReader для работы с майновской обфускацией.
  */
 public class DeobfuscationMetadataReader extends ClassMetadataReader {
-	
-	private static Method runTransformers;
-	
-	static {
-		try {
-			runTransformers = LaunchClassLoader.class.getDeclaredMethod("runTransformers",
-				String.class, String.class, byte[].class);
-			runTransformers.setAccessible(true);
-		} catch (Exception e) {
-			HookClassTransformer.logger.error("Error:", e);
-		}
-	}
 	
 	@Override
 	public byte[] getClassData(String className) throws IOException {
@@ -81,7 +69,7 @@ public class DeobfuscationMetadataReader extends ClassMetadataReader {
 		currentTransformChain.addLast(type);
 		try {
 			HookClassTransformer.skipTransformation = true;
-			bytes = (byte[]) runTransformers.invoke(Launch.classLoader, obfName, type.replace('/', '.'), bytes);
+			bytes = KASMUtil.applyAllPossibleTransformers(obfName, type.replace('/', '.'), bytes);
 		} catch (Exception e) {
 			HookClassTransformer.logger.error("Error:", e);
 		} finally {

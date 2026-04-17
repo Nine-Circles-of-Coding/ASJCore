@@ -1,4 +1,5 @@
 Innovations:
- Mod relations info in modlist (requirements, dependencies, dependants)
- Compatibility with Angelica and LWJGL3ify
- Transformers optimization
+ 
+
+Fixes:
+ LWJGL keyboard bug workaround

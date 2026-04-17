@@ -39,6 +39,7 @@ class ASJHookLoader: HookLoader() {
 		
 		init {
 			KASMLib.has2DumpChangedClasses = System.getProperty("KASMlib.dumpChangedClasses").toBoolean()
+			KASMLib.has2DumpUnchangedClasses = System.getProperty("KASMlib.dumpUnChangedClasses").toBoolean()
 			
 			if (PatcherPreConfigHandler.allowLWJGLTransform) {
 				fun allowLWJGLTransform(set: String) {
@@ -63,7 +64,7 @@ class ASJHookLoader: HookLoader() {
 			ASJClassTransformer::class.java.name,
 			ASJPacketCompleter::class.java.name,
 			RealmsDeleteTransformer::class.java.name,
-			SpigotTransformer::class.java.name
+			SpigotTransformer::class.java.name,
 		)
 	}
 	
@@ -87,9 +88,9 @@ class ASJHookLoader: HookLoader() {
 		registerPostTransformer(KASMLib(false))
 		registerPostTransformer(KASMLib(true))
 		registerPostTransformer(SuperWrapperTransformer())
+		registerPostTransformer(HookReplacerWorker())
 		registerSuperWrapperContainer("alexsocol.patcher.asm.hook.ASJSuperWrapperHandler")
 		
-		KASMLib.register(HookReplacerWorker.inst)
 		KASMLib.register(InterfaceAppenderWorker)
 		KASMLib.register(ReflectionLikeWorker.inst)
 		

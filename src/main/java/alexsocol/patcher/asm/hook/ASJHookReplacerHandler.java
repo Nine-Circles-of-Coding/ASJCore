@@ -86,10 +86,10 @@ public class ASJHookReplacerHandler {
 	@HookReplacer // fucking Crucible bitches overwriting my changes so post-transforming -_-
 	public static double getBlockReachDistance(ItemInWorldManager iiwm) {
 		startFROM();
-		POPLine();POP(iiwm.blockReachDistance);
-		POPLine();startTO();
-		POPLine();POP(PlayerReachDistanceHandler.getReachDistance(iiwm.thisPlayerMP));
-		POPLine();stop();
+		POP(iiwm.blockReachDistance);
+		startTO();
+		POP(PlayerReachDistanceHandler.getReachDistance(iiwm.thisPlayerMP));
+		stop();
 		
 		return 0;
 	}
@@ -97,91 +97,93 @@ public class ASJHookReplacerHandler {
 	@HookReplacer // fucking Crucible bitches overwriting my changes so post-transforming -_-
 	public static void setBlockReachDistance(ItemInWorldManager iiwm, double distance) {
 		startFROM();
-		POPLine();iiwm.blockReachDistance = distance;
-		POPLine();startTO();
-		POPLine();PlayerReachDistanceHandler.setReachDistance(iiwm.thisPlayerMP, distance);
-		POPLine();stop();
+		iiwm.blockReachDistance = distance;
+		startTO();
+		PlayerReachDistanceHandler.setReachDistance(iiwm.thisPlayerMP, distance);
+		stop();
 	}
 	
 	
-	// Perspective vs Ortho proj config
-	@HookReplacer
+	// Perspective vs Ortho proj config. Keeping old line for other mods like RiftFlux to mixin/hook into
+	@HookReplacer(isMandatory = false)
 	public static void setupCameraTransform(EntityRenderer er, float f, int i) {
 		startFROM();
-		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
-		POPLine();startTO();
-		POPLine();AngelicaCompat.selectProjection(er, f, er.farPlaneDistance * 2F);
-		POPLine();stop();
+		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
+		startTO();
+		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
+		AngelicaCompat.switchToOrtho(er, f, er.farPlaneDistance * 2F);
+		stop();
 	}
 	
-	@HookReplacer(targetMethod = "setupCameraTransform")
+	@HookReplacer(targetMethod = "setupCameraTransform", isMandatory = false)
 	public static void setupCameraTransformOF(EntityRenderer er, float f, int i) {
 		startFROM();
-		POPLine();Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
-		POPLine();startTO();
-		POPLine();AngelicaCompat.selectProjection(er, f, FLOAD("4"));
-		POPLine();stop();
+		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
+		startTO();
+		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
+		AngelicaCompat.switchToOrtho(er, f, FLOAD("4"));
+		stop();
 	}
 	
 	// bind smooth camera key
 	@HookReplacer(targetMethod = "<init>")
 	public static void GameSettings(GameSettings thiz) {
 		startFROM();
-		POPLine();POP("key.smoothCamera");POP(0);
-		POPLine();startTO();
-		POPLine();POP("key.smoothCamera");POP(Keyboard.KEY_F8);
-		POPLine();stop();
+		POP("key.smoothCamera");POP(0);
+		startTO();
+		POP("key.smoothCamera");POP(Keyboard.KEY_F8);
+		stop();
 	}
 	
 	@HookReplacer(targetMethod = "<init>")
 	public static void GameSettings(GameSettings thiz, Minecraft mc, File options) {
 		startFROM();
-		POPLine();POP("key.smoothCamera");POP(0);
-		POPLine();startTO();
-		POPLine();POP("key.smoothCamera");POP(Keyboard.KEY_F8);
-		POPLine();stop();
+		POP("key.smoothCamera");POP(0);
+		startTO();
+		POP("key.smoothCamera");POP(Keyboard.KEY_F8);
+		stop();
 	}
 	
 	@HookReplacer(targetMethod = "<init>")
 	public static void ModelCreeper(ModelCreeper thiz, float size) {
 		startFROM();
-		POPLine();{byte b0 = 4;}
-		POPLine();startTO();
-		POPLine();{byte b0 = 6;}
-		POPLine();stop();
+		POP(4);ISTORE("2");
+		startTO();
+		POP(6);ISTORE("2");
+		stop();
 	}
 	
-	@HookReplacer
+	@HookReplacer(removePop = true)
 	public static Set<String> getResourceDomains(FileResourcePack frp) {
 		startFROM();
-		POPLine();POP(HookReplacer.Replacer.<String>ALOAD("7").toLowerCase());
-		POPLine();startTO();
-		POPLine();POP(ALOAD("7").toString());
-		POPLine();stop();
+		HookReplacer.Replacer.<String>ALOAD("7").toLowerCase();
+		startTO();
+		ALOAD("7").toString();
+		stop();
 		
 		return null;
 	}
 	
-	@HookReplacer
+	@HookReplacer(removePop = true)
 	public static Set<String> getResourceDomains(FolderResourcePack frp) {
 		startFROM();
-		POPLine();POP(HookReplacer.Replacer.<String>ALOAD("7").toLowerCase());
-		POPLine();startTO();
-		POPLine();POP(ALOAD("7").toString());
-		POPLine();stop();
+		HookReplacer.Replacer.<String>ALOAD("7").toLowerCase();
+		startTO();
+		ALOAD("7").toString();
+		stop();
 		
 		return null;
 	}
 	
 	
 	// String -> NBTTagByteArray fix
-	@HookReplacer(targetMethod = "func_150489_a", correctStaticIndexes = true)
+	@HookReplacer(targetMethod = "func_150489_a", removePop = true)
 	public static NBTBase fixSingleElement(JsonToNBT.Primitive primitive) {
 		startFROM();
-		POPLine();POP(new NBTTagIntArray(new int[] {Integer.parseInt(HookReplacer.Replacer.<String>ALOAD("1").trim())}));
-		POPLine();startTO();
-		POPLine();POP(deserialize(ALOAD("2")));
-		POPLine();stop();
+		new NBTTagIntArray(new int[] {Integer.parseInt(HookReplacer.Replacer.<String>ALOAD("1").trim())});
+		startTO();
+		deserialize(ALOAD("2"));
+		stop();
 
 		return null;
 	}
@@ -203,13 +205,13 @@ public class ASJHookReplacerHandler {
 		}
 	}
 
-	@HookReplacer(targetMethod = "func_150489_a", correctStaticIndexes = true)
+	@HookReplacer(targetMethod = "func_150489_a")
 	public static NBTBase blockExtraCode(JsonToNBT.Primitive primitive) {
 		startFROM();
-		POPLine();POP(HookReplacer.Replacer.<String[]>ALOAD("2").length);
-		POPLine();startTO();
-		POPLine();POP(0);
-		POPLine();stop();
+		POP(HookReplacer.Replacer.<String[]>ALOAD("2").length);
+		startTO();
+		POP(0);
+		stop();
 		
 		return null;
 	}
@@ -217,10 +219,10 @@ public class ASJHookReplacerHandler {
 	@HookReplacer
 	public static boolean addComponentParts(ComponentScatteredFeaturePieces.SwampHut hut, World world, Random rand, StructureBoundingBox box) {
 		startFROM();
-		POPLine();world.spawnEntityInWorld(ALOAD("11"));
-		POPLine();startTO();
-		POPLine();fixWitchDespawn(world, ALOAD("11"));
-		POPLine();stop();
+		world.spawnEntityInWorld(ALOAD("11"));
+		startTO();
+		fixWitchDespawn(world, ALOAD("11"));
+		stop();
 		
 		return false;
 	}

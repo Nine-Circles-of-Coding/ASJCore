@@ -375,7 +375,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		sb.append(", ReturnValue=").append(returnValue);
 		if (returnValue == ReturnValue.PRIMITIVE_CONSTANT) sb.append(", Constant=").append(primitiveConstant);
 		sb.append(", InjectorFactory: ").append(injectorFactory.getClass().getName());
-		sb.append(", CreateMethod = ").append(createMethod);
+		sb.append(", CreateMethod=").append(createMethod);
 		
 		return sb.toString();
 	}

@@ -28,44 +28,47 @@ import java.util.*
 
 //@formatter:off
 // fix oak leaves on jungle shrubs
-@HookReplacer
+@HookReplacer(removePop = true)
 fun func_150567_a(target: BiomeGenJungle, rand: Random): WorldGenAbstractTree? {
 	startFROM()
-	POPLine();POP(WorldGenShrub(3, 0))
-	POPLine();startTO()
-	POPLine();POP(WorldGenShrub(3, 3))
-	POPLine();stop()
+	WorldGenShrub(3, 0)
+	startTO()
+	WorldGenShrub(3, 3)
+	stop()
 	
 	return null
 }
 
 // add more blindness
-@HookReplacer(targetMethod = "setupFog")
+@HookReplacer(targetMethod = "setupFog", isMandatory = false)
 fun blindnessDegree(er: EntityRenderer, fogMode: Int, ticks: Float) {
-	val entitylivingbase: EntityLivingBase = er.mc.renderViewEntity
-	val flag = false
-	val block = null
-	val event = null
-	var f1: Float
 	startFROM()
-	POPLine();f1 = 5.0f
-	POPLine();startTO()
-	POPLine();f1 = 5f / (entitylivingbase.getActivePotionEffect(Potion.blindness).amplifier + 1)
-	POPLine();stop()
+	POP(5f); FSTORE("7")
+	startTO()
+	POP(5f / (ALOAD<EntityLivingBase>("3").getActivePotionEffect(Potion.blindness).amplifier + 1)); FSTORE("7")
+	stop()
+}
+
+@HookReplacer(targetMethod = "setupFog", isMandatory = false)
+fun blindnessDegreeOF(er: EntityRenderer, fogMode: Int, ticks: Float) {
+	startFROM()
+	POP(5f); FSTORE("8")
+	startTO()
+	POP(5f / (ALOAD<EntityLivingBase>("3").getActivePotionEffect(Potion.blindness).amplifier + 1)); FSTORE("8")
+	stop()
 }
 
 @HookReplacer(targetMethod = "setupFog")
 fun lavaFog(er: EntityRenderer, fogMode: Int, ticks: Float) {
-	val entitylivingbase: EntityLivingBase = er.mc.renderViewEntity
-	val flag = false
 	startFROM()
-	POPLine();POP(2.0F)
-	POPLine();startTO()
-	POPLine();POP(lavaFog(flag))
-	POPLine();stop()
+	POP(2.0F)
+	startTO()
+	POP(lavaFog(ILOAD("4")))
+	stop()
 }
 
-fun lavaFog(flag: Boolean) = if (flag) 0.05f else 2f
+// flag: actually boolean
+fun lavaFog(flag: Int) = if (flag > 0) 0.05f else 2f
 
 @Suppress("unused") // used in class transformer
 fun printMissingData(locallyMissing: List<String>) = "Fatally missing blocks and items for mods:\n${locallyMissing.mapTo(HashSet()) { it.split(':')[0] }}"
@@ -73,63 +76,63 @@ fun printMissingData(locallyMissing: List<String>) = "Fatally missing blocks and
 @HookReplacer(targetMethod = "<init>")
 fun GuiSnooperList(list: GuiSnooper.List, parent: GuiSnooper) {
 	startFROM()
-	POPLine();POP(80)
-	POPLine();startTO()
-	POPLine();POP(24)
-	POPLine();stop()
+	POP(80)
+	startTO()
+	POP(24)
+	stop()
 }
 
 @HookReplacer
 fun renderString(fr: FontRenderer, text: String, x: Int, y: Int, color: Int, shadow: Boolean): Int {
 	startFROM()
-	POPLine();POP(-67108864)
-	POPLine();startTO()
-	POPLine();POP(-16777216)
-	POPLine();stop()
+	POP(-67108864)
+	startTO()
+	POP(-16777216)
+	stop()
 	
 	return 0
 }
 
-@HookReplacer(targetMethod = "<init>")
+@HookReplacer(targetMethod = "<init>", removePop = true)
 fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double) {
 	startFROM()
-	POPLine();POP(world.gameRules.getGameRuleBooleanValue("doFireTick"))
-	POPLine();startTO()
-	POPLine();POP(cutOutByASJCore())
-	POPLine();stop()
+	world.gameRules.getGameRuleBooleanValue("doFireTick")
+	startTO()
+	cutOutByASJCore()
+	stop()
 }
 
-@HookReplacer(targetMethod = "<init>") // Bukkit compatibility
+@HookReplacer(targetMethod = "<init>", removePop = true, isMandatory = false) // Bukkit compatibility
 fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double, isEffect: Boolean) {
 	startFROM()
-	POPLine();POP(world.gameRules.getGameRuleBooleanValue("doFireTick"))
-	POPLine();startTO()
-	POPLine();POP(cutOutByASJCore())
-	POPLine();stop()
+	world.gameRules.getGameRuleBooleanValue("doFireTick")
+	startTO()
+	cutOutByASJCore()
+	stop()
 }
 
 fun cutOutByASJCore() = false
 
 
 // dark theme for server
-@HookReplacer(targetMethod = "paint")
+@HookReplacer(targetMethod = "paint", removePop = true)
 fun darkBackground(stats: StatsComponent, graphics: Graphics) {
 	startFROM()
-	POPLine();POP(Color(16777215))
-	POPLine();startTO()
-	POPLine();POP(getStatsBackgroundColor())
-	POPLine();stop()
+	Color(16777215)
+	startTO()
+	getStatsBackgroundColor()
+	stop()
 }
 
 fun getStatsBackgroundColor() = if (PatcherConfigHandler.darkMode) Color.DARK_GRAY!! else Color.WHITE!!
 
-@HookReplacer(targetMethod = "paint")
+@HookReplacer(targetMethod = "paint", removePop = true)
 fun whiteText(stats: StatsComponent, graphics: Graphics) {
 	startFROM()
-	POPLine();POP(Color.BLACK)
-	POPLine();startTO()
-	POPLine();POP(getStatsTextColor())
-	POPLine();stop()
+	Color.BLACK
+	startTO()
+	getStatsTextColor()
+	stop()
 }
 
 fun getStatsTextColor() = if (PatcherConfigHandler.darkMode) Color.WHITE!! else Color.BLACK!!
@@ -139,10 +142,10 @@ fun getStatsTextColor() = if (PatcherConfigHandler.darkMode) Color.WHITE!! else 
 @HookReplacer(targetMethod = "renderBlockPane")
 fun fixGapBig(rb: RenderBlocks, block: BlockPane, x: Int, y: Int, z: Int): Boolean {
 	startFROM()
-	POPLine();POP(0.01)
-	POPLine();startTO()
-	POPLine();POP(0.001)
-	POPLine();stop()
+	POP(0.01)
+	startTO()
+	POP(0.001)
+	stop()
 	
 	return false
 }
@@ -150,10 +153,10 @@ fun fixGapBig(rb: RenderBlocks, block: BlockPane, x: Int, y: Int, z: Int): Boole
 @HookReplacer(targetMethod = "renderBlockPane")
 fun fixGapSmall(rb: RenderBlocks, block: BlockPane, x: Int, y: Int, z: Int): Boolean {
 	startFROM()
-	POPLine();POP(0.005)
-	POPLine();startTO()
-	POPLine();POP(0.0005)
-	POPLine();stop()
+	POP(0.005)
+	startTO()
+	POP(0.0005)
+	stop()
 	
 	return false
 }
@@ -164,34 +167,50 @@ fun javaStreamsAreShitSI(elements: Array<String>) = IntArray(elements.size) { el
 @HookReplacer(targetMethod = "func_145891_a")
 fun fixHopperHoppingZone(tile: TileEntityHopper, hopper: IHopper?): Boolean {
 	startFROM()
-	POPLine();POP(1.0)
-	POPLine();startTO()
-	POPLine();POP(0.5)
-	POPLine();stop()
+	POP(1.0)
+	startTO()
+	POP(0.5)
+	stop()
 	
 	return false
 }
 
 @HookReplacer(targetMethod = "updateRepairOutput")
 fun changeAnvilCostLimit(con: ContainerRepair) {
-	startFROM();POP(40);startTO();POP(maxAnvilCost());stop()
+	startFROM()
+	POP(40)
+	startTO()
+	POP(maxAnvilCost())
+	stop()
 }
 
 @HookReplacer(targetMethod = "updateRepairOutput")
 fun changeAnvilCostLower(con: ContainerRepair) {
-	startFROM();POP(39);startTO();POP(maxAnvilCost() - 1);stop()
+	startFROM()
+	POP(39)
+	startTO()
+	POP(maxAnvilCost() - 1)
+	stop()
 }
 
 @HookReplacer(targetMethod = "drawGuiContainerForegroundLayer")
 fun changeAnvilCostLimit(gui: GuiRepair, mx: Int, mz: Int) {
-	startFROM();POP(40);startTO();POP(maxAnvilCost());stop()
+	startFROM()
+	POP(40)
+	startTO()
+	POP(maxAnvilCost())
+	stop()
 }
 
 fun maxAnvilCost() = PatcherConfigHandler.anvilLevelLimit
 
 @HookReplacer(targetMethod = "onCollideWithPlayer")
 fun changeXpCooldown(xp: EntityXPOrb, player: EntityPlayer) {
-	startFROM();POP(2);startTO();POP(xpCooldown());stop()
+	startFROM()
+	POP(2)
+	startTO()
+	POP(xpCooldown())
+	stop()
 }
 
 fun xpCooldown() = PatcherConfigHandler.xpCooldown
@@ -200,22 +219,22 @@ fun xpCooldown() = PatcherConfigHandler.xpCooldown
 @HookReplacer(targetMethod = "onSpawnWithEgg")
 fun fixLeaderHealth(thiz: EntityZombie, data: IEntityLivingData): IEntityLivingData? {
 	startFROM()
-	POPLine();thiz.func_146070_a(true)
-	POPLine();startTO()
-	POPLine();thiz.func_146070_a(true)
-	POPLine();thiz.health = thiz.maxHealth
-	POPLine();stop()
+	thiz.func_146070_a(true)
+	startTO()
+	thiz.func_146070_a(true)
+	thiz.health = thiz.maxHealth
+	stop()
 	
 	return null
 }
 
-@HookReplacer(targetMethod = "attackEntityFrom")
+@HookReplacer(targetMethod = "attackEntityFrom", removePop = true)
 fun fixPigZombieAidType(thiz: EntityZombie, src: DamageSource?, amount: Float): Boolean {
 	startFROM()
-	POPLine();POP(EntityZombie(thiz.worldObj))
-	POPLine();startTO()
-	POPLine();POP(getAidEntity(thiz))
-	POPLine();stop()
+	EntityZombie(thiz.worldObj)
+	startTO()
+	getAidEntity(thiz)
+	stop()
 	
 	return false
 }
@@ -226,13 +245,13 @@ fun getAidEntity(thiz: EntityZombie) = try {
 	EntityZombie(thiz.worldObj) // увы
 }
 
-@HookReplacer(targetMethod = "onLivingUpdate")
+@HookReplacer(targetMethod = "onLivingUpdate", removePop = true)
 fun fixBabyZombieNotBurning(thiz: EntityZombie) {
 	startFROM()
-	POPLine();POP(thiz.isChild)
-	POPLine();startTO()
-	POPLine();POP(checkChildBurning(thiz))
-	POPLine();stop()
+	thiz.isChild
+	startTO()
+	checkChildBurning(thiz)
+	stop()
 }
 
 fun checkChildBurning(thiz: EntityZombie) = !PatcherConfigHandler.burningZombieChildren && thiz.isChild
@@ -240,12 +259,12 @@ fun checkChildBurning(thiz: EntityZombie) = !PatcherConfigHandler.burningZombieC
 @HookReplacer(targetMethod = "drawScreen")
 fun addDependenciesInfo(thiz: GuiModList, mouseX: Int, mouseY: Int, ticks: Float) {
 	startFROM()
-	POPLine();POP(thiz.width - ILOAD("4") - 20)
-	POPLine();startTO()
-	POPLine();POP(addDependenciesInfo(thiz, ILOAD("4"), ILOAD("5"), thiz.selectedMod))
-	POPLine();ISTORE("5")
-	POPLine();POP(thiz.width - ILOAD("4") - 21) // slight change to not trigger injection again -_-
-	POPLine();stop()
+	POP(thiz.width - ILOAD("4") - 20)
+	startTO()
+	POP(addDependenciesInfo(thiz, ILOAD("4"), ILOAD("5"), thiz.selectedMod))
+	ISTORE("5")
+	POP(thiz.width - ILOAD("4") - 21) // slight change to not trigger injection again -_-
+	stop()
 }
 
 fun addDependenciesInfo(thiz: GuiModList, offset: Int, shifty: Int, mod: ModContainer): Int {
@@ -270,9 +289,9 @@ fun addDependenciesInfo(thiz: GuiModList, offset: Int, shifty: Int, mod: ModCont
 @HookReplacer(targetMethod = "drawScreen")
 fun alwaysDrawInfo(thiz: GuiModList, mouseX: Int, mouseY: Int, ticks: Float) {
 	startFROM()
-	POPLine();POP(thiz.selectedMod.metadata.autogenerated)
-	POPLine();startTO()
-	POPLine();POP(false)
-	POPLine();stop()
+	POP(thiz.selectedMod.metadata.autogenerated)
+	startTO()
+	POP(false)
+	stop()
 }
 //@formatter:on

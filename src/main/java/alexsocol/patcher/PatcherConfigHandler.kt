@@ -34,7 +34,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var langsRamOptimization = true
 	var lightningID = 150
 	var maxParticles = 4000
-	var orthoProjection = false
+	var orthoProjectionOn = true
 	var portalHook = true
 	var removeStreamKeys = true
 	var rescaleProfiler = true
@@ -89,7 +89,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		langsRamOptimization = loadProp(CATEGORY_GENERAL, "langsRamOptimization", langsRamOptimization, true, "Set this to false to disable langs RAM optimization (if some lang is not loaded properly)")
 		lightningID = loadProp(CATEGORY_GENERAL, "lightningID", lightningID, true, "ID for lightning bolt entity")
 		maxParticles = loadProp(CATEGORY_GENERAL, "maxParticles", maxParticles, true, "How many [any] particles can there be at one time (defaults to vanilla value)")
-		orthoProjection = loadProp(CATEGORY_GENERAL, "orthoProjection", orthoProjection, false, "Set this to true to enable orthographic projection (no perspective)")
+		orthoProjectionOn = loadProp(CATEGORY_GENERAL, "orthoProjectionOn", orthoProjectionOn, true, "Set this to false to disable orthographic projection feature")
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
 		removeStreamKeys = loadProp(CATEGORY_GENERAL, "removeStreamKeys", removeStreamKeys, true, "Set this to false to keep useless streamer keys (compat with ReBind mod)")
 		rescaleProfiler = loadProp(CATEGORY_GENERAL, "rescaleProfiler", rescaleProfiler, false, "Set this to false to keep profiler HUD not scalable with GUI scale setting")

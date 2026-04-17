@@ -18,8 +18,10 @@ object KeyBindingHandler {
 	val keyOrtho = KeyBinding("asjcore.orthoProjection", Keyboard.KEY_F6, "key.categories.misc")
 	val keyNI = KeyBinding("asjcore.noEntityInteract", Keyboard.KEY_F10, "key.categories.misc")
 	
+	var orthoProjectionState = false
+	
 	init {
-		ClientRegistry.registerKeyBinding(keyOrtho)
+		if (PatcherConfigHandler.orthoProjectionOn) ClientRegistry.registerKeyBinding(keyOrtho)
 		ClientRegistry.registerKeyBinding(keyNI)
 	}
 	
@@ -37,18 +39,20 @@ object KeyBindingHandler {
 			toggleNI = false
 		}
 		
-		if (isPressed(keyOrtho)) {
-			if (!toggleOrtho) {
-				toggleOrtho = true
-				PatcherConfigHandler.orthoProjection = !PatcherConfigHandler.orthoProjection
+		if (PatcherConfigHandler.orthoProjectionOn) {
+			if (isPressed(keyOrtho)) {
+				if (!toggleOrtho) {
+					toggleOrtho = true
+					orthoProjectionState = !orthoProjectionState
+				}
+			} else if (toggleOrtho) {
+				toggleOrtho = false
 			}
-		} else if (toggleOrtho) {
-			toggleOrtho = false
 		}
 	}
 	
 	private fun isPressed(key: KeyBinding): Boolean {
-		return try {
+		return if (key.keyCode == 0) false else try {
 			Keyboard.isKeyDown(key.keyCode)
 		} catch (_: IndexOutOfBoundsException) {
 			false
