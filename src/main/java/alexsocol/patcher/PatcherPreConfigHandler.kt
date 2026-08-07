@@ -1,7 +1,8 @@
 package alexsocol.patcher
 
 import alexsocol.asjlib.extendables.ASJPreConfigHandler
-import net.minecraftforge.common.config.Configuration.*
+import net.minecraftforge.common.config.Configuration.CATEGORY_GENERAL
+import net.minecraftforge.common.config.Configuration.CATEGORY_SPLITTER
 import java.io.File
 
 object PatcherPreConfigHandler: ASJPreConfigHandler() {
@@ -17,8 +18,12 @@ object PatcherPreConfigHandler: ASJPreConfigHandler() {
 	var fixItemCollision = true
 	var logDebug = true
 	var logTrace = false
+	var tickrateHooks = true
 	var topDownButtons = true
-	var transformersForHookReplacerBlacklist = arrayOf("Reika.")
+	var transformersForHookReplacerBlacklist = arrayOf(
+		"Reika.", // whatever
+		"am2.preloader.", // dumbass -_-
+	)
 	
 	// derkatercore
 	var allPublic = false
@@ -47,8 +52,9 @@ object PatcherPreConfigHandler: ASJPreConfigHandler() {
 		fixItemCollision = loadProp(CATEGORY_GENERAL, "fixItemCollision", fixItemCollision, true, "Set this to false to disable item collision on complex blocks fix")
 		logDebug = loadProp(CATEGORY_GENERAL, "logDebug", logDebug, false, "Set this to false to disable debug logging")
 		logTrace = loadProp(CATEGORY_GENERAL, "logTrace", logTrace, false, "Set this to true to enable thorough logging")
+		tickrateHooks = loadProp(CATEGORY_GENERAL, "tickrateHooks", tickrateHooks, true, "Set this to false to disable tickrate modifications")
 		topDownButtons = loadProp(CATEGORY_GENERAL, "topDownButtons", topDownButtons, true, "Set this to false to disable functionality allowing buttons to be placed on block top or bottom")
-		transformersForHookReplacerBlacklist = loadProp(CATEGORY_GENERAL, "transformersForHookReplacerBlacklist", transformersForHookReplacerBlacklist, true, "Add here problematic transformers that cause issues on HookReplacers registration")
+		transformersForHookReplacerBlacklist = loadProp(CATEGORY_GENERAL, "transformersForHookReplacerBlacklist", transformersForHookReplacerBlacklist, true, "Add here problematic transformers that cause issues on HookReplacers registration", false)
 		
 		allPublic = loadProp(CATEGORY_DKC, "allPublic", allPublic, true, "Set this to true to make all fields and functions public")
 		ignoredClasses = loadProp(CATEGORY_DKC, "ignoredClasses", ignoredClasses, true, "Array of classes or packages (or just parts) that won't be touched when making everything public", false)

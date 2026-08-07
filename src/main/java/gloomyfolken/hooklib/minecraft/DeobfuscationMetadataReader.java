@@ -69,7 +69,7 @@ public class DeobfuscationMetadataReader extends ClassMetadataReader {
 		currentTransformChain.addLast(type);
 		try {
 			HookClassTransformer.skipTransformation = true;
-			bytes = KASMUtil.applyAllPossibleTransformers(obfName, type.replace('/', '.'), bytes);
+			bytes = KASMUtil.applyAllPossibleTransformers(obfName.replace('/', '.'), type.replace('/', '.'), bytes);
 		} catch (Exception e) {
 			HookClassTransformer.logger.error("Error:", e);
 		} finally {

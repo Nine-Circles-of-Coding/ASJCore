@@ -2,89 +2,92 @@ package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
 import alexsocol.asjlib.extendables.block.*
-import alexsocol.asjlib.render.ICustomArmSwingEndEntity
-import alexsocol.patcher.PatcherConfigHandler
-import alexsocol.patcher.compat.AngelicaCompat
+import alexsocol.asjlib.render.*
+import alexsocol.patcher.*
+import alexsocol.patcher.compat.*
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.*
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
-import alexsocol.patcher.helper.FuckingSpigotFix
+import alexsocol.patcher.helper.*
 import alexsocol.patcher.network.*
-import alexsocol.patcher.util.FakeStatsList
-import biomesoplenty.common.blocks.BlockBOPLog
-import biomesoplenty.common.itemblocks.ItemBlockLog
-import cofh.asmhooks.HooksCore
-import com.emoniph.witchery.dimension.WorldProviderDreamWorld
-import com.google.common.collect.HashMultimap
+import alexsocol.patcher.util.*
+import biomesoplenty.common.blocks.*
+import biomesoplenty.common.itemblocks.*
+import cofh.asmhooks.*
+import com.emoniph.witchery.dimension.*
+import com.google.common.collect.*
 import cpw.mods.fml.client.*
-import cpw.mods.fml.common.Loader
-import cpw.mods.fml.common.network.handshake.NetworkDispatcher
+import cpw.mods.fml.common.*
+import cpw.mods.fml.common.network.handshake.*
 import cpw.mods.fml.common.registry.*
 import cpw.mods.fml.relauncher.*
-import cpw.mods.fml.server.FMLServerHandler
-import gloomyfolken.hooklib.asm.Hook
+import cpw.mods.fml.server.*
+import gloomyfolken.hooklib.asm.*
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import gloomyfolken.hooklib.asm.ReturnCondition.*
-import jp.mc.ancientred.starminer.core.entity.EntityLivingGravitized
+import jp.mc.ancientred.starminer.core.entity.*
 import net.minecraft.block.*
-import net.minecraft.block.material.Material
-import net.minecraft.client.Minecraft
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.block.material.*
+import net.minecraft.client.*
+import net.minecraft.client.entity.*
 import net.minecraft.client.gui.*
-import net.minecraft.client.gui.achievement.GuiStats
-import net.minecraft.client.gui.inventory.GuiContainer
-import net.minecraft.client.multiplayer.PlayerControllerMP
+import net.minecraft.client.gui.achievement.*
+import net.minecraft.client.gui.inventory.*
+import net.minecraft.client.multiplayer.*
 import net.minecraft.client.renderer.*
 import net.minecraft.client.renderer.entity.*
-import net.minecraft.client.resources.I18n
+import net.minecraft.client.resources.*
 import net.minecraft.client.settings.*
+import net.minecraft.client.shader.*
 import net.minecraft.command.*
-import net.minecraft.command.server.CommandSummon
-import net.minecraft.creativetab.CreativeTabs
+import net.minecraft.command.server.*
+import net.minecraft.creativetab.*
 import net.minecraft.entity.*
-import net.minecraft.entity.DataWatcher.WatchableObject
-import net.minecraft.entity.EntityList.EntityEggInfo
-import net.minecraft.entity.ai.attributes.AttributeModifier
+import net.minecraft.entity.DataWatcher.*
+import net.minecraft.entity.EntityList
+import net.minecraft.entity.ai.attributes.*
 import net.minecraft.entity.boss.*
 import net.minecraft.entity.effect.*
 import net.minecraft.entity.item.*
 import net.minecraft.entity.monster.*
-import net.minecraft.entity.passive.EntityMooshroom
+import net.minecraft.entity.passive.*
 import net.minecraft.entity.player.*
 import net.minecraft.entity.projectile.*
 import net.minecraft.init.*
 import net.minecraft.inventory.*
 import net.minecraft.item.*
+import net.minecraft.item.Item
 import net.minecraft.nbt.*
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.*
 import net.minecraft.potion.*
-import net.minecraft.profiler.PlayerUsageSnooper
+import net.minecraft.profiler.*
 import net.minecraft.server.*
-import net.minecraft.server.dedicated.DedicatedServer
-import net.minecraft.server.gui.MinecraftServerGui
-import net.minecraft.server.integrated.IntegratedServer
-import net.minecraft.server.management.ItemInWorldManager
+import net.minecraft.server.dedicated.*
+import net.minecraft.server.gui.*
+import net.minecraft.server.integrated.*
+import net.minecraft.server.management.*
 import net.minecraft.stats.*
 import net.minecraft.stats.StatList.*
 import net.minecraft.tileentity.*
 import net.minecraft.util.*
 import net.minecraft.world.*
 import net.minecraft.world.biome.*
-import net.minecraft.world.chunk.Chunk
-import net.minecraft.world.chunk.storage.AnvilChunkLoader
+import net.minecraft.world.chunk.*
+import net.minecraft.world.chunk.storage.*
 import net.minecraftforge.common.*
-import net.minecraftforge.common.util.ForgeDirection
-import net.minecraftforge.fluids.IFluidBlock
-import org.lwjgl.opengl.GL11
-import org.objectweb.asm.Opcodes
+import net.minecraftforge.common.util.*
+import net.minecraftforge.fluids.*
+import org.lwjgl.opengl.*
+import org.objectweb.asm.*
 import ru.vamig.worldengine.*
-import vazkii.botania.client.core.handler.BotaniaPlayerController
+import vazkii.botania.client.core.handler.*
 import java.awt.*
-import java.awt.datatransfer.StringSelection
-import java.io.File
+import java.awt.datatransfer.*
+import java.io.*
+import java.lang.reflect.*
 import java.util.*
 import javax.swing.*
-import javax.swing.plaf.basic.BasicScrollBarUI
+import javax.swing.plaf.basic.*
 import kotlin.math.*
 import org.lwjglx.opengl.GL11 as XGL11
 
@@ -193,7 +196,7 @@ object ASJHookHandler {
 	private fun addEntityEgg(entity: Class<*>, i: Int, j: Int) {
 		val id = EntityList.classToIDMapping[entity] as Int
 		if (EntityList.entityEggs[id] != null) return
-		EntityList.entityEggs[id] = EntityEggInfo(id, i, j)
+		EntityList.entityEggs[id] = EntityList.EntityEggInfo(id, i, j)
 	}
 	
 	
@@ -661,7 +664,7 @@ object ASJHookHandler {
 		return false
 	}
 	
-//	// nightvision twinkling fix
+	// nightvision twinkling fix
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun getNightVisionBrightness(render: EntityRenderer, player: EntityPlayer, partialTicks: Float): Float {
@@ -1342,12 +1345,16 @@ object ASJHookHandler {
 	@Hook(returnCondition = ALWAYS)
 	fun setReachDistanceExtension(handler: BotaniaPlayerController, f: Float) = Unit
 	
+	val EntityLivingGravitized_hasInit: Field? by lazy { ASJReflectionHelper.getField(EntityLivingGravitized::class.java, "hasInitServerPlayer", "hasInitPrivate")?.apply { setAccessible(true) } }
+	
 	// change starminer extra reach
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun init(e: EntityLivingGravitized) {
-		ASJReflectionHelper.setValue(EntityLivingGravitized::class.java, e, true, "hasInitServerPlayer")
-		@Suppress("IMPOSSIBLE_IS_CHECK_WARNING", "KotlinConstantConditions") if (e !is EntityPlayerMP) return
+		EntityLivingGravitized_hasInit?.let { ASJReflectionHelper.setValue(it, e, true, false) }
+		
+		@Suppress("IMPOSSIBLE_IS_CHECK_WARNING", "KotlinConstantConditions")
+		if (e !is EntityPlayerMP) return
 		
 		e.getAttributeMap().applyAttributeModifiers(HashMultimap.create<String, AttributeModifier>().apply {
 			put(PlayerReachDistanceHandler.reachDistance.attributeUnlocalizedName, AttributeModifier(UUID.fromString("30eb815c-094d-45fb-a6e3-6864482f9bf5"), "StarMiner Gravitized Reach", 2.0, 0))
@@ -1608,11 +1615,11 @@ object ASJHookHandler {
 	
 	@JvmStatic
 	@Hook(returnCondition = ON_NOT_NULL)
-	fun func_151182_a(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) dummyStat else null 
+	fun func_151182_a(static: StatList?, info: EntityList.EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) dummyStat else null 
 	
 	@JvmStatic
 	@Hook(returnCondition = ON_NOT_NULL)
-	fun func_151176_b(static: StatList?, info: EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) dummyStat else null
+	fun func_151176_b(static: StatList?, info: EntityList.EntityEggInfo?): StatBase? = if (PatcherConfigHandler.disableStats) dummyStat else null
 	
 	@JvmStatic
 	@Hook(returnCondition = ON_NOT_NULL, injectOnExit = true)
@@ -1747,4 +1754,16 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(isMandatory = false, injectOnExit = true, targetMethod = "glFogi")
 	fun xglFogi(static: XGL11?, pname: Int, param: Int) = AngelicaCompat.glFogiHook(pname, param)
+	
+	
+	@JvmStatic
+	@Hook(returnCondition = ALWAYS)
+	fun getSoundVolume(thiz: EntityGhast) = if (PatcherConfigHandler.quietGhasts) 1f else 10f
+	
+	@JvmStatic
+	@Hook
+	fun activateNextShader(er: EntityRenderer) {
+		if (OpenGlHelper.shadersSupported && ShaderLinkHelper.getStaticShaderLinkHelper() == null)
+			ShaderLinkHelper.setNewStaticShaderLinkHelper()
+	}
 }

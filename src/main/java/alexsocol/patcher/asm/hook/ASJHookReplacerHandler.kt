@@ -2,26 +2,32 @@
 
 package alexsocol.patcher.asm.hook
 
-import alexsocol.patcher.PatcherConfigHandler
-import com.KAIIIAK.classManipulators.HookReplacer
+import alexsocol.patcher.*
+import com.KAIIIAK.classManipulators.*
+import com.KAIIIAK.classManipulators.HookReplacer.*
 import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
-import cpw.mods.fml.client.GuiModList
-import cpw.mods.fml.common.ModContainer
-import net.minecraft.block.BlockPane
+import cpw.mods.fml.client.*
+import cpw.mods.fml.common.*
+import lumien.randomthings.Items.*
+import net.minecraft.block.*
+import net.minecraft.block.material.Material
 import net.minecraft.client.gui.*
 import net.minecraft.client.renderer.*
 import net.minecraft.entity.*
-import net.minecraft.entity.effect.EntityLightningBolt
-import net.minecraft.entity.item.EntityXPOrb
-import net.minecraft.entity.monster.EntityZombie
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.inventory.ContainerRepair
-import net.minecraft.potion.Potion
-import net.minecraft.server.gui.StatsComponent
+import net.minecraft.entity.effect.*
+import net.minecraft.entity.item.*
+import net.minecraft.entity.monster.*
+import net.minecraft.entity.player.*
+import net.minecraft.init.Blocks
+import net.minecraft.inventory.*
+import net.minecraft.network.*
+import net.minecraft.network.play.server.*
+import net.minecraft.potion.*
+import net.minecraft.server.gui.*
 import net.minecraft.tileentity.*
-import net.minecraft.util.DamageSource
-import net.minecraft.world.World
-import net.minecraft.world.biome.BiomeGenJungle
+import net.minecraft.util.*
+import net.minecraft.world.*
+import net.minecraft.world.biome.*
 import net.minecraft.world.gen.feature.*
 import java.awt.*
 import java.util.*
@@ -40,7 +46,8 @@ fun func_150567_a(target: BiomeGenJungle, rand: Random): WorldGenAbstractTree? {
 }
 
 // add more blindness
-@HookReplacer(targetMethod = "setupFog", isMandatory = false)
+@CreateHRG(name = "blindnessDegree")
+@HookReplacer(targetMethod = "setupFog", mandatoryGroups = ["blindnessDegree"])
 fun blindnessDegree(er: EntityRenderer, fogMode: Int, ticks: Float) {
 	startFROM()
 	POP(5f); FSTORE("7")
@@ -49,7 +56,7 @@ fun blindnessDegree(er: EntityRenderer, fogMode: Int, ticks: Float) {
 	stop()
 }
 
-@HookReplacer(targetMethod = "setupFog", isMandatory = false)
+@HookReplacer(targetMethod = "setupFog", mandatoryGroups = ["blindnessDegree"])
 fun blindnessDegreeOF(er: EntityRenderer, fogMode: Int, ticks: Float) {
 	startFROM()
 	POP(5f); FSTORE("8")
@@ -93,25 +100,24 @@ fun renderString(fr: FontRenderer, text: String, x: Int, y: Int, color: Int, sha
 	return 0
 }
 
-@HookReplacer(targetMethod = "<init>", removePop = true)
+@CreateHRG(name = "lightning")
+@HookReplacer(targetMethod = "<init>", removePop = true, mandatoryGroups = ["lightning"])
 fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double) {
 	startFROM()
 	world.gameRules.getGameRuleBooleanValue("doFireTick")
 	startTO()
-	cutOutByASJCore()
+	POP(false)
 	stop()
 }
 
-@HookReplacer(targetMethod = "<init>", removePop = true, isMandatory = false) // Bukkit compatibility
+@HookReplacer(targetMethod = "<init>", removePop = true, mandatoryGroups = ["lightning"]) // Bukkit compatibility
 fun EntityLightningBolt(thiz: EntityLightningBolt, world: World, x: Double, y: Double, z: Double, isEffect: Boolean) {
 	startFROM()
 	world.gameRules.getGameRuleBooleanValue("doFireTick")
 	startTO()
-	cutOutByASJCore()
+	POP(false)
 	stop()
 }
-
-fun cutOutByASJCore() = false
 
 
 // dark theme for server
@@ -294,4 +300,103 @@ fun alwaysDrawInfo(thiz: GuiModList, mouseX: Int, mouseY: Int, ticks: Float) {
 	POP(false)
 	stop()
 }
+
+// WE Biome crash fix for RT
+@HookReplacer(removePop = true)
+fun onEntityItemUpdate(thiz: ItemBiomeCapsule, item: EntityItem): Boolean {
+	startFROM()
+	BiomeGenBase.getBiome(ILOAD("6"))
+	startTO()
+	ALOAD<BiomeGenBase>("3")
+	stop()
+	
+	return false
+}
+
+
+@CreateHRG(name = "pistonPush")
+@HookReplacer(targetMethod = "canExtend", mandatoryGroups = ["pistonPush"])
+fun canExtend1(piston: BlockPistonBase, world: World?, x: Int, y: Int, z: Int, side: Int): Boolean {
+	startFROM()
+	POP(12)
+	startTO()
+	POP(PatcherConfigHandler.maxPistonPush)
+	stop()
+	
+	return false
+}
+
+@HookReplacer(targetMethod = "tryExtend", mandatoryGroups = ["pistonPush"])
+fun tryExtend1(piston: BlockPistonBase, world: World?, x: Int, y: Int, z: Int, side: Int): Boolean {
+	startFROM()
+	POP(12)
+	startTO()
+	POP(PatcherConfigHandler.maxPistonPush)
+	stop()
+	
+	return false
+}
+
+fun maxPistonExtension() = PatcherConfigHandler.maxPistonPush + 1
+
+@HookReplacer(targetMethod = "canExtend", mandatoryGroups = ["pistonPush"])
+fun canExtend2(piston: BlockPistonBase, world: World?, x: Int, y: Int, z: Int, side: Int): Boolean {
+	startFROM()
+	POP(13)
+	startTO()
+	POP(maxPistonExtension())
+	stop()
+	
+	return false
+}
+
+@HookReplacer(targetMethod = "tryExtend", mandatoryGroups = ["pistonPush"])
+fun tryExtend2(piston: BlockPistonBase, world: World?, x: Int, y: Int, z: Int, side: Int): Boolean {
+	startFROM()
+	POP(13)
+	startTO()
+	POP(maxPistonExtension())
+	stop()
+	
+	return false
+}
+
+
+@CreateHRG(name = "highSleep", type = MandatoryType.IF_ALL)
+@HookReplacer(mandatoryGroups = ["highSleep"], removePop = true)
+fun readPacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
+	startFROM()
+	buf.readByte()
+	startTO()
+	buf.readInt()
+	stop()
+}
+
+@HookReplacer(mandatoryGroups = ["highSleep"])
+fun writePacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
+	startFROM()
+	buf.writeByte(packet.field_149096_c)
+	startTO()
+	buf.writeInt(packet.field_149096_c)
+	stop()
+}
+
+
+@HookReplacer(removePop = true) // maybe has crash but couldn't find it so oh well
+fun onBlockAdded(block: BlockFire, world: World, x: Int, y: Int, z: Int) {
+	startFROM()
+	world.provider.dimensionId
+	startTO()
+	noNetherPortalInWrongDims(world.provider.dimensionId)
+	stop()
+}
+
+fun noNetherPortalInWrongDims(dimId: Int) = when (dimId) {
+	0, -1 -> 0
+	else  -> 1
+}
+
+
+// call inserted by ASJClassTransformer#fixLiquidToBucket
+fun checkBlock(original: Material, world: World, x: Int, y: Int, z: Int) = world.getBlock(x, y, z) === if (original === Material.water) Blocks.water else if (original === Material.lava) Blocks.lava else false 
 //@formatter:on

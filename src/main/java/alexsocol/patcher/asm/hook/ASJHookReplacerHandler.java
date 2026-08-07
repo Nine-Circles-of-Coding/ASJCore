@@ -5,14 +5,18 @@ import alexsocol.patcher.handler.PlayerReachDistanceHandler;
 import com.KAIIIAK.classManipulators.HookReplacer;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import mods.clayium.item.gadget.GadgetLongArm;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.achievement.GuiStats;
 import net.minecraft.client.model.ModelCreeper;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.resources.FileResourcePack;
 import net.minecraft.client.resources.FolderResourcePack;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.GameSettings;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.EntityWitch;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagByteArray;
@@ -20,9 +24,9 @@ import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.play.client.C02PacketUseEntity;
 import net.minecraft.server.management.ItemInWorldManager;
+import net.minecraft.stats.StatCrafting;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.structure.ComponentScatteredFeaturePieces;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import org.lwjgl.input.Keyboard;
@@ -39,8 +43,9 @@ import static com.KAIIIAK.classManipulators.HookReplacer.Replacer.*;
 public class ASJHookReplacerHandler {
 	
 	// reach distance
+	@HookReplacer.CreateHRG(name = "reachDistance-getMouseOver")
 	@SideOnly(Side.CLIENT)
-	@HookReplacer
+	@HookReplacer(mandatoryGroups = { "reachDistance-getMouseOver" })
 	public static void getMouseOver(EntityRenderer er, float partialTick) {
 		if (er.mc.renderViewEntity != null) {
 			if (er.mc.theWorld != null) {
@@ -63,24 +68,39 @@ public class ASJHookReplacerHandler {
 			}
 		}
 	}
-	
-	@HookReplacer
-	public static void processUseEntity(NetHandlerPlayServer nhps, C02PacketUseEntity packet) {
-		WorldServer worldserver = null;
-		Entity entity = null;
-		
-		if (entity != null) {
-			boolean flag = false;
-			double d0 = 0;
-			
-			startFROM();
-			POPLine();if (!flag) {
-				d0 = 9.0D;
+
+	@SideOnly(Side.CLIENT)
+	@HookReplacer(targetMethod = "getMouseOver", mandatoryGroups = { "reachDistance-getMouseOver" })
+	public static void getMouseOverClayium(EntityRenderer er, float partialTick) {
+		if (er.mc.renderViewEntity != null) {
+			if (er.mc.theWorld != null) {
+				double d0 = 0;
+				double d1 = 0;
+				Vec3 vec3 = null;
+
+				startFROM();
+				POPLine();if (er.mc.playerController.extendedReach()) {
+					d0 = GadgetLongArm.hookBlockReachDistance(6.0F);
+					d1 = GadgetLongArm.hookBlockReachDistance(6.0F);
+				} else {
+					if (d0 > GadgetLongArm.hookBlockReachDistance(3.0F)) {
+						d1 = GadgetLongArm.hookBlockReachDistance(3.0F);
+					}
+
+					d0 = d1;
+				}
+				startTO();stop();
 			}
-			startTO();
-			d0 = Math.pow(PlayerReachDistanceHandler.getReachDistance(nhps.playerEntity), 2);
-			stop();
 		}
+	}
+	
+	@HookReplacer(removePop = true)
+	public static void processUseEntity(NetHandlerPlayServer nhps, C02PacketUseEntity packet) {
+		startFROM();
+		DLOAD("5");
+		startTO();
+		Math.pow(PlayerReachDistanceHandler.getReachDistance(nhps.playerEntity), 2);
+		stop();
 	}
 	
 	@HookReplacer // fucking Crucible bitches overwriting my changes so post-transforming -_-
@@ -105,7 +125,8 @@ public class ASJHookReplacerHandler {
 	
 	
 	// Perspective vs Ortho proj config. Keeping old line for other mods like RiftFlux to mixin/hook into
-	@HookReplacer(isMandatory = false)
+	@HookReplacer.CreateHRG(name = "orthoProjection")
+	@HookReplacer(mandatoryGroups = "orthoProjection")
 	public static void setupCameraTransform(EntityRenderer er, float f, int i) {
 		startFROM();
 		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
@@ -115,7 +136,7 @@ public class ASJHookReplacerHandler {
 		stop();
 	}
 	
-	@HookReplacer(targetMethod = "setupCameraTransform", isMandatory = false)
+	@HookReplacer(targetMethod = "setupCameraTransform", mandatoryGroups = "orthoProjection")
 	public static void setupCameraTransformOF(EntityRenderer er, float f, int i) {
 		startFROM();
 		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
@@ -216,6 +237,7 @@ public class ASJHookReplacerHandler {
 		return null;
 	}
 	
+	
 	@HookReplacer
 	public static boolean addComponentParts(ComponentScatteredFeaturePieces.SwampHut hut, World world, Random rand, StructureBoundingBox box) {
 		startFROM();
@@ -230,6 +252,17 @@ public class ASJHookReplacerHandler {
 	public static void fixWitchDespawn(World world, EntityWitch witch) {
 		witch.func_110163_bv();
 		world.spawnEntityInWorld(witch);
+	}
+	
+	
+	@HookReplacer(removePop = true)
+	@SuppressWarnings("ALL")
+	public static void func_148213_a(GuiStats.Stats gui, StatCrafting stat, int x, int y) {
+		startFROM();
+		("" + I18n.format(HookReplacer.Replacer.<Item>ALOAD("4").getUnlocalizedName() + ".name", new Object[0])).trim();
+		startTO();
+		new ItemStack(HookReplacer.Replacer.<Item>ALOAD("4")).getDisplayName();
+		stop();
 	}
 }
 //@formatter:on

@@ -13,6 +13,7 @@ import java.util.stream.IntStream;
 
 import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 
+@SuppressWarnings("unused")
 public class SomeUtil {
 	
 	public static AbstractInsnNode copyInsnNode(AbstractInsnNode original) {
@@ -255,8 +256,8 @@ public class SomeUtil {
 	public static List<AbstractInsnNode> toList(InsnList insnList) {
 		List<AbstractInsnNode> ret = new ArrayList<>();
 		if (insnList == null || insnList.size() == 0) return ret;
-		for (int i = 0; i < insnList.size(); i++) {
-			ret.add(insnList.get(i));
+		for (AbstractInsnNode node = insnList.getFirst(); node != null; node = node.getNext()){
+			ret.add(node);
 		}
 		return ret;
 	}

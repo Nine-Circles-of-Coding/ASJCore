@@ -244,7 +244,7 @@ public class ASJReflectionHelper {
 				return m;
 			}
 		}
-		CSLog.error(new NoSuchMethodException("Method not found! (Class: " + clazz + "; Expected field names: " + Arrays.toString(methodNames)));
+		CSLog.error(new NoSuchMethodException("Method not found! (Class: " + clazz + "; Expected method names: " + Arrays.toString(methodNames)));
 		return null;
 	}
 	

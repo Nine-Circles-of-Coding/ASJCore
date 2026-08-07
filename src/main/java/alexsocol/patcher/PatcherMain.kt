@@ -1,19 +1,29 @@
 package alexsocol.patcher
 
-import alexsocol.asjlib.*
+import alexsocol.asjlib.ASJUtilities
 import alexsocol.asjlib.command.*
+import alexsocol.asjlib.eventFML
+import alexsocol.asjlib.eventForge
 import alexsocol.asjlib.render.ASJShaderHelper
 import alexsocol.patcher.PatcherMain.MODID
 import alexsocol.patcher.asm.ASJHookLoader
 import alexsocol.patcher.crafting.CraftingHandler
-import alexsocol.patcher.event.*
-import alexsocol.patcher.handler.*
+import alexsocol.patcher.event.ServerStartedEvent
+import alexsocol.patcher.event.ServerStartingEvent
+import alexsocol.patcher.event.ServerStoppedEvent
+import alexsocol.patcher.event.ServerStoppingEvent
+import alexsocol.patcher.handler.KeyBindingHandler
+import alexsocol.patcher.handler.PatcherEventHandler
+import alexsocol.patcher.handler.PatcherEventHandlerClient
+import alexsocol.patcher.handler.PlayerReachDistanceHandler
 import alexsocol.patcher.network.NetworkHandler
 import cpw.mods.fml.client.config.GuiUtils
-import cpw.mods.fml.common.*
+import cpw.mods.fml.common.Mod
+import cpw.mods.fml.common.ModMetadata
 import cpw.mods.fml.common.event.*
 import cpw.mods.fml.common.registry.GameData
-import net.minecraft.block.*
+import net.minecraft.block.Block
+import net.minecraft.block.BlockTrapDoor
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
 import net.minecraft.util.Facing
@@ -69,6 +79,7 @@ object PatcherMain {
 			PatcherEventHandlerClient.eventForge()
 			ASJShaderHelper.registerHandlers()
 			if (!ASJHookLoader.OBF) ClientCommandHandler.instance.registerCommand(CommandResources)
+			if (PatcherPreConfigHandler.tickrateHooks) ClientCommandHandler.instance.registerCommand(CommandTickrate(true))
 		}
 	}
 	
@@ -86,9 +97,11 @@ object PatcherMain {
 		e.registerServerCommand(CommandHeal)
 		e.registerServerCommand(CommandHookList)
 		e.registerServerCommand(CommandKillAll)
+		e.registerServerCommand(CommandPrintTransformers)
 		e.registerServerCommand(CommandRtp)
 		e.registerServerCommand(CommandSchema)
 		e.registerServerCommand(CommandTop)
+		if (PatcherPreConfigHandler.tickrateHooks) e.registerServerCommand(CommandTickrate(false))
 		e.registerServerCommand(CommandWolkJpeg)
 		
 		MinecraftForge.EVENT_BUS.post(ServerStartingEvent(e))

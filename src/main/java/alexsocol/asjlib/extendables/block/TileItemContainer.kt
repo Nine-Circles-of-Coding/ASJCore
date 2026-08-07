@@ -22,6 +22,7 @@ open class TileItemContainer: ASJTile() {
 			field = stack
 			if (ASJUtilities.isServer && worldObj != null) {
 				ASJUtilities.dispatchTEToNearbyPlayers(this)
+				worldObj.notifyBlocksOfNeighborChange(xCoord, yCoord, zCoord, getBlockType())
 			}
 		}
 	
@@ -34,7 +35,7 @@ open class TileItemContainer: ASJTile() {
 	}
 	
 	override fun readCustomNBT(nbt: NBTTagCompound) {
-		if (nbt.hasKey("item")) item = ItemStack.loadItemStackFromNBT(nbt.getCompoundTag("item"))
+		item = if (nbt.hasKey("item")) ItemStack.loadItemStackFromNBT(nbt.getCompoundTag("item")) else null
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -44,8 +45,9 @@ open class TileItemContainer: ASJTile() {
 	
 	companion object {
 		
-		fun renderItem(tile: TileEntity, stack_: ItemStack? = null) {
-			val stack = stack_ ?: (tile as? TileItemContainer)?.item ?: return
+		@Suppress("unused")
+		fun renderItem(tile: TileEntity, stackOverride: ItemStack? = null) {
+			val stack = stackOverride ?: (tile as? TileItemContainer)?.item ?: return
 			
 			glEnable(GL12.GL_RESCALE_NORMAL)
 			glDisable(GL_CULL_FACE)

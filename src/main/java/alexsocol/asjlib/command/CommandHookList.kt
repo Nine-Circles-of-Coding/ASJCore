@@ -2,8 +2,10 @@ package alexsocol.asjlib.command
 
 import alexsocol.asjlib.ASJUtilities
 import com.KAIIIAK.classManipulators.HookReplacerWorker
+import com.KAIIIAK.classManipulators.IMandatoryCheck.CheckState.*
 import gloomyfolken.hooklib.asm.HookClassTransformer
 import net.minecraft.command.*
+import net.minecraft.util.EnumChatFormatting
 
 object CommandHookList: CommandBase() {
 	
@@ -19,7 +21,10 @@ object CommandHookList: CommandBase() {
 		}
 		
 		HookReplacerWorker.registeredChangesHolders.values.flatMap { it.values }.flatten().forEach {
-			ASJUtilities.say(sender, "$it")
+			val check = it.successor.check()
+			
+			if (check != APPLIED)
+				ASJUtilities.say(sender, "${if (check == FAILED) "[${EnumChatFormatting.DARK_RED}FAILED${EnumChatFormatting.RESET}] " else ""}$it")
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package alexsocol.patcher
 
+import alexsocol.asjlib.D
+import alexsocol.asjlib.F
 import alexsocol.asjlib.extendables.ASJConfigHandler
 import alexsocol.patcher.PatcherPreConfigHandler.CATEGORY_DANGER
 import alexsocol.patcher.PatcherPreConfigHandler.CATEGORY_INTEGRATION
@@ -10,7 +12,9 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	
 	var addAir = false
 	var addBlocks = false
+	var msPerTick = 50
 	var textIDs = false
+	var tps = 20f
 	
 	var anvilLevelLimit = Int.MAX_VALUE
 	var bucketSounds = true
@@ -34,8 +38,10 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var langsRamOptimization = true
 	var lightningID = 150
 	var maxParticles = 4000
+	var maxPistonPush = 12
 	var orthoProjectionOn = true
 	var portalHook = true
+	var quietGhasts = true
 	var removeStreamKeys = true
 	var rescaleProfiler = true
 	var respawnInEnd = false
@@ -65,7 +71,9 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	override fun readProperties() {
 		addAir = loadProp(CATEGORY_DANGER, "addAir", addAir, true, "Set this to true to add air item")
 		addBlocks = loadProp(CATEGORY_DANGER, "addBlocks", addBlocks, true, "Set this to true to add items for technical blocks")
+		msPerTick = loadProp(CATEGORY_DANGER, "msPerTick", msPerTick, false, "Amount of milliseconds per server tick (higher values - lower TPS), disabled by tickrateHooks. Incompatible with fastcraft")
 		textIDs = loadProp(CATEGORY_DANGER, "textIDs", textIDs, false, "Set this to true to enable text item IDs instead of numeric for storing in NBT")
+		tps = loadProp(CATEGORY_DANGER, "tps", tps.D, false, "Amount of client ticks per second (higher values - higher TPS), disabled by tickrateHooks").F
 		
 		anvilLevelLimit = loadProp(CATEGORY_GENERAL, "anvilLevelLimit", anvilLevelLimit, false, "Max level cost for anvil use (default 40)", 40, Int.MAX_VALUE)
 		bucketSounds = loadProp(CATEGORY_GENERAL, "bucketSounds", bucketSounds, false, "Set this to false to disable sounds from buckets")
@@ -89,9 +97,11 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		langsRamOptimization = loadProp(CATEGORY_GENERAL, "langsRamOptimization", langsRamOptimization, true, "Set this to false to disable langs RAM optimization (if some lang is not loaded properly)")
 		lightningID = loadProp(CATEGORY_GENERAL, "lightningID", lightningID, true, "ID for lightning bolt entity")
 		maxParticles = loadProp(CATEGORY_GENERAL, "maxParticles", maxParticles, true, "How many [any] particles can there be at one time (defaults to vanilla value)")
+		maxPistonPush = loadProp(CATEGORY_GENERAL, "maxPistonPush", maxPistonPush, false, "How many blocks can a piston push (defaults to vanilla value)")
 		orthoProjectionOn = loadProp(CATEGORY_GENERAL, "orthoProjectionOn", orthoProjectionOn, true, "Set this to false to disable orthographic projection feature")
 		portalHook = loadProp(CATEGORY_GENERAL, "portalHook", portalHook, false, "Set this to true to disable closing GUI when entering nether portal")
-		removeStreamKeys = loadProp(CATEGORY_GENERAL, "removeStreamKeys", removeStreamKeys, true, "Set this to false to keep useless streamer keys (compat with ReBind mod)")
+		quietGhasts = loadProp(CATEGORY_GENERAL, "quietGhasts", quietGhasts, false, "Set this to false to make ghasts loud as usual")
+		removeStreamKeys = loadProp(CATEGORY_GENERAL, "removeStreamKeys", removeStreamKeys, true, "Set this to false to keep useless streamer keys (KeyBindingsOverhaul/ReBind compat)")
 		rescaleProfiler = loadProp(CATEGORY_GENERAL, "rescaleProfiler", rescaleProfiler, false, "Set this to false to keep profiler HUD not scalable with GUI scale setting")
 		respawnInEnd = loadProp(CATEGORY_GENERAL, "respawnInEnd", respawnInEnd, false, "Set this to true to allow respawning in the end")
 		respawnInNether = loadProp(CATEGORY_GENERAL, "respawnInNether", respawnInNether, false, "Set this to true to allow respawning in the nether")

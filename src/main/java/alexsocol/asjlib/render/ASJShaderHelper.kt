@@ -10,12 +10,11 @@ import net.minecraft.client.resources.*
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11.GL_FALSE
 import org.lwjgl.opengl.GL20.*
-import java.time.*
-import java.util.concurrent.*
 
 /**
  * Almost all code is by Vazkii - ShaderHelper, I just ported it to GL20 and made lib-style
  */
+@Suppress("unused")
 object ASJShaderHelper: IResourceManagerReloadListener {
 	
 	var crashOnError = true
@@ -149,7 +148,7 @@ object ASJShaderHelper: IResourceManagerReloadListener {
 	
 	@Throws(Exception::class)
 	private fun readFileAsString(filename: String, modid: String, manager: IResourceManager): String {
-		return mc.resourceManager.getResource(ResourceLocation(modid, filename)).inputStream.readBytes().decodeToString()
+		return manager.getResource(ResourceLocation(modid, filename)).inputStream.readBytes().decodeToString()
 	}
 	
 	// inspired by Vazkii's ClientTickHandler:

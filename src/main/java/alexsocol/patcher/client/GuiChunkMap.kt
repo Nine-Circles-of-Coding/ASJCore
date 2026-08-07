@@ -136,7 +136,8 @@ class GuiChunkMap(val loaded: Map<ChunkCoordIntPair, String>, val forced: Map<Ch
 		if (spawnpoint in target) list.add(SPAWNPOINT)
 		if (forced) list.add(FORCED)
 		if (worldSpawn in target) list.add(WORLDSPAWN)
-		else if (isSpawnArea(target)) list.add(SPAWNAREA)
+		if (mc.theWorld.getChunkFromChunkCoords(target.chunkXPos, target.chunkZPos).getRandomWithSeed(987234911L).nextInt(10) == 0) list.add(SLIMECHUNK)
+		if (isSpawnArea(target) && worldSpawn !in target) list.add(SPAWNAREA)
 		
 		return if (list.isEmpty()) listOf(LOADED) else list
 	}
@@ -155,7 +156,8 @@ class GuiChunkMap(val loaded: Map<ChunkCoordIntPair, String>, val forced: Map<Ch
 		LOADED(Color(0xFFFFFF).rgb),
 		SPAWNAREA(Color(0xFFFF00).rgb),
 		SPAWNPOINT(Color(0xFF00FF).rgb),
-		WORLDSPAWN(Color(0x00FF00).rgb),
+		WORLDSPAWN(Color(0x00FFFF).rgb),
+		SLIMECHUNK(Color(0x00FF00).rgb),
 	}
 	
 	private operator fun ChunkCoordIntPair.contains(check: ChunkCoordinates?) = if (check == null) false else check.posX shr 4 == chunkXPos && check.posZ shr 4 == chunkZPos

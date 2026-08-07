@@ -3,6 +3,7 @@
 
 package ru.vamig.worldengine.additions;
 
+import cpw.mods.fml.common.Loader;
 import net.minecraft.block.Block;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -15,6 +16,11 @@ public class WE_ChunkSmartLight extends Chunk {
 	}
 	
 	public void generateSkylightMap() {
+		if (Loader.isModLoaded("lumi")) {
+			super.generateSkylightMap();
+			return;
+		}
+		
 		int i = getTopFilledSegment();
 		heightMapMinimum = Integer.MAX_VALUE;
 		//-//

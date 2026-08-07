@@ -1,5 +1,8 @@
 package com.KAIIIAK.classManipulators;
 
+import java.lang.annotation.Repeatable;
+
+@SuppressWarnings("unused")
 public @interface HookReplacer {
 	
 	String targetMethod() default "";
@@ -7,11 +10,11 @@ public @interface HookReplacer {
 	boolean correctStaticIndexes() default false;
 	
 	/**
-	 * matchIndex values logic:
-	 * if (matchIndex == {}) - replace all match
-	 * if (matchIndex == {1, 3}) - replace first and third found
+	 * onlyNthMatches values logic:
+	 * if (onlyNthMatches == {}) - replace all match
+	 * if (onlyNthMatches == {1, 3}) - replace first and third found
 	 */
-	int[] matchIndex() default {};
+	int[] onlyNthMatches() default {};
 	
 	/**
 	 * earlier < 0 < later
@@ -19,6 +22,8 @@ public @interface HookReplacer {
 	int priority() default 0;
 	
 	boolean isMandatory() default true;
+	
+	String[] mandatoryGroups() default {};
 	
 	/**
 	 * if (removePop) start(); someMethodWithReturn(); stop(); is equivalent to start(); POP(someMethodWithReturn()); stop();
@@ -28,6 +33,24 @@ public @interface HookReplacer {
 	boolean ignoreLines() default true;
 	
 	boolean ignoreLabels() default true;
+	
+	@interface HookGroups {
+		
+		CreateHRG[] value();
+	}
+	
+	@Repeatable(HookGroups.class)
+	@interface CreateHRG {
+		
+		String name();
+		
+		MandatoryType type() default MandatoryType.IF_ANY;
+		
+		String[] included() default {};
+		
+		boolean optional() default false; // if true - will not crash by itself, but may be a reason to crash group that include this one...
+	}
+	
 	
 	@SuppressWarnings("unused")
 	class Replacer {
@@ -93,4 +116,5 @@ public @interface HookReplacer {
 		
 		public static void ASTORE(String var) {}
 	}
+	
 }

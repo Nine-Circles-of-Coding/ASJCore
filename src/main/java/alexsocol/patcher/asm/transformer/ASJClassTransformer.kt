@@ -43,12 +43,13 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 				
 				core { `Entity$ClassVisitor`(it) }
 			}
+			"net.minecraft.init.Bootstrap\$11"                                -> fixLiquidToBucket()
 			"net.minecraft.item.ItemGlassBottle"                              -> core { `ItemGlassBottle$ClassVisitor`(it) }
 			"net.minecraft.nbt.JsonToNBT"                                     -> core { `JsonToNBT$ClassVisitor`(it) }
 			"net.minecraft.client.network.OldServerPinger$2",
 			"net.minecraft.network.NetworkManager$2",
-			"net.minecraft.network.NetworkSystem$1"                           -> core { `Network_$_$ClassVisitor`(it) }
-			"net.minecraft.network.play.client.C17PacketCustomPayload"        -> core { `C17PacketCustomPayload$ClassVisitor`(it) }
+			"net.minecraft.network.NetworkSystem$1"                           -> if (PatcherConfigHandler.tcpNoDelay) core { `Network_$_$ClassVisitor`(it) } else this.basicClass
+			"net.minecraft.network.play.client.C17PacketCustomPayload"        -> if (PatcherConfigHandler.c17PacketCustomPayloadUnlimit) core { `C17PacketCustomPayload$ClassVisitor`(it) } else this.basicClass
 			"net.minecraft.server.management.ItemInWorldManager"              -> core { `ItemInWorldManager$ClassVisitor`(it) }
 			"net.minecraft.tileentity.TileEntityFurnace"                      -> core { `TileEntityFurnace$ClassVisitor`(it) }
 			"net.minecraft.world.World"                                       -> core { `World$ClassVisitor`(it) }
@@ -279,7 +280,7 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	private inner class `Network_$_$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-			if (PatcherConfigHandler.tcpNoDelay && name == "initChannel") {
+			if (name == "initChannel") {
 				logger.debug("Visiting $transformedName#initChannel: $name$desc")
 				return `Network_$_$initChannel$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
 			}
@@ -309,11 +310,10 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 	private inner class `C17PacketCustomPayload$ClassVisitor`(cv: ClassVisitor): ClassVisitor(ASM5, cv) {
 		
 		override fun visitMethod(access: Int, name: String, desc: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-			if (PatcherConfigHandler.c17PacketCustomPayloadUnlimit)
-				if ((name == "<init>" && desc == "(Ljava/lang/String;[B)V") || (name == "readPacketData" || name == "a" && desc == "(Let;)V") || (name == "writePacketData" || name == "b" && desc == "(Let;)V")) {
-					logger.debug("Visiting C17PacketCustomPayload methods: $name$desc")
-					return `C17PacketCustomPayload$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
-				}
+			if ((name == "<init>" && desc == "(Ljava/lang/String;[B)V") || (name == "readPacketData" || name == "a" && desc == "(Let;)V") || (name == "writePacketData" || name == "b" && desc == "(Let;)V")) {
+				logger.debug("Visiting C17PacketCustomPayload methods: $name$desc")
+				return `C17PacketCustomPayload$MethodVisitor`(super.visitMethod(access, name, desc, signature, exceptions))
+			}
 			
 			return super.visitMethod(access, name, desc, signature, exceptions)
 		}
@@ -556,6 +556,24 @@ class ASJClassTransformer: ASJAbstractClassTransformer() {
 			mn.instructions.remove(aload.next.next)
 			mn.instructions.remove(aload.next)
 			mn.instructions.set(aload, InsnNode(ICONST_0))
+		}
+	}
+	
+	fun fixLiquidToBucket() = tree { cn ->
+		val mn = cn.methods.find { it.name == "dispenseStack" || it.name == "b" } ?: return@tree
+		
+		mn.instructions.iterator().forEach { insn ->
+			if (insn !is FieldInsnNode) return@forEach
+			if (insn.opcode != GETSTATIC || insn.owner != if (OBF) "awt" else "net/minecraft/block/material/Material") return@forEach
+			
+			mn.instructions.remove(insn.next.next)
+			mn.instructions.remove(insn.next)
+			
+			mn.instructions.insert(insn, MethodInsnNode(INVOKESTATIC, "alexsocol/patcher/asm/hook/ASJHookReplacerHandlerKt", "checkBlock", "(${if (OBF) "Lawt;Lahb;" else "Lnet/minecraft/block/material/Material;Lnet/minecraft/world/World;"}III)Z", false))
+			mn.instructions.insert(insn, VarInsnNode(ILOAD, 7))
+			mn.instructions.insert(insn, VarInsnNode(ILOAD, 6))
+			mn.instructions.insert(insn, VarInsnNode(ILOAD, 5))
+			mn.instructions.insert(insn, VarInsnNode(ALOAD, 4))
 		}
 	}
 }

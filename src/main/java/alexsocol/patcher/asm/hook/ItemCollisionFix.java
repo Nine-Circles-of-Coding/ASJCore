@@ -4,6 +4,7 @@ import alexsocol.asjlib.ExtensionsKt;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 //@SuppressWarnings("DataFlowIssue")
@@ -25,9 +26,13 @@ public class ItemCollisionFix { // TODO uncomment when HookReplacer has 'withRec
 		if (list.isEmpty()) return true;
 		
 		AxisAlignedBB bb = ExtensionsKt.boundingBox(entity, 0);
-		for (AxisAlignedBB it : list)
-			if (it.intersectsWith(bb))
-				return false;
+		try {
+			for (AxisAlignedBB it : list)
+				if (it.intersectsWith(bb))
+					return false;
+		} catch (ConcurrentModificationException e) {
+			return true; // WTF
+		}
 		
 		return true;
 	}

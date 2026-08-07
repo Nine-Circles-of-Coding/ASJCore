@@ -12,6 +12,8 @@ object CommandChunkMap: ASJCommandBase() {
 	
 	override fun getCommandName() = "chunkmap"
 	
+	override fun canCommandSenderUseCommand(sender: ICommandSender?) = sender is EntityPlayerMP
+	
 	override fun processCommand(sender: ICommandSender?, args: Array<out String?>?) {
 		if (sender !is EntityPlayerMP) return
 		

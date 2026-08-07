@@ -94,13 +94,17 @@ class ASJHookLoader: HookLoader() {
 		KASMLib.register(InterfaceAppenderWorker)
 		KASMLib.register(ReflectionLikeWorker.inst)
 		
+		HookReplacerWorker.registerGroupRegistry("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
+		HookReplacerWorker.registerGroupRegistry("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
 		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
 		
 		if (PatcherPreConfigHandler.fixItemCollision) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ItemCollisionFix")
-		
 		if (PatcherPreConfigHandler.fixCapeRotations) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.CapeRotationsFix")
-		
 		if (PatcherPreConfigHandler.deleteRealms) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.RealmsDeleterHR")
+		if (PatcherPreConfigHandler.tickrateHooks) {
+			HookReplacerWorker.registerGroupRegistry("alexsocol.patcher.asm.hook.TickrateKt")
+			HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.TickrateKt")
+		}
 	}
 }
