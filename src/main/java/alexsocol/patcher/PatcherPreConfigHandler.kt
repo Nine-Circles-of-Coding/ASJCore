@@ -21,8 +21,10 @@ object PatcherPreConfigHandler: ASJPreConfigHandler() {
 	var tickrateHooks = true
 	var topDownButtons = true
 	var transformersForHookReplacerBlacklist = arrayOf(
-		"Reika.", // whatever
-		"am2.preloader.", // dumbass -_-
+		"." // everything until KAIIIAK makes isolated classloader for this
+
+//		"Reika.", // whatever
+//		"am2.preloader.", // dumbass -_-
 	)
 	
 	// derkatercore

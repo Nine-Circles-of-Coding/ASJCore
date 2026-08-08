@@ -263,20 +263,20 @@ public enum MandatoryType {
 		}
 	},
 	IF_ANY // default
-			{
-				@Override
-				public CheckState test(Set<IMandatoryCheck> mandatoryChecks) {
-					if (mandatoryChecks == null || mandatoryChecks.isEmpty()) return FAILED;
-					boolean atLeastOneIsWaiting = false;
-					for (IMandatoryCheck iMandatoryCheck : mandatoryChecks) {
-						CheckState state = iMandatoryCheck.check();
-						if (state == APPLIED) return APPLIED;
-						if (state == WAITING) atLeastOneIsWaiting = true;
-					}
-					if (atLeastOneIsWaiting) return WAITING;
-					return FAILED;
+		{
+			@Override
+			public CheckState test(Set<IMandatoryCheck> mandatoryChecks) {
+				if (mandatoryChecks == null || mandatoryChecks.isEmpty()) return FAILED;
+				boolean atLeastOneIsWaiting = false;
+				for (IMandatoryCheck iMandatoryCheck : mandatoryChecks) {
+					CheckState state = iMandatoryCheck.check();
+					if (state == APPLIED) return APPLIED;
+					if (state == WAITING) atLeastOneIsWaiting = true;
 				}
-			},
+				if (atLeastOneIsWaiting) return WAITING;
+				return FAILED;
+			}
+		},
 	IF_ALL {
 		@Override
 		public CheckState test(Set<IMandatoryCheck> mandatoryChecks) {
@@ -301,6 +301,22 @@ public enum MandatoryType {
 		@Override
 		public CheckState test(Set<IMandatoryCheck> mandatoryChecks) {
 			return IF_ALL.test(mandatoryChecks);
+		}
+	},
+	IF_ALL_OR_NONE {
+		@Override
+		public CheckState test(Set<IMandatoryCheck> mandatoryChecks) {
+			if (mandatoryChecks == null || mandatoryChecks.isEmpty()) return FAILED;
+			boolean atLeastOneFailed = false;
+			boolean atLeastOneApplied = false;
+			for (IMandatoryCheck iMandatoryCheck : mandatoryChecks) {
+				CheckState state = iMandatoryCheck.check();
+				if (state == WAITING) return WAITING;
+				if (state == FAILED) atLeastOneFailed = true;
+				if (state == APPLIED) atLeastOneApplied = true;
+				if (atLeastOneApplied && atLeastOneFailed) return FAILED;
+			}
+			return APPLIED;
 		}
 	};
 	

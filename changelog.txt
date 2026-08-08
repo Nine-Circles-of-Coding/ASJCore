@@ -1,18 +1,3 @@
-Innovations:
- /tickrate(c) commands to change tickrate (server - ms per tick; client - ticks per second)
- Config for piston push limit
- Slime chunks display for /chunkmap
- Quiet ghasts config
- Reworked @HookReplacer
-
 Fixes:
- Nether portal creation was possible in dimensions with negative IDs
- Dispenser collecting modded liquids as water/lava buckets
- LWJGL keyboard bug workaround
- NPE from SSS
- Block names in stats list
- Visual falling when sleeping above Y 127
- [lumi] Crash with WE worlds
- [Clayium] Extra reach compat
- [RT] WE Biome crash fix
- [Starminer] Extra reach compat for v0.9.9
+ [AM2.5] /tickrate conflict
+ [Starminer] Bed fix conflict

@@ -42,15 +42,13 @@ public class HookReplacerWorker implements IClassTransformer {
 		
 		TreeMap<Integer, List<ChangesHolder>> registeredChanges = data.getValue();
 		
-		try {
-			if (KASMLib.has2DumpUnchangedClasses) {
+		if (KASMLib.has2DumpUnchangedClasses) {
+			try {
 				File file = new File("ASJCoreDumpClasses/HookReplacer/" + transformedName.replaceAll("\\.", "/") + "UNCHANGED.class");
 				file.getParentFile().mkdirs();
 				
 				IOUtils.write(basicClass, Files.newOutputStream(file.toPath()));
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+			} catch (IOException ignored) {}
 		}
 		
 		logger.debug("Found Class to hook-replace into " + transformedName);
@@ -99,14 +97,13 @@ public class HookReplacerWorker implements IClassTransformer {
 			cn.accept(cw);
 			byte[] result = cw.toByteArray();
 			
-			try {
-				if (KASMLib.has2DumpChangedClasses) {
+			if (KASMLib.has2DumpChangedClasses) {
+				try {
 					File file = new File("ASJCoreDumpClasses/HookReplacer/" + transformedName.replaceAll("\\.", "/") + ".class");
 					file.getParentFile().mkdirs();
 					
 					IOUtils.write(result, Files.newOutputStream(file.toPath()));
-				}
-			} catch (IOException ignored) {
+				} catch (IOException ignored) {}
 			}
 			
 			logger.debug(String.format("Finished replacing for %s", transformedName));

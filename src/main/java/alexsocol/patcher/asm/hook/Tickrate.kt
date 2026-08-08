@@ -11,6 +11,7 @@ import io.github.crucible.*
 import net.minecraft.client.*
 import net.minecraft.server.*
 import net.minecraft.util.*
+import net.tclproject.mysteriumlib.asm.fixes.MysteriumPatchesFixesMagicka
 import java.io.*
 import java.net.*
 
@@ -42,14 +43,14 @@ fun replaceTickRateCrucible(ms: MinecraftServer) {
     stop()
 }
 
-//@HookReplacer(targetMethod = "run", mandatoryGroups = ["tickrate"])
-//fun replaceTickRateArsMagic(ms: MinecraftServer) {
-//    startFROM()
-//    POP(50L)
-//    startTO()
-//    POP(getMsPT())
-//    stop()
-//}
+@HookReplacer(targetMethod = "run", mandatoryGroups = ["tickrate"])
+fun replaceTickRateMysteriumLibInArsMagica(ms: MinecraftServer) {
+    startFROM()
+    POP(MysteriumPatchesFixesMagicka.servertickrate)
+    startTO()
+    POP(getMsPT())
+    stop()
+}
 
 @HookReplacer(targetMethod = "<init>")
 fun replaceTickRate(mc: Minecraft, session: Session?, displayWidth: Int, displayHeight: Int, fullscreen: Boolean, isDemo: Boolean, mcDataDir: File?, fileAssets: File?, fileResourcepacks: File?, proxy: Proxy?, launchedVersion: String?, launchArgs: Multimap<*, *>?, mcDefaultResourcePackIndex: String?) {

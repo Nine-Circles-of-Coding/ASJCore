@@ -362,7 +362,7 @@ fun tryExtend2(piston: BlockPistonBase, world: World?, x: Int, y: Int, z: Int, s
 }
 
 
-@CreateHRG(name = "highSleep", type = MandatoryType.IF_ALL)
+@CreateHRG(name = "highSleep", type = MandatoryType.IF_ALL_OR_NONE)
 @HookReplacer(mandatoryGroups = ["highSleep"], removePop = true)
 fun readPacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
 	startFROM()
@@ -372,7 +372,7 @@ fun readPacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
 	stop()
 }
 
-@HookReplacer(mandatoryGroups = ["highSleep"])
+@HookReplacer(mandatoryGroups = ["highSleep"], removePop = true)
 fun writePacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
 	startFROM()
 	buf.writeByte(packet.field_149096_c)

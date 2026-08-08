@@ -12,7 +12,6 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -24,7 +23,7 @@ public class KASMUtil {
 	public static Class<?> getClass(int i) {
 		try {
 			return Class.forName(Thread.currentThread().getStackTrace()[i].getClassName());
-		} catch (ClassNotFoundException e) {
+		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -32,7 +31,7 @@ public class KASMUtil {
 	public static <T> T inst() {
 		try {
 			return (T) getClass(3).newInstance();
-		} catch (IllegalAccessException | InstantiationException | ClassCastException e) {
+		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -50,12 +49,13 @@ public class KASMUtil {
 			transformers = ASJReflectionHelper.getField(LaunchClassLoader.class, "transformers");
 			loadPlugins = ASJReflectionHelper.getField(CoreModManager.class, "loadPlugins");
 			coreModInstance = ASJReflectionHelper.getField(Class.forName("cpw.mods.fml.relauncher.CoreModManager$FMLPluginWrapper"), "coreModInstance");
-		} catch (ClassNotFoundException e) {
+		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
 	public static Map<String, IClassTransformer> generatedTransformersCache = new HashMap<>();
+	public static Set<String> skippedTransformersCache = new HashSet<>();
 	
 	@SuppressWarnings("unchecked")
 	public static Set<IClassTransformer> collectAllPossibleTransformers() {
@@ -68,7 +68,7 @@ public class KASMUtil {
 				logger.trace("Found transformer (class): " + iClassTransformer.getClass().getName());
 				ret.add(iClassTransformer);
 			}
-		} catch (IllegalAccessException e) {
+		} catch (Throwable e) {
 			logger.error("Exception getting active transformers", e);
 		}
 		try {
@@ -78,7 +78,7 @@ public class KASMUtil {
 					fmlPluginWrapper, fmlPluginWrapperr -> {
 						try {
 							return (IFMLLoadingPlugin) coreModInstance.get(fmlPluginWrapperr);
-						} catch (IllegalAccessException e) {
+						} catch (Throwable e) {
 							logger.error("Exception unwrapping plugin '" + fmlPluginWrapperr.getClass().getName() + "':", e);
 							return null;
 						}
@@ -86,6 +86,8 @@ public class KASMUtil {
 				);
 				out:
 				for (String namedTransformer : Opt.it(plugin.getASMTransformerClass())) {
+					if (skippedTransformersCache.contains(namedTransformer)) continue;
+					
 					for (String exception : Opt.it(PatcherPreConfigHandler.INSTANCE.getTransformersForHookReplacerBlacklist()))
 						if (namedTransformer.contains(exception)) continue out;
 					
@@ -96,8 +98,9 @@ public class KASMUtil {
 						namedTransformer, rTransf -> {
 							try {
 								return (IClassTransformer) Launch.classLoader.loadClass(namedTransformer).newInstance();
-							} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | ExceptionInInitializerError e) {
+							} catch (Throwable e) {
 								logger.error("Exception instantiating named transformer '" + namedTransformer + "':", e);
+								skippedTransformersCache.add(namedTransformer);
 								return null;
 							}
 						}
@@ -106,7 +109,7 @@ public class KASMUtil {
 					allPossibleClasses.add(namedTransformer);
 				}
 			}
-		} catch (IllegalAccessException e) {
+		} catch (Throwable e) {
 			logger.error("Exception getting inactive transformers", e);
 		}
 		
@@ -114,10 +117,23 @@ public class KASMUtil {
 	}
 	
 	public static byte[] applyAllPossibleTransformers(String name, String transformedName, byte[] basicClass) {
-		byte[] ret = basicClass;
-		for (IClassTransformer transformer : Opt.it(collectAllPossibleTransformers())) {
-			ret = transformer.transform(name, transformedName, ret);
+		Set<IClassTransformer> all;
+		try {
+			all = collectAllPossibleTransformers();
+		} catch (Throwable e) {
+			logger.error("Exception collecting transformers for '" + transformedName + "':", e);
+			return basicClass;
 		}
+		
+		byte[] ret = basicClass;
+		for (IClassTransformer transformer : Opt.it(all)) {
+			try {
+				ret = transformer.transform(name, transformedName, ret);
+			} catch (Throwable e) {
+				logger.error("Exception applying transformer '" + transformer.getClass().getName() + "':", e);
+			}
+		}
+		
 		return ret;
 	}
 	
@@ -132,7 +148,7 @@ public class KASMUtil {
 						fmlPluginWrapper, fmlPluginWrapperr -> {
 							try {
 								return (IFMLLoadingPlugin) coreModInstance.get(fmlPluginWrapperr);
-							} catch (IllegalAccessException e) {
+							} catch (Throwable e) {
 								throw new RuntimeException(e);
 							}
 						}
@@ -141,7 +157,7 @@ public class KASMUtil {
 					ret.add(registeredTransformers);
 				}
 			}
-		} catch (IllegalAccessException e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 		return ret;
@@ -158,7 +174,7 @@ public class KASMUtil {
 				ret.add(transformersCache.computeIfAbsent(iClassTransformer, IClassTransformer::getClass).getName());
 			}
 			
-		} catch (IllegalAccessException e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 		return ret;
@@ -167,8 +183,7 @@ public class KASMUtil {
 	public static Class<?> findLoadedClass(String name) {
 		try {
 			return (Class<?>) findLoadedClass.invoke(Launch.classLoader, name);
-		} catch (InvocationTargetException | IllegalAccessException ignored) {
-		}
+		} catch (Throwable ignored) {}
 		
 		return null;
 	}
@@ -210,7 +225,7 @@ public class KASMUtil {
 			Class<?> rawClass;
 			try {
 				rawClass = Class.forName(asmType.getClassName());
-			} catch (ClassNotFoundException e) {
+			} catch (Throwable e) {
 				throw new RuntimeException("Failed to resolve enum class from annotation: " + arr[0], e);
 			}
 			
