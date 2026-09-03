@@ -5,6 +5,8 @@ import java.lang.annotation.Repeatable;
 @SuppressWarnings("unused")
 public @interface HookReplacer {
 	
+	String targetClass() default "";
+	
 	String targetMethod() default "";
 	
 	boolean correctStaticIndexes() default false;

@@ -63,9 +63,10 @@ public class SuperWrapperTransformer implements IClassTransformer {
 						Type methodType = Type.getMethodType(methodNode.desc);
 						InsnList newInstructions = new InsnList();
 						Type[] argumentTypes = methodType.getArgumentTypes();
-						
-						for (int i = 0; i < argumentTypes.length; i++)
+						for (int i = 0; i < argumentTypes.length; i++) {
 							newInstructions.add(new VarInsnNode(argumentTypes[i].getOpcode(ILOAD), i));
+							if (i == 0 && container.checkcast) newInstructions.add(new TypeInsnNode(CHECKCAST, container.targetClassInternal));
+						}
 						
 						newInstructions.add(new MethodInsnNode(
 								container.isInterface ? INVOKEINTERFACE : INVOKEVIRTUAL,
@@ -205,12 +206,14 @@ public class SuperWrapperTransformer implements IClassTransformer {
 			for (MethodNode methodNode : classNode.methods) {
 				boolean containsAnnotation = false;
 				String signatureFromAnnotation = null;
+				String targetClassFromAnnotation = null;
 				String targetMethodFromAnnotation = null;
 				List<String> exceptionsFromAnnotation = null;
 				String methodPostfixFromAnnotation = null;
 				String methodPrefixFromAnnotation = null;
 				Boolean callThis = true;
 				Boolean isInterface = false;
+				Boolean checkcast = true;
 				
 				List<AnnotationNode> annotations = new ArrayList<>();
 				if (methodNode.visibleAnnotations != null) annotations.addAll(methodNode.visibleAnnotations);
@@ -232,6 +235,9 @@ public class SuperWrapperTransformer implements IClassTransformer {
 					
 					if (annotationNode.values != null) {
 						Map<String, Object> annotationArgs = SomeUtil.convertListToMap(annotationNode.values);
+						if (annotationArgs.containsKey("targetClass")) {
+							targetClassFromAnnotation = (String) annotationArgs.get("targetClass");
+						}
 						if (annotationArgs.containsKey("targetMethod")) {
 							targetMethodFromAnnotation = (String) annotationArgs.get("targetMethod");
 						}
@@ -254,6 +260,9 @@ public class SuperWrapperTransformer implements IClassTransformer {
 						if (annotationArgs.containsKey("isInterface")) {
 							isInterface = (Boolean) annotationArgs.get("isInterface");
 						}
+						if (annotationArgs.containsKey("checkcast")) {
+							checkcast = (Boolean) annotationArgs.get("checkcast");
+						}
 					}
 					
 					containsAnnotation = true;
@@ -271,8 +280,8 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				Type[] newDescTypes = new Type[argTypes.length - 1];
 				System.arraycopy(argTypes, 1, newDescTypes, 0, newDescTypes.length);
 				Type newDescReturnType = methodType.getReturnType();
-				
-				SuperWrapperTransformerContainer container = new SuperWrapperTransformerContainer(className, argTypes[0].getInternalName(), methodNode.name, newDescTypes, newDescReturnType);
+				String targetClassInternal = targetClassFromAnnotation != null ?  targetClassFromAnnotation.replace('.', '/') : argTypes[0].getInternalName();
+				SuperWrapperTransformerContainer container = new SuperWrapperTransformerContainer(className, targetClassInternal, methodNode.name, newDescTypes, newDescReturnType);
 				container.setPrefixForInsertMethod(methodPrefixFromAnnotation == null ? "Super__" : methodPrefixFromAnnotation);
 				container.setPostfixForInsertMethod(methodPostfixFromAnnotation == null ? "__Wrapper" : methodPostfixFromAnnotation);
 				
@@ -282,6 +291,7 @@ public class SuperWrapperTransformer implements IClassTransformer {
 				container.setIsInterface(isInterface);
 				container.setDesc(methodNode.desc);
 				container.setTargetMethod(targetMethodFromAnnotation != null ? targetMethodFromAnnotation : methodNode.name);
+				container.setCheckcast(checkcast);
 				
 				registeredContainers.add(container);
 				found = true;

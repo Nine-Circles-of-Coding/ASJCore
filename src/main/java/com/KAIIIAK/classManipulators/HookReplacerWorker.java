@@ -60,7 +60,7 @@ public class HookReplacerWorker implements IClassTransformer {
 		AtomicInteger changes = new AtomicInteger(0);
 		
 		for (MethodNode methodNode : Opt.it(cn.methods)) {
-			logger.debug(String.format("Testing method %s", methodNode.name));
+			logger.trace(String.format("Testing method %s", methodNode.name));
 			//processMethod(cn.methods, methodNode, registeredChangesCopy, changes);
 			processMethod(cn.methods, methodNode, registeredChanges, changes);
 		}
@@ -109,7 +109,6 @@ public class HookReplacerWorker implements IClassTransformer {
 			logger.debug(String.format("Finished replacing for %s", transformedName));
 			return result;
 		}
-		
 		
 		return basicClass;
 	}
@@ -252,6 +251,7 @@ public class HookReplacerWorker implements IClassTransformer {
 					throw new RuntimeException(String.format("HookReplacer method %s.%s%s must be static!", classNode.name, methodNode.name, methodNode.desc));
 				
 				boolean removePop = false;
+				String targetClassFromAnnotation = null;
 				String targetMethodFromAnnotation = null;
 				boolean correctStaticIndexes = false;
 				int[] onlyNthMatches = {};
@@ -264,6 +264,9 @@ public class HookReplacerWorker implements IClassTransformer {
 				
 				if (hookReplacerAnnotation.values != null) {
 					Map<String, Object> annotationArgs = SomeUtil.convertListToMap(hookReplacerAnnotation.values);
+					if (annotationArgs.containsKey("targetClass")) {
+						targetClassFromAnnotation = (String) annotationArgs.get("targetClass");
+					}
 					if (annotationArgs.containsKey("targetMethod")) {
 						targetMethodFromAnnotation = (String) annotationArgs.get("targetMethod");
 					}
@@ -301,7 +304,8 @@ public class HookReplacerWorker implements IClassTransformer {
 				
 				Type methodType = Type.getMethodType(methodNode.desc);
 				Type[] argTypes = methodType.getArgumentTypes();
-				if (argTypes.length == 0) continue;
+				if (argTypes.length == 0)
+					throw new RuntimeException(String.format("HookReplacer method %s.%s%s must have at least one argument!", classNode.name, methodNode.name, methodNode.desc));
 				
 				ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
 				
@@ -355,8 +359,9 @@ public class HookReplacerWorker implements IClassTransformer {
 				
 				if (from.isEmpty()) continue;
 				
+				Type classType = targetClassFromAnnotation != null ? Type.getObjectType(targetClassFromAnnotation.replace('.', '/')) : argTypes[0];
 				String methodName = targetMethodFromAnnotation != null ? targetMethodFromAnnotation : methodNode.name;
-				ChangesHolder changesHolder = new ChangesHolder(argTypes[0], methodName);
+				ChangesHolder changesHolder = new ChangesHolder(classType, methodName);
 				
 				if (correctStaticIndexes) {
 					from = getWithStaticIndexes(from);

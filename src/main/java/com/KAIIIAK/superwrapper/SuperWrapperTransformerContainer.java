@@ -21,6 +21,7 @@ public class SuperWrapperTransformerContainer {
 	
 	public String desc = "";
 	public String targetMethod = "";
+	public boolean checkcast = true;
 	
 	public SuperWrapperTransformerContainer(String containerClassName, String targetInternal, String methodName, Type[] targetMethodArgs, Type targetMethodRet) {
 		this.containerClassName = containerClassName;
@@ -73,5 +74,9 @@ public class SuperWrapperTransformerContainer {
 	
 	public void setTargetMethod(String targetMethod) {
 		this.targetMethod = targetMethod;
+	}
+	
+	public void setCheckcast(boolean checkcast) {
+		this.checkcast = checkcast;
 	}
 }

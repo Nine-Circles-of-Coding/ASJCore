@@ -1,7 +1,6 @@
 package alexsocol.patcher.asm.hook;
 
 import alexsocol.patcher.compat.AngelicaCompat;
-import alexsocol.patcher.handler.PlayerReachDistanceHandler;
 import com.KAIIIAK.classManipulators.HookReplacer;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -15,6 +14,7 @@ import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.monster.EntityWitch;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.JsonToNBT;
@@ -22,8 +22,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraft.network.NetHandlerPlayServer;
-import net.minecraft.network.play.client.C02PacketUseEntity;
-import net.minecraft.server.management.ItemInWorldManager;
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
 import net.minecraft.stats.StatCrafting;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -92,35 +91,6 @@ public class ASJHookReplacerHandler {
 				startTO();stop();
 			}
 		}
-	}
-	
-	@HookReplacer(removePop = true)
-	public static void processUseEntity(NetHandlerPlayServer nhps, C02PacketUseEntity packet) {
-		startFROM();
-		DLOAD("5");
-		startTO();
-		Math.pow(PlayerReachDistanceHandler.getReachDistance(nhps.playerEntity), 2);
-		stop();
-	}
-	
-	@HookReplacer // fucking Crucible bitches overwriting my changes so post-transforming -_-
-	public static double getBlockReachDistance(ItemInWorldManager iiwm) {
-		startFROM();
-		POP(iiwm.blockReachDistance);
-		startTO();
-		POP(PlayerReachDistanceHandler.getReachDistance(iiwm.thisPlayerMP));
-		stop();
-		
-		return 0;
-	}
-	
-	@HookReplacer // fucking Crucible bitches overwriting my changes so post-transforming -_-
-	public static void setBlockReachDistance(ItemInWorldManager iiwm, double distance) {
-		startFROM();
-		iiwm.blockReachDistance = distance;
-		startTO();
-		PlayerReachDistanceHandler.setReachDistance(iiwm.thisPlayerMP, distance);
-		stop();
 	}
 	
 	
@@ -255,14 +225,33 @@ public class ASJHookReplacerHandler {
 	}
 	
 	
-	@HookReplacer(removePop = true)
 	@SuppressWarnings("ALL")
+	@HookReplacer(removePop = true)
 	public static void func_148213_a(GuiStats.Stats gui, StatCrafting stat, int x, int y) {
 		startFROM();
 		("" + I18n.format(HookReplacer.Replacer.<Item>ALOAD("4").getUnlocalizedName() + ".name", new Object[0])).trim();
 		startTO();
 		new ItemStack(HookReplacer.Replacer.<Item>ALOAD("4")).getDisplayName();
 		stop();
+	}
+	
+	// Idea from Factorization by purpleposeidon, fixes this (in a proper way):
+	// Place 7 blocks in a tower. On the edge of the top block, place another block.
+	// Place a slab on the ground below it. Look up, try to place a block against the top one.
+	@HookReplacer(removePop = true)
+	public static void processPlayerBlockPlacement(NetHandlerPlayServer nhps, C08PacketPlayerBlockPlacement packet) {
+		startFROM();
+		nhps.playerEntity.getDistanceSq((double) ILOAD("6") + 0.5D, (double) ILOAD("7") + 0.5D, (double) ILOAD("8") + 0.5D);
+		startTO();
+		playerEyeBlockDistanceSq(nhps.playerEntity, ILOAD("6"), ILOAD("7"), ILOAD("8"));
+		stop();
+	}
+	
+	public static double playerEyeBlockDistanceSq(EntityPlayerMP player, int x, int y, int z) {
+		double d3 = player.posX - (x + 0.5);
+		double d4 = (player.posY + player.eyeHeight) - (y + 0.5);
+		double d5 = player.posZ - (z + 0.5);
+		return d3 * d3 + d4 * d4 + d5 * d5;
 	}
 }
 //@formatter:on

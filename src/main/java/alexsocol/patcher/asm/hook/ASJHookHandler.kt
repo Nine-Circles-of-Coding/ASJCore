@@ -1,95 +1,120 @@
 package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
-import alexsocol.asjlib.extendables.block.*
-import alexsocol.asjlib.render.*
-import alexsocol.patcher.*
-import alexsocol.patcher.compat.*
+import alexsocol.asjlib.extendables.block.IFenceConnectable
+import alexsocol.asjlib.extendables.block.IFenceGate
+import alexsocol.asjlib.extendables.block.IPaneConnectable
+import alexsocol.asjlib.extendables.block.IWallConnectable
+import alexsocol.asjlib.render.ICustomArmSwingEndEntity
+import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.compat.AngelicaCompat
 import alexsocol.patcher.event.*
-import alexsocol.patcher.handler.*
+import alexsocol.patcher.handler.GameRulesHandler
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
-import alexsocol.patcher.helper.*
-import alexsocol.patcher.network.*
-import alexsocol.patcher.util.*
-import biomesoplenty.common.blocks.*
-import biomesoplenty.common.itemblocks.*
-import cofh.asmhooks.*
-import com.emoniph.witchery.dimension.*
-import com.google.common.collect.*
-import cpw.mods.fml.client.*
-import cpw.mods.fml.common.*
-import cpw.mods.fml.common.network.handshake.*
-import cpw.mods.fml.common.registry.*
-import cpw.mods.fml.relauncher.*
-import cpw.mods.fml.server.*
-import gloomyfolken.hooklib.asm.*
+import alexsocol.patcher.helper.FuckingSpigotFix
+import alexsocol.patcher.network.MessageClipboard
+import alexsocol.patcher.network.NetworkHandler
+import alexsocol.patcher.util.FakeStatsList
+import cpw.mods.fml.client.FMLClientHandler
+import cpw.mods.fml.client.GuiModList
+import cpw.mods.fml.client.SplashProgress
+import cpw.mods.fml.common.Loader
+import cpw.mods.fml.common.network.handshake.NetworkDispatcher
+import cpw.mods.fml.common.registry.GameRegistry
+import cpw.mods.fml.common.registry.LanguageRegistry
+import cpw.mods.fml.relauncher.Side
+import cpw.mods.fml.relauncher.SideOnly
+import cpw.mods.fml.server.FMLServerHandler
+import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
 import gloomyfolken.hooklib.asm.ReturnCondition.*
-import jp.mc.ancientred.starminer.core.entity.*
 import net.minecraft.block.*
-import net.minecraft.block.material.*
-import net.minecraft.client.*
-import net.minecraft.client.entity.*
+import net.minecraft.block.material.Material
+import net.minecraft.client.Minecraft
+import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.client.gui.*
-import net.minecraft.client.gui.achievement.*
-import net.minecraft.client.gui.inventory.*
-import net.minecraft.client.multiplayer.*
+import net.minecraft.client.gui.achievement.GuiStats
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.multiplayer.PlayerControllerMP
 import net.minecraft.client.renderer.*
-import net.minecraft.client.renderer.entity.*
-import net.minecraft.client.resources.*
-import net.minecraft.client.settings.*
-import net.minecraft.client.shader.*
+import net.minecraft.client.renderer.entity.Render
+import net.minecraft.client.renderer.entity.RenderPlayer
+import net.minecraft.client.resources.I18n
+import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.settings.KeyBinding
+import net.minecraft.client.shader.ShaderLinkHelper
 import net.minecraft.command.*
-import net.minecraft.command.server.*
-import net.minecraft.creativetab.*
+import net.minecraft.command.server.CommandSummon
+import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.*
-import net.minecraft.entity.DataWatcher.*
-import net.minecraft.entity.EntityList
-import net.minecraft.entity.ai.attributes.*
-import net.minecraft.entity.boss.*
-import net.minecraft.entity.effect.*
-import net.minecraft.entity.item.*
+import net.minecraft.entity.DataWatcher.WatchableObject
+import net.minecraft.entity.ai.attributes.AttributeModifier
+import net.minecraft.entity.boss.EntityDragon
+import net.minecraft.entity.boss.EntityWither
+import net.minecraft.entity.effect.EntityLightningBolt
+import net.minecraft.entity.effect.EntityWeatherEffect
+import net.minecraft.entity.item.EntityEnderPearl
+import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.monster.*
-import net.minecraft.entity.passive.*
-import net.minecraft.entity.player.*
-import net.minecraft.entity.projectile.*
-import net.minecraft.init.*
-import net.minecraft.inventory.*
+import net.minecraft.entity.passive.EntityMooshroom
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.EntityPlayerMP
+import net.minecraft.entity.player.InventoryPlayer
+import net.minecraft.entity.projectile.EntityArrow
+import net.minecraft.entity.projectile.EntityEgg
+import net.minecraft.init.Blocks
+import net.minecraft.init.Items
+import net.minecraft.inventory.ContainerEnchantment
+import net.minecraft.inventory.Slot
 import net.minecraft.item.*
-import net.minecraft.item.Item
-import net.minecraft.nbt.*
-import net.minecraft.network.play.client.*
-import net.minecraft.potion.*
-import net.minecraft.profiler.*
-import net.minecraft.server.*
-import net.minecraft.server.dedicated.*
-import net.minecraft.server.gui.*
-import net.minecraft.server.integrated.*
-import net.minecraft.server.management.*
-import net.minecraft.stats.*
+import net.minecraft.nbt.NBTTagByteArray
+import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.nbt.NBTTagList
+import net.minecraft.nbt.NBTTagString
+import net.minecraft.potion.Potion
+import net.minecraft.potion.PotionEffect
+import net.minecraft.potion.PotionHelper
+import net.minecraft.profiler.PlayerUsageSnooper
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.ServerEula
+import net.minecraft.server.dedicated.DedicatedServer
+import net.minecraft.server.gui.MinecraftServerGui
+import net.minecraft.server.integrated.IntegratedServer
+import net.minecraft.server.management.ItemInWorldManager
+import net.minecraft.stats.AchievementList
+import net.minecraft.stats.StatBase
+import net.minecraft.stats.StatBasic
+import net.minecraft.stats.StatList
 import net.minecraft.stats.StatList.*
-import net.minecraft.tileentity.*
+import net.minecraft.tileentity.TileEntityBeacon
+import net.minecraft.tileentity.TileEntityFurnace
 import net.minecraft.util.*
 import net.minecraft.world.*
-import net.minecraft.world.biome.*
-import net.minecraft.world.chunk.*
-import net.minecraft.world.chunk.storage.*
-import net.minecraftforge.common.*
-import net.minecraftforge.common.util.*
-import net.minecraftforge.fluids.*
-import org.lwjgl.opengl.*
-import org.objectweb.asm.*
-import ru.vamig.worldengine.*
-import vazkii.botania.client.core.handler.*
-import java.awt.*
-import java.awt.datatransfer.*
-import java.io.*
-import java.lang.reflect.*
+import net.minecraft.world.biome.BiomeGenBase
+import net.minecraft.world.biome.BiomeGenMutated
+import net.minecraft.world.biome.WorldChunkManager
+import net.minecraft.world.chunk.Chunk
+import net.minecraft.world.chunk.storage.AnvilChunkLoader
+import net.minecraftforge.common.DimensionManager
+import net.minecraftforge.common.ForgeHooks
+import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.common.util.ForgeDirection
+import net.minecraftforge.fluids.IFluidBlock
+import org.lwjgl.opengl.GL11
+import org.objectweb.asm.Opcodes
+import ru.vamig.worldengine.WE_Biome
+import ru.vamig.worldengine.WE_WorldChunkManager
+import java.awt.Color
+import java.awt.Desktop
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
+import java.io.File
 import java.util.*
 import javax.swing.*
-import javax.swing.plaf.basic.*
-import kotlin.math.*
-import org.lwjglx.opengl.GL11 as XGL11
+import javax.swing.plaf.basic.BasicScrollBarUI
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sqrt
 
 @Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST", "DEPRECATION")
 object ASJHookHandler {
@@ -472,8 +497,8 @@ object ASJHookHandler {
 	
 	// a hook into your hook >:D can you hook it?
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun paneConnectsTo(static: HooksCore?, world: IBlockAccess, x: Int, y: Int, z: Int, dir: ForgeDirection): Boolean {
+	@Hook(returnCondition = ALWAYS, targetClass = "cofh.asmhooks.HooksCore")
+	fun paneConnectsTo(static: Any?, world: IBlockAccess, x: Int, y: Int, z: Int, dir: ForgeDirection): Boolean {
 		if (canPaneConnectTo(Blocks.glass_pane as BlockPane, world, x, y, z, dir)) return true
 		
 		val block = world.getBlock(x, y, z)
@@ -1061,16 +1086,11 @@ object ASJHookHandler {
 	}
 	
 	
-	// memes
+	// meme
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	@SideOnly(Side.CLIENT)
 	fun enableEverythingIsScrewedUpMode(pcmp: PlayerControllerMP) = PatcherConfigHandler.everythingIsScrewedUpMode
-	
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetMethod = "func_149466_j", injectOnExit = true)
-	fun ignoreIllegalStances(c03: C03PacketPlayer, @ReturnValue original: Boolean) = if (PatcherConfigHandler.ignoreIllegalStates) false else original
-	
 	
 	// dragon damaging fix
 	@JvmStatic
@@ -1228,18 +1248,18 @@ object ASJHookHandler {
 	fun placeAllsided(block: BlockRotatedPillar, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta
 	
 	@JvmStatic
-	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "placeAllsided")
-	fun onBlockPlaced(block: BlockBOPLog, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta and 0b1100 == 0b1100
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "placeAllsided", targetClass = "biomesoplenty.common.blocks.BlockBOPLog")
+	fun onBlockPlaced(block: Any, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta and 0b1100 == 0b1100
 	
 	@JvmStatic
-	fun placeAllsided(block: BlockBOPLog, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta
+	fun placeAllsided(block: Any, world: World?, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, meta: Int) = meta
 	
 	@JvmStatic
-	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "allsidedMeta")
-	fun getMetadata(ib: ItemBlockLog, meta: Int) = meta and 0b1100 == 0b1100
+	@Hook(returnCondition = ON_TRUE, returnAnotherMethod = "allsidedMeta", targetClass = "biomesoplenty.common.itemblocks.ItemBlockLog")
+	fun getMetadata(ib: Any, meta: Int) = meta and 0b1100 == 0b1100
 	
 	@JvmStatic
-	fun allsidedMeta(ib: ItemBlockLog, meta: Int) = meta
+	fun allsidedMeta(ib: Any, meta: Int) = meta
 	
 	
 	// bucket sounds
@@ -1334,34 +1354,6 @@ object ASJHookHandler {
 	}
 	
 	
-	// changeable reach distance
-	@SideOnly(Side.CLIENT)
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun getBlockReachDistance(pcmp: PlayerControllerMP) = PlayerReachDistanceHandler.getReachDistance(mc.thePlayer).F
-	
-	// remove client reach handling from Botania
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun setReachDistanceExtension(handler: BotaniaPlayerController, f: Float) = Unit
-	
-	val EntityLivingGravitized_hasInit: Field? by lazy { ASJReflectionHelper.getField(EntityLivingGravitized::class.java, "hasInitServerPlayer", "hasInitPrivate")?.apply { setAccessible(true) } }
-	
-	// change starminer extra reach
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun init(e: EntityLivingGravitized) {
-		EntityLivingGravitized_hasInit?.let { ASJReflectionHelper.setValue(it, e, true, false) }
-		
-		@Suppress("IMPOSSIBLE_IS_CHECK_WARNING", "KotlinConstantConditions")
-		if (e !is EntityPlayerMP) return
-		
-		e.getAttributeMap().applyAttributeModifiers(HashMultimap.create<String, AttributeModifier>().apply {
-			put(PlayerReachDistanceHandler.reachDistance.attributeUnlocalizedName, AttributeModifier(UUID.fromString("30eb815c-094d-45fb-a6e3-6864482f9bf5"), "StarMiner Gravitized Reach", 2.0, 0))
-		})
-	}
-	
-	
 	// fix for https://bugs.mojang.com/browse/MC-1519
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
@@ -1380,8 +1372,8 @@ object ASJHookHandler {
 	
 	// fucking stupid shitcoder fix
 	@JvmStatic
-	@Hook(returnCondition = ON_TRUE)
-	fun dropBetterBackpacks(static: WorldProviderDreamWorld?, player: EntityPlayer) = !Loader.isModLoaded("betterstorage")
+	@Hook(returnCondition = ON_TRUE, targetClass = "com.emoniph.witchery.dimension.WorldProviderDreamWorld")
+	fun dropBetterBackpacks(static: Any?, player: EntityPlayer) = !Loader.isModLoaded("betterstorage")
 	
 	// Mod options gui tweaks
 	@JvmStatic
@@ -1752,8 +1744,8 @@ object ASJHookHandler {
 	
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook(isMandatory = false, injectOnExit = true, targetMethod = "glFogi")
-	fun xglFogi(static: XGL11?, pname: Int, param: Int) = AngelicaCompat.glFogiHook(pname, param)
+	@Hook(isMandatory = false, injectOnExit = true, targetClass = "org.lwjglx.opengl.GL11", targetMethod = "glFogi")
+	fun xglFogi(static: Any?, pname: Int, param: Int) = AngelicaCompat.glFogiHook(pname, param)
 	
 	
 	@JvmStatic

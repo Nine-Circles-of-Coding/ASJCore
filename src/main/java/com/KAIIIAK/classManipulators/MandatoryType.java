@@ -309,13 +309,15 @@ public enum MandatoryType {
 			if (mandatoryChecks == null || mandatoryChecks.isEmpty()) return FAILED;
 			boolean atLeastOneFailed = false;
 			boolean atLeastOneApplied = false;
+			boolean atLeastOneIsWaiting = false;
 			for (IMandatoryCheck iMandatoryCheck : mandatoryChecks) {
 				CheckState state = iMandatoryCheck.check();
-				if (state == WAITING) return WAITING;
+				if (state == WAITING) atLeastOneIsWaiting = true;
 				if (state == FAILED) atLeastOneFailed = true;
 				if (state == APPLIED) atLeastOneApplied = true;
 				if (atLeastOneApplied && atLeastOneFailed) return FAILED;
 			}
+			if (atLeastOneIsWaiting) return WAITING;
 			return APPLIED;
 		}
 	};

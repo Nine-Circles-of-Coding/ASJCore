@@ -25,12 +25,12 @@ object PlayerReachDistanceHandler {
 	@JvmStatic
 	fun getReachDistance(player: EntityPlayer?) = player?.getEntityAttribute(reachDistance)?.attributeValue ?: 5.0
 	
-	@JvmStatic
-	fun setReachDistance(player: EntityPlayer, distance: Double) {
-		val attribute = player.getEntityAttribute(reachDistance)
-		val current = attribute.attributeValue
-		val basicMod = attribute.getModifier(basicModifierUUID)
-		attribute.removeModifier(basicMod)
-		attribute.applyModifier(basicModifier(distance - (current - basicMod.amount)))
-	}
+//	@JvmStatic
+//	fun setReachDistance(player: EntityPlayer, distance: Double) {
+//		val attribute = player.getEntityAttribute(reachDistance)
+//		val current = attribute.attributeValue
+//		val basicMod = attribute.getModifier(basicModifierUUID)
+//		attribute.removeModifier(basicMod)
+//		attribute.applyModifier(basicModifier(distance - (current - basicMod.amount)))
+//	}
 }

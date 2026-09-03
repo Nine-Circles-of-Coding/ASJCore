@@ -84,7 +84,12 @@ public class HookContainerParser {
 			return;
 		}
 		
-		builder.setTargetClass(argumentTypes[0].getClassName());
+		if (annotationValues.containsKey("targetClass")) {
+			builder	.setTargetClass((String) annotationValues.get("targetClass"))
+					.setFirstParameterIsObject(true);
+		} else {
+			builder.setTargetClass(argumentTypes[0].getClassName());
+		}
 		
 		if (annotationValues.containsKey("targetMethod")) {
 			builder.setTargetMethod((String) annotationValues.get("targetMethod"));

@@ -18,6 +18,12 @@ import java.lang.annotation.*;
 public @interface SuperWrapper {
 	
 	/**
+	 * Имя целевого класса, который будет вызван<br>
+	 * Если не указан, будет идентичен имени типа первого аргумента метода с этой аннотацией
+	 */
+	String targetClass() default "";
+	
+	/**
 	 * Имя целевого метода, который будет вызван<br>
 	 * Если не указан, будет идентичен имени метода с этой аннотацией
 	 */
@@ -74,4 +80,9 @@ public @interface SuperWrapper {
 	 * Если true то будет использоваться INVOKEINTERFACE для вызова генерируемого метода 
 	 */
 	boolean isInterface() default false;
+	
+	/**
+	 * Если false, то не добавит вызов CHECKCAST в байткода метода, отмеченного этой аннотацией
+	 */
+	boolean checkcast() default true;
 }

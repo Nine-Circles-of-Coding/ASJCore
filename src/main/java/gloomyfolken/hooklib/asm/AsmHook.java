@@ -29,6 +29,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 	public static final HookInjectorFactory ON_ENTER_FACTORY = MethodEnter.INSTANCE;
 	public static final HookInjectorFactory ON_EXIT_FACTORY = MethodExit.INSTANCE;
 	private String targetClassName; // через точки
+	private boolean firstParameterIsObject;
 	private String targetMethodName;
 	private List<Type> targetMethodParameters = new ArrayList<>(2);
 	private Type targetMethodReturnType; //если не задано, то не проверяется
@@ -410,6 +411,14 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		}
 		
 		/**
+		 * Определяет, является ли тип первого параметра хук-метода идентичным targetClassName или java.lang.Object.
+		 */
+		public Builder setFirstParameterIsObject(boolean firstParameterIsObject) {
+			AsmHook.this.firstParameterIsObject = firstParameterIsObject;
+			return this;
+		}
+		
+		/**
 		 * --- ОБЯЗАТЕЛЬНО ВЫЗВАТЬ ---
 		 * Определяет название метода, в который необходимо вставить хук.
 		 * Если нужно пропатчить конструктор, то в названии метода нужно указать <init>.
@@ -580,7 +589,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 				throw new IllegalStateException("Hook method is not specified, so can not append " +
 													"parameter to its parameters list.");
 			}
-			AsmHook.this.hookMethodParameters.add(TypeHelper.getType(targetClassName));
+			AsmHook.this.hookMethodParameters.add(TypeHelper.getType(AsmHook.this.firstParameterIsObject ? "java.lang.Object" : targetClassName));
 			AsmHook.this.transmittableVariableIds.add(0);
 			return this;
 		}

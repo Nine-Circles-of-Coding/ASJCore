@@ -1,19 +1,22 @@
 package alexsocol.patcher.asm
 
-import alexsocol.asjlib.ASJReflectionHelper
+import alexsocol.asjlib.*
 import alexsocol.asjlib.asm.*
-import alexsocol.patcher.PatcherPreConfigHandler
+import alexsocol.patcher.*
 import alexsocol.patcher.asm.transformer.*
-import alexsocol.patcher.asm.worker.InterfaceAppenderWorker
-import com.KAIIIAK.KASMLib.KASMLib
-import com.KAIIIAK.KASMLib.workers.ReflectionLikeWorker
-import com.KAIIIAK.classManipulators.HookReplacerWorker
-import com.KAIIIAK.superwrapper.SuperWrapperTransformer
-import com.KAIIIAK.superwrapper.SuperWrapperTransformer.registerSuperWrapperContainer
+import alexsocol.patcher.asm.worker.*
+import com.KAIIIAK.KASMLib.*
+import com.KAIIIAK.KASMLib.workers.*
+import com.KAIIIAK.callProxy.CallProxyLogic
+import com.KAIIIAK.classManipulators.*
+import com.KAIIIAK.classManipulators.HookReplacerWorker.*
+import com.KAIIIAK.superwrapper.*
+import com.KAIIIAK.superwrapper.SuperWrapperTransformer.*
 import cpw.mods.fml.relauncher.*
 import gloomyfolken.hooklib.minecraft.*
-import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.registerPostTransformer
+import gloomyfolken.hooklib.minecraft.MinecraftClassTransformer.*
 import net.minecraft.launchwrapper.*
+import kotlin.jvm.java
 
 // -Dfml.coreMods.load=alexsocol.patcher.asm.ASJHookLoader
 // -username=AlexSocol
@@ -22,6 +25,7 @@ import net.minecraft.launchwrapper.*
 	"alexsocol.asjlib.asm",
 	"alexsocol.patcher.asm.transformer",
 	"com.KAIIIAK.asm",
+	"com.KAIIIAK.callProxy",
 	"com.KAIIIAK.classManipulators",
 	"com.KAIIIAK.ignorer",
 	"com.KAIIIAK.KASMLib",
@@ -56,16 +60,21 @@ class ASJHookLoader: HookLoader() {
 	}
 	
 	override fun getASMTransformerClass(): Array<String> {
-		return arrayOf(
+		val classes = mutableListOf<String>(
 			PrimaryClassTransformer::class.java.name,
 			ASJASM::class.java.name,
 			ASJGoto::class.java.name,
 			ASJAccessTransformer::class.java.name,
 			ASJClassTransformer::class.java.name,
 			ASJPacketCompleter::class.java.name,
+			CallProxyLogic::class.java.name,
 			RealmsDeleteTransformer::class.java.name,
 			SpigotTransformer::class.java.name,
 		)
+		
+		if (!OBF) classes.add(ASJAccessTransformerDev::class.java.name)
+		
+		return classes.toTypedArray()
 	}
 	
 	override fun registerHooks() {
@@ -74,6 +83,7 @@ class ASJHookLoader: HookLoader() {
 		registerHookContainer("alexsocol.patcher.asm.hook.ASJHookHandler")
 		registerHookContainer("alexsocol.patcher.asm.hook.BiomeDictionaryForWEHooks")
 		registerHookContainer("alexsocol.patcher.asm.hook.NoEntityInteractionHandler")
+		registerHookContainer("alexsocol.patcher.asm.hook.ReachDistanceHooks")
 		
 		if (PatcherPreConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.hook.BlockButtonExtender")
 		if (PatcherPreConfigHandler.deleteRealms) registerHookContainer("alexsocol.patcher.asm.hook.RealmsDeleter")
@@ -94,17 +104,18 @@ class ASJHookLoader: HookLoader() {
 		KASMLib.register(InterfaceAppenderWorker)
 		KASMLib.register(ReflectionLikeWorker.inst)
 		
-		HookReplacerWorker.registerGroupRegistry("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
-		HookReplacerWorker.registerGroupRegistry("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
-		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
-		HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
+		registerGroupRegistry("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
+		registerGroupRegistry("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
+		registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandler") // java
+		registerHookReplacerContainer("alexsocol.patcher.asm.hook.ASJHookReplacerHandlerKt") // kotlin
+		registerHookReplacerContainer("alexsocol.patcher.asm.hook.ReachDistanceHooks")
 		
-		if (PatcherPreConfigHandler.fixItemCollision) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.ItemCollisionFix")
-		if (PatcherPreConfigHandler.fixCapeRotations) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.CapeRotationsFix")
-		if (PatcherPreConfigHandler.deleteRealms) HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.RealmsDeleterHR")
+		if (PatcherPreConfigHandler.fixItemCollision) registerHookReplacerContainer("alexsocol.patcher.asm.hook.ItemCollisionFix")
+		if (PatcherPreConfigHandler.fixCapeRotations) registerHookReplacerContainer("alexsocol.patcher.asm.hook.CapeRotationsFix")
+		if (PatcherPreConfigHandler.deleteRealms) registerHookReplacerContainer("alexsocol.patcher.asm.hook.RealmsDeleterHR")
 		if (PatcherPreConfigHandler.tickrateHooks) {
-			HookReplacerWorker.registerGroupRegistry("alexsocol.patcher.asm.hook.TickrateKt")
-			HookReplacerWorker.registerHookReplacerContainer("alexsocol.patcher.asm.hook.TickrateKt")
+			registerGroupRegistry("alexsocol.patcher.asm.hook.TickrateKt")
+			registerHookReplacerContainer("alexsocol.patcher.asm.hook.TickrateKt")
 		}
 	}
 }

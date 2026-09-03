@@ -1,3 +1,10 @@
+Innovations:
+ Removed "Using numeric IDs will not be supported in the future" message from commands
+ @CallProxy for wrapping calls to injected fields/methods
+ Excluded org.intellij.lang.annotations and org.jetbrains.annotations packages from jar files
+
 Fixes:
- [AM2.5] /tickrate conflict
- [Starminer] Bed fix conflict
+ reach distance conflicts with Botania, Starminer, Aether, ChromatiCraft, M&B:B2, LOTR, MineFantasy
+ ignoreIllegalStates config
+ phantom block placement when looking up
+ raycast limit

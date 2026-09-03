@@ -1,4 +1,4 @@
-@file:Suppress("JoinDeclarationAndAssignment", "UNUSED_VARIABLE", "UNUSED_VALUE", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE", "unused", "VariableNeverRead", "AssignedValueIsNeverRead")
+@file:Suppress("JoinDeclarationAndAssignment", "UNUSED_VARIABLE", "UNUSED_VALUE", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE", "unused", "VariableNeverRead", "AssignedValueIsNeverRead", "ReplaceJavaStaticMethodWithKotlinAnalog")
 
 package alexsocol.patcher.asm.hook
 
@@ -8,19 +8,21 @@ import com.KAIIIAK.classManipulators.HookReplacer.*
 import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
 import cpw.mods.fml.client.*
 import cpw.mods.fml.common.*
-import lumien.randomthings.Items.*
 import net.minecraft.block.*
-import net.minecraft.block.material.Material
+import net.minecraft.block.material.*
 import net.minecraft.client.gui.*
 import net.minecraft.client.renderer.*
+import net.minecraft.command.*
 import net.minecraft.entity.*
 import net.minecraft.entity.effect.*
 import net.minecraft.entity.item.*
 import net.minecraft.entity.monster.*
 import net.minecraft.entity.player.*
-import net.minecraft.init.Blocks
+import net.minecraft.init.*
 import net.minecraft.inventory.*
+import net.minecraft.item.*
 import net.minecraft.network.*
+import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.server.*
 import net.minecraft.potion.*
 import net.minecraft.server.gui.*
@@ -31,6 +33,7 @@ import net.minecraft.world.biome.*
 import net.minecraft.world.gen.feature.*
 import java.awt.*
 import java.util.*
+import kotlin.math.abs
 
 //@formatter:off
 // fix oak leaves on jungle shrubs
@@ -302,8 +305,8 @@ fun alwaysDrawInfo(thiz: GuiModList, mouseX: Int, mouseY: Int, ticks: Float) {
 }
 
 // WE Biome crash fix for RT
-@HookReplacer(removePop = true)
-fun onEntityItemUpdate(thiz: ItemBiomeCapsule, item: EntityItem): Boolean {
+@HookReplacer(removePop = true, targetClass = "lumien.randomthings.Items.ItemBiomeCapsule")
+fun onEntityItemUpdate(thiz: Any, item: EntityItem): Boolean {
 	startFROM()
 	BiomeGenBase.getBiome(ILOAD("6"))
 	startTO()
@@ -362,7 +365,7 @@ fun tryExtend2(piston: BlockPistonBase, world: World?, x: Int, y: Int, z: Int, s
 }
 
 
-@CreateHRG(name = "highSleep", type = MandatoryType.IF_ALL_OR_NONE)
+@CreateHRG(name = "highSleep", type = MandatoryType.IF_ALL_OR_NONE) // StarMiner also fixes this
 @HookReplacer(mandatoryGroups = ["highSleep"], removePop = true)
 fun readPacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
 	startFROM()
@@ -395,6 +398,71 @@ fun noNetherPortalInWrongDims(dimId: Int) = when (dimId) {
 	0, -1 -> 0
 	else  -> 1
 }
+
+@HookReplacer(correctStaticIndexes = true)
+fun getItemByText(static: CommandBase?, sender: ICommandSender, arg: String?): Item? {
+	startFROM()
+	sender.addChatMessage(ALOAD("4"))
+	startTO()
+	// nope
+	stop()
+	
+	return null
+}
+
+@HookReplacer(correctStaticIndexes = true)
+fun getBlockByText(static: CommandBase?, sender: ICommandSender, arg: String?): Block? {
+	startFROM()
+	sender.addChatMessage(ALOAD("4"))
+	startTO()
+	// nope
+	stop()
+	
+	return null
+}
+
+@HookReplacer // fix raycast limit
+fun func_147447_a(world: World, start: Vec3, end: Vec3, a: Boolean, b: Boolean, c: Boolean): MovingObjectPosition? {
+	startFROM()
+	POP(200)
+	startTO()
+	POP(abs(ILOAD("6") - ILOAD("9")) + abs(ILOAD("7") - ILOAD("10")) + abs(ILOAD("8") - ILOAD("11")) + 5) // +5 as extra precaution
+	stop()
+	
+	return null
+}
+
+
+@HookReplacer(onlyNthMatches = [2], removePop = true, targetMethod = "processPlayer")
+fun ignoreIllegalStates1(nhps: NetHandlerPlayServer, packet: C03PacketPlayer) {
+	startFROM()
+	nhps.playerEntity.isPlayerSleeping
+	startTO()
+	cantKick(nhps)
+	stop()
+}
+
+fun cantKick(nhps: NetHandlerPlayServer) = nhps.playerEntity.isPlayerSleeping || PatcherConfigHandler.ignoreIllegalStates
+
+@HookReplacer(removePop = true, targetMethod = "processPlayer")
+fun ignoreIllegalStates2a(nhps: NetHandlerPlayServer, packet: C03PacketPlayer) {
+	startFROM()
+	Math.abs(packet.func_149464_c())
+	startTO()
+	checkPos(packet.func_149464_c())
+	stop()
+}
+
+@HookReplacer(removePop = true, targetMethod = "processPlayer")
+fun ignoreIllegalStates2b(nhps: NetHandlerPlayServer, packet: C03PacketPlayer) {
+	startFROM()
+	Math.abs(packet.func_149472_e())
+	startTO()
+	checkPos(packet.func_149472_e())
+	stop()
+}
+
+fun checkPos(coord: Double) = if (PatcherConfigHandler.ignoreIllegalStates) 0.0 else Math.abs(coord)
 
 
 // call inserted by ASJClassTransformer#fixLiquidToBucket

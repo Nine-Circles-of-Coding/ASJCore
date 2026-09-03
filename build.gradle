@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.7.0.1"
+version = "1.7.0.2"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -62,6 +62,8 @@ jar {
 	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	
 	from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+	exclude 'org/intellij/lang/annotations/**'
+	exclude 'org/jetbrains/annotations/**'
 	
 	manifest {
 		attributes 'FMLAT': 'asjlib_at.cfg'
@@ -107,6 +109,8 @@ tasks.register('deobfJar', Jar) {
 
 	from sourceSets.main.output
     from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+	exclude 'org/intellij/lang/annotations/**'
+	exclude 'org/jetbrains/annotations/**'
 	manifest.attributes(jar.manifest.getAttributes())
 }
 

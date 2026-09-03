@@ -61,6 +61,15 @@ fun replaceTickRate(mc: Minecraft, session: Session?, displayWidth: Int, display
     stop()
 }
 
+@HookReplacer // in case someone (Mysterium) changes timer
+fun updateTimer(timer: Timer) {
+    startFROM()
+    POP(timer.ticksPerSecond)
+    startTO()
+    POP(getTPS())
+    stop()
+}
+
 fun getTPS(): Float = PatcherConfigHandler.tps
 fun getMsPT(): Long = PatcherConfigHandler.msPerTick.toLong()
 fun getNsPT(): Long = PatcherConfigHandler.msPerTick * 1_000_000L
