@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.7.0.2"
+version = "1.7.0.3"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -64,6 +64,8 @@ jar {
 	from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
 	exclude 'org/intellij/lang/annotations/**'
 	exclude 'org/jetbrains/annotations/**'
+	exclude 'META-INF/maven/**'
+	exclude 'META-INF/versions/**'
 	
 	manifest {
 		attributes 'FMLAT': 'asjlib_at.cfg'

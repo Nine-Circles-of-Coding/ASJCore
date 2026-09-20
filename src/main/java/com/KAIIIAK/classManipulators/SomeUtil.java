@@ -1,6 +1,9 @@
 package com.KAIIIAK.classManipulators;
 
 import com.KAIIIAK.KASMLib.KASMLib;
+import com.KAIIIAK.classManipulators.Tools.FlexiblePatternReplace;
+import com.KAIIIAK.classManipulators.fakeNode.AnyNode;
+import com.KAIIIAK.classManipulators.fakeNode.CaptureNode;
 import com.KAIIIAK.nullsafety.Opt;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
@@ -132,100 +135,138 @@ public class SomeUtil {
 		String opcodeName = opcodeNames.get(opcode);
 		return opcodeName != null ? opcodeName : "Unknown";
 	}
-	
-	public static boolean myEquals(AbstractInsnNode first, AbstractInsnNode second) {
-		if (first == second) {
+
+
+	public static void cleverCaptureSource(AbstractInsnNode value, FlexiblePatternReplace.MatchContext<AbstractInsnNode> context)
+	{
+		AbstractInsnNode patternValue =
+				context.matchedPattern.get(context.matchedPattern.size() - 1);
+		if(patternValue instanceof CaptureNode)
+		{
+			context.put("capture" + ((CaptureNode)patternValue).captureIndex, value);
+		}
+	}
+
+	public static List<AbstractInsnNode> cleverReplacementBuilder(FlexiblePatternReplace.MatchContext<AbstractInsnNode> context, List<AbstractInsnNode> replaceInto)
+	{
+		List<AbstractInsnNode> result = new ArrayList<>();
+
+		for (AbstractInsnNode value : Opt.it(replaceInto)) {
+      		if(value instanceof CaptureNode)
+      		{
+				int captureIndex = ((CaptureNode)value).captureIndex;
+				result.add(context.<AbstractInsnNode>get("capture" + captureIndex));
+			} else {
+				result.add(value);
+			}
+		}
+
+		return result;
+	}
+
+	public static boolean myEquals(AbstractInsnNode sourceValue, AbstractInsnNode patternValue) {
+		if (sourceValue == patternValue) {
 			return true;
 		}
-		
-		if (first == null || second == null) {
+
+		if (patternValue == null)
+		{
+			return false;
+		}
+
+		if (patternValue instanceof AnyNode || patternValue instanceof CaptureNode)
+		{
+			return true;
+		}
+
+		if (sourceValue == null) {
 			return false;
 		}
 		
-		if (first.getClass() != second.getClass()) {
+		if (sourceValue.getClass() != patternValue.getClass()) {
 			return false;
 		}
 		
-		if (first instanceof FieldInsnNode) {
-			FieldInsnNode firstFieldInsn = (FieldInsnNode) first;
-			FieldInsnNode secondFieldInsn = (FieldInsnNode) second;
+		if (sourceValue instanceof FieldInsnNode) {
+			FieldInsnNode firstFieldInsn = (FieldInsnNode) sourceValue;
+			FieldInsnNode secondFieldInsn = (FieldInsnNode) patternValue;
 			
 			return firstFieldInsn.getOpcode() == secondFieldInsn.getOpcode() &&
 					Objects.equals(firstFieldInsn.owner, secondFieldInsn.owner) &&
 					Objects.equals(firstFieldInsn.name, secondFieldInsn.name) &&
 					Objects.equals(firstFieldInsn.desc, secondFieldInsn.desc);
-		} else if (first instanceof FrameNode) {
-			FrameNode firstFrameNode = (FrameNode) first;
-			FrameNode secondFrameNode = (FrameNode) second;
+		} else if (sourceValue instanceof FrameNode) {
+			FrameNode firstFrameNode = (FrameNode) sourceValue;
+			FrameNode secondFrameNode = (FrameNode) patternValue;
 			
 			// Compare the frame type and local/stack values
 			return firstFrameNode.getOpcode() == secondFrameNode.getOpcode() &&
 					(firstFrameNode.type != secondFrameNode.type || // Ochen unsafe huinya (c) KAIIIAK
 							(Objects.equals(firstFrameNode.local, secondFrameNode.local) && Objects.equals(firstFrameNode.stack, secondFrameNode.stack)));
-		} else if (first instanceof IincInsnNode) {
-			IincInsnNode firstIincInsn = (IincInsnNode) first;
-			IincInsnNode secondIincInsn = (IincInsnNode) second;
+		} else if (sourceValue instanceof IincInsnNode) {
+			IincInsnNode firstIincInsn = (IincInsnNode) sourceValue;
+			IincInsnNode secondIincInsn = (IincInsnNode) patternValue;
 			
 			return firstIincInsn.var == secondIincInsn.var &&
 					firstIincInsn.incr == secondIincInsn.incr;
-		} else if (first instanceof IntInsnNode) {
-			IntInsnNode firstIntInsn = (IntInsnNode) first;
-			IntInsnNode secondIntInsn = (IntInsnNode) second;
+		} else if (sourceValue instanceof IntInsnNode) {
+			IntInsnNode firstIntInsn = (IntInsnNode) sourceValue;
+			IntInsnNode secondIntInsn = (IntInsnNode) patternValue;
 			
 			return firstIntInsn.getOpcode() == secondIntInsn.getOpcode() &&
 					firstIntInsn.operand == secondIntInsn.operand;
-		} else if (first instanceof InvokeDynamicInsnNode) {
-			InvokeDynamicInsnNode firstInvokeDynamicInsn = (InvokeDynamicInsnNode) first;
-			InvokeDynamicInsnNode secondInvokeDynamicInsn = (InvokeDynamicInsnNode) second;
+		} else if (sourceValue instanceof InvokeDynamicInsnNode) {
+			InvokeDynamicInsnNode firstInvokeDynamicInsn = (InvokeDynamicInsnNode) sourceValue;
+			InvokeDynamicInsnNode secondInvokeDynamicInsn = (InvokeDynamicInsnNode) patternValue;
 			
 			return Objects.equals(firstInvokeDynamicInsn.name, secondInvokeDynamicInsn.name) &&
 					Objects.equals(firstInvokeDynamicInsn.desc, secondInvokeDynamicInsn.desc) &&
 					Objects.equals(firstInvokeDynamicInsn.bsm, secondInvokeDynamicInsn.bsm) &&
 					Arrays.equals(firstInvokeDynamicInsn.bsmArgs, secondInvokeDynamicInsn.bsmArgs);
-		} else if (first instanceof LdcInsnNode) {
-			LdcInsnNode firstLdcInsn = (LdcInsnNode) first;
-			LdcInsnNode secondLdcInsn = (LdcInsnNode) second;
+		} else if (sourceValue instanceof LdcInsnNode) {
+			LdcInsnNode firstLdcInsn = (LdcInsnNode) sourceValue;
+			LdcInsnNode secondLdcInsn = (LdcInsnNode) patternValue;
 			
 			return Objects.equals(firstLdcInsn.cst, secondLdcInsn.cst);
-		} else if (first instanceof LineNumberNode) {
+		} else if (sourceValue instanceof LineNumberNode) {
 			// For LineNumberNode, compare the opcode
-			return first.getOpcode() == second.getOpcode();
-		} else if (first instanceof LookupSwitchInsnNode) {
-			LookupSwitchInsnNode firstLookupSwitchInsn = (LookupSwitchInsnNode) first;
-			LookupSwitchInsnNode secondLookupSwitchInsn = (LookupSwitchInsnNode) second;
+			return sourceValue.getOpcode() == patternValue.getOpcode();
+		} else if (sourceValue instanceof LookupSwitchInsnNode) {
+			LookupSwitchInsnNode firstLookupSwitchInsn = (LookupSwitchInsnNode) sourceValue;
+			LookupSwitchInsnNode secondLookupSwitchInsn = (LookupSwitchInsnNode) patternValue;
 			
 			return Objects.equals(firstLookupSwitchInsn.dflt, secondLookupSwitchInsn.dflt) &&
 					Objects.equals(firstLookupSwitchInsn.keys, secondLookupSwitchInsn.keys) &&
 					Objects.equals(firstLookupSwitchInsn.labels, secondLookupSwitchInsn.labels);
-		} else if (first instanceof MultiANewArrayInsnNode) {
-			MultiANewArrayInsnNode firstMultiANewArrayInsn = (MultiANewArrayInsnNode) first;
-			MultiANewArrayInsnNode secondMultiANewArrayInsn = (MultiANewArrayInsnNode) second;
+		} else if (sourceValue instanceof MultiANewArrayInsnNode) {
+			MultiANewArrayInsnNode firstMultiANewArrayInsn = (MultiANewArrayInsnNode) sourceValue;
+			MultiANewArrayInsnNode secondMultiANewArrayInsn = (MultiANewArrayInsnNode) patternValue;
 			
 			return Objects.equals(firstMultiANewArrayInsn.desc, secondMultiANewArrayInsn.desc) &&
 					firstMultiANewArrayInsn.dims == secondMultiANewArrayInsn.dims;
-		} else if (first instanceof TableSwitchInsnNode) {
-			TableSwitchInsnNode firstTableSwitchInsn = (TableSwitchInsnNode) first;
-			TableSwitchInsnNode secondTableSwitchInsn = (TableSwitchInsnNode) second;
+		} else if (sourceValue instanceof TableSwitchInsnNode) {
+			TableSwitchInsnNode firstTableSwitchInsn = (TableSwitchInsnNode) sourceValue;
+			TableSwitchInsnNode secondTableSwitchInsn = (TableSwitchInsnNode) patternValue;
 			
 			return Objects.equals(firstTableSwitchInsn.dflt, secondTableSwitchInsn.dflt) &&
 					firstTableSwitchInsn.min == secondTableSwitchInsn.min &&
 					firstTableSwitchInsn.max == secondTableSwitchInsn.max &&
 					Objects.equals(firstTableSwitchInsn.labels, secondTableSwitchInsn.labels);
-		} else if (first instanceof TypeInsnNode) {
-			TypeInsnNode firstTypeInsn = (TypeInsnNode) first;
-			TypeInsnNode secondTypeInsn = (TypeInsnNode) second;
+		} else if (sourceValue instanceof TypeInsnNode) {
+			TypeInsnNode firstTypeInsn = (TypeInsnNode) sourceValue;
+			TypeInsnNode secondTypeInsn = (TypeInsnNode) patternValue;
 			
 			return firstTypeInsn.getOpcode() == secondTypeInsn.getOpcode() &&
 					Objects.equals(firstTypeInsn.desc, secondTypeInsn.desc);
-		} else if (first instanceof VarInsnNode) {
-			VarInsnNode firstVarInsn = (VarInsnNode) first;
-			VarInsnNode secondVarInsn = (VarInsnNode) second;
+		} else if (sourceValue instanceof VarInsnNode) {
+			VarInsnNode firstVarInsn = (VarInsnNode) sourceValue;
+			VarInsnNode secondVarInsn = (VarInsnNode) patternValue;
 			
 			return firstVarInsn.getOpcode() == secondVarInsn.getOpcode() &&
 					firstVarInsn.var == secondVarInsn.var;
-		} else if (first instanceof MethodInsnNode) {
-			MethodInsnNode firstMethodInsn = (MethodInsnNode) first;
-			MethodInsnNode secondMethodInsn = (MethodInsnNode) second;
+		} else if (sourceValue instanceof MethodInsnNode) {
+			MethodInsnNode firstMethodInsn = (MethodInsnNode) sourceValue;
+			MethodInsnNode secondMethodInsn = (MethodInsnNode) patternValue;
 			
 			return (firstMethodInsn.getOpcode() == secondMethodInsn.getOpcode() ||
 					firstMethodInsn.getOpcode() == INVOKESPECIAL ||
@@ -234,15 +275,15 @@ public class SomeUtil {
 					Objects.equals(firstMethodInsn.name, secondMethodInsn.name) &&
 					Objects.equals(firstMethodInsn.desc, secondMethodInsn.desc) &&
 					firstMethodInsn.itf == secondMethodInsn.itf;
-		} else if (first instanceof JumpInsnNode) {
+		} else if (sourceValue instanceof JumpInsnNode) {
 			// For JumpInsnNode subclasses, compare the opcode
-			return first.getOpcode() == second.getOpcode();
-		} else if (first instanceof InsnNode) {
+			return sourceValue.getOpcode() == patternValue.getOpcode();
+		} else if (sourceValue instanceof InsnNode) {
 			// For InsnNode subclasses, compare the opcode
-			return first.getOpcode() == second.getOpcode();
-		} else if (first instanceof LabelNode) {
+			return sourceValue.getOpcode() == patternValue.getOpcode();
+		} else if (sourceValue instanceof LabelNode) {
 			// For LabelNode, compare the opcode
-			return first.getOpcode() == second.getOpcode();
+			return sourceValue.getOpcode() == patternValue.getOpcode();
 		}
 		
 		// For unknown AbstractInsnNode types, return false

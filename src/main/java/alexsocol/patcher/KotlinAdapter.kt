@@ -41,7 +41,6 @@ class KotlinAdapter: ILanguageAdapter {
 	}
 	
 	companion object {
-		
 		const val className = "alexsocol.patcher.KotlinAdapter"
 	}
 }
@@ -54,12 +53,12 @@ class KotlinAdapter: ILanguageAdapter {
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
 annotation class KotlinProxy(
-		/**
-		 * The name of the client side class to load and populate
-		 */
-		val clientSide: String = "",
-		/**
-		 * The name of the server side class to load and populate
-		 */
-		val serverSide: String = "",
-                            )
+	/**
+	 * The name of the client side class to load and populate
+	 */
+	val clientSide: String = "",
+	/**
+	 * The name of the server side class to load and populate
+	 */
+	val serverSide: String = "",
+)

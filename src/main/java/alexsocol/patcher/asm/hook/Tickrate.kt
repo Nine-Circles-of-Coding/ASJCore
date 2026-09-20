@@ -7,6 +7,7 @@ import com.KAIIIAK.classManipulators.*
 import com.KAIIIAK.classManipulators.HookReplacer.*
 import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
 import com.google.common.collect.*
+import cpw.mods.fml.common.FMLLog
 import io.github.crucible.*
 import net.minecraft.client.*
 import net.minecraft.server.*
@@ -14,6 +15,33 @@ import net.minecraft.util.*
 import net.tclproject.mysteriumlib.asm.fixes.MysteriumPatchesFixesMagicka
 import java.io.*
 import java.net.*
+
+@Suppress("ReplaceJavaStaticMethodWithKotlinAnalog")
+@HookReplacer(targetMethod = "run", removePop = true, isMandatory = false) // Cauldron-based servers seems to not need this
+fun changeThreadSleepTime(ms: MinecraftServer) {
+    startFROM()
+    Math.max(LSKIP(), LSKIP())
+    startTO()
+    changeThreadSleepTime(LSKIP(), LSKIP())
+    stop()
+}
+
+fun changeThreadSleepTime(minSleep: Long, actualSleep: Long) = actualSleep
+
+@HookReplacer(targetMethod = "run")
+fun sleepThreadIfCan(ms: MinecraftServer) {
+    startFROM()
+    Thread.sleep(LSKIP())
+    startTO()
+    sleepThreadIfCan(LSKIP())
+    stop()
+}
+
+fun sleepThreadIfCan(requestedSleepTime: Long) {
+    if (requestedSleepTime <= 0L) return
+    if (getMsPT() == 1L) FMLLog.bigWarning("Requested ${requestedSleepTime}ms of sleep on tickrate 1")
+    Thread.sleep(requestedSleepTime)
+}
 
 @CreateHRG(name = "tickrate")
 @HookReplacer(targetMethod = "run", mandatoryGroups = ["tickrate"])

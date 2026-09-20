@@ -138,7 +138,7 @@ public abstract class WE_Biome extends BiomeGenBase {
 			if (biome != null) return biome;
 		}
 		
-		double biomeMapData = WE_PerlinNoise.PerlinNoise2D((long) Math.pow(cp.world.getSeed() * 84, 6),
+		double biomeMapData = WE_PerlinNoise.PerlinNoise2D(cp.world.getSeed(),
 			x / cp.biomemapScaleX, z / cp.biomemapScaleX,
 			cp.biomemapPersistence, cp.biomemapNumberOfOctaves)
 			                      * cp.biomemapScaleY;

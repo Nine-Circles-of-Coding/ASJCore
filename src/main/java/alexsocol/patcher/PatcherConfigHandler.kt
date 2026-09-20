@@ -13,6 +13,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var addAir = false
 	var addBlocks = false
 	var msPerTick = 50
+	var noAirUpdate = false
 	var textIDs = false
 	var tps = 20f
 	
@@ -26,6 +27,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var damageMobArmor = true
 	var darkMode = true
 	var disableStats = false
+	var dropItemsOnContainerClosing = false
 	var eggs = true
 	var endlessSprint = true
 	var entityGravityFix = true
@@ -47,6 +49,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 	var respawnInEnd = false
 	var respawnInNether = false
 	var ridingHandRotationDisable = false
+	var saturationBoost = true
 	var showNbt = true
 	var showOreDict = true
 	var showRegName = true
@@ -72,6 +75,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		addAir = loadProp(CATEGORY_DANGER, "addAir", addAir, true, "Set this to true to add air item")
 		addBlocks = loadProp(CATEGORY_DANGER, "addBlocks", addBlocks, true, "Set this to true to add items for technical blocks")
 		msPerTick = loadProp(CATEGORY_DANGER, "msPerTick", msPerTick, false, "Amount of milliseconds per server tick (higher values - lower TPS), disabled by tickrateHooks. Incompatible with fastcraft")
+		noAirUpdate = loadProp(CATEGORY_DANGER, "noAirUpdate", noAirUpdate, false, "Set this to true to disable air blocks sending block updates")
 		textIDs = loadProp(CATEGORY_DANGER, "textIDs", textIDs, false, "Set this to true to enable text item IDs instead of numeric for storing in NBT")
 		tps = loadProp(CATEGORY_DANGER, "tps", tps.D, false, "Amount of client ticks per second (higher values - higher TPS), disabled by tickrateHooks").F
 		
@@ -85,6 +89,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		damageMobArmor = loadProp(CATEGORY_GENERAL, "damageMobArmor", damageMobArmor, false, "Set this to false to prevent mob armor getting destroyed from attacks")
 		darkMode = loadProp(CATEGORY_GENERAL, "darkMode", darkMode, true, "Set this to false to disable dark mode on minecraft load")
 		disableStats = loadProp(CATEGORY_GENERAL, "disableStats", disableStats, true, "Set this to false to re-enable stats collection")
+		dropItemsOnContainerClosing = loadProp(CATEGORY_GENERAL, "dropItemsOnContainerClosing", dropItemsOnContainerClosing, false, "Set this to true to re-enable items dropping from certain containers (like workbench) on closing")
 		eggs = loadProp(CATEGORY_GENERAL, "eggs", eggs, true, "Set this to false to not add eggs for snow and iron golems, giant, ender dragon, wither")
 		endlessSprint = loadProp(CATEGORY_GENERAL, "endlessSprint", endlessSprint, false, "Set this to true to remove sprinting cancellation after 30 seconds")
 		entityGravityFix = loadProp(CATEGORY_GENERAL, "entityGravityFix", entityGravityFix, false, "Set this to false to disable gravity fix")
@@ -106,6 +111,7 @@ object PatcherConfigHandler: ASJConfigHandler() {
 		respawnInEnd = loadProp(CATEGORY_GENERAL, "respawnInEnd", respawnInEnd, false, "Set this to true to allow respawning in the end")
 		respawnInNether = loadProp(CATEGORY_GENERAL, "respawnInNether", respawnInNether, false, "Set this to true to allow respawning in the nether")
 		ridingHandRotationDisable = loadProp(CATEGORY_GENERAL, "ridingHandRotationDisable", ridingHandRotationDisable, false, "Set this to true to disable FPV hand rotation while riding")
+		saturationBoost = loadProp(CATEGORY_GENERAL, "saturationBoost", saturationBoost, false, "Set this to false to disable backported feature of healing boost from food saturation")
 		showNbt = loadProp(CATEGORY_GENERAL, "showNbt", showNbt, false, "Set this to false to not show stack NBT in item tooltip when holding SHIFT AND when advanced tooltips are enabled (F3+H)")
 		showOreDict = loadProp(CATEGORY_GENERAL, "showOreDict", showOreDict, false, "Set this to false to not show oredict names in item tooltip when holding SHIFT")
 		showRegName = loadProp(CATEGORY_GENERAL, "showRegName", showRegName, false, "Set this to false to not show registry name in item tooltip when holding SHIFT")

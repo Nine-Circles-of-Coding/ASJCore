@@ -2,6 +2,10 @@ package alexsocol.patcher.asm.hook;
 
 import alexsocol.patcher.compat.AngelicaCompat;
 import com.KAIIIAK.classManipulators.HookReplacer;
+import cpw.mods.fml.common.ModContainer;
+import cpw.mods.fml.common.discovery.ASMDataTable;
+import cpw.mods.fml.common.discovery.JarDiscoverer;
+import cpw.mods.fml.common.discovery.ModCandidate;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import mods.clayium.item.gadget.GadgetLongArm;
@@ -32,6 +36,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.util.glu.Project;
 
 import java.io.File;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -99,9 +104,9 @@ public class ASJHookReplacerHandler {
 	@HookReplacer(mandatoryGroups = "orthoProjection")
 	public static void setupCameraTransform(EntityRenderer er, float f, int i) {
 		startFROM();
-		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
+		Project.gluPerspective(FSKIP(), FSKIP(), FSKIP(), er.farPlaneDistance * 2F);
 		startTO();
-		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, er.farPlaneDistance * 2F);
+		Project.gluPerspective(FSKIP(), FSKIP(), FSKIP(), er.farPlaneDistance * 2F);
 		AngelicaCompat.switchToOrtho(er, f, er.farPlaneDistance * 2F);
 		stop();
 	}
@@ -109,9 +114,9 @@ public class ASJHookReplacerHandler {
 	@HookReplacer(targetMethod = "setupCameraTransform", mandatoryGroups = "orthoProjection")
 	public static void setupCameraTransformOF(EntityRenderer er, float f, int i) {
 		startFROM();
-		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
+		Project.gluPerspective(FSKIP(), FSKIP(), FSKIP(), FLOAD("4"));
 		startTO();
-		Project.gluPerspective(er.getFOVModifier(f, true), (float)er.mc.displayWidth / (float)er.mc.displayHeight, 0.05F, FLOAD("4"));
+		Project.gluPerspective(FSKIP(), FSKIP(), FSKIP(), FLOAD("4"));
 		AngelicaCompat.switchToOrtho(er, f, FLOAD("4"));
 		stop();
 	}
@@ -147,9 +152,8 @@ public class ASJHookReplacerHandler {
 	@HookReplacer(removePop = true)
 	public static Set<String> getResourceDomains(FileResourcePack frp) {
 		startFROM();
-		HookReplacer.Replacer.<String>ALOAD("7").toLowerCase();
+		HookReplacer.Replacer.<String>ASKIP().toLowerCase();
 		startTO();
-		ALOAD("7").toString();
 		stop();
 		
 		return null;
@@ -158,9 +162,8 @@ public class ASJHookReplacerHandler {
 	@HookReplacer(removePop = true)
 	public static Set<String> getResourceDomains(FolderResourcePack frp) {
 		startFROM();
-		HookReplacer.Replacer.<String>ALOAD("7").toLowerCase();
+		HookReplacer.Replacer.<String>ASKIP().toLowerCase();
 		startTO();
-		ALOAD("7").toString();
 		stop();
 		
 		return null;
@@ -171,7 +174,7 @@ public class ASJHookReplacerHandler {
 	@HookReplacer(targetMethod = "func_150489_a", removePop = true)
 	public static NBTBase fixSingleElement(JsonToNBT.Primitive primitive) {
 		startFROM();
-		new NBTTagIntArray(new int[] {Integer.parseInt(HookReplacer.Replacer.<String>ALOAD("1").trim())});
+		new NBTTagIntArray(new int[] {Integer.parseInt(HookReplacer.Replacer.<String>ALOAD("1").trim())}); // TODO VARANY
 		startTO();
 		deserialize(ALOAD("2"));
 		stop();
@@ -238,20 +241,35 @@ public class ASJHookReplacerHandler {
 	// Idea from Factorization by purpleposeidon, fixes this (in a proper way):
 	// Place 7 blocks in a tower. On the edge of the top block, place another block.
 	// Place a slab on the ground below it. Look up, try to place a block against the top one.
-	@HookReplacer(removePop = true)
+	@HookReplacer(removePop = true, isMandatory = false)
 	public static void processPlayerBlockPlacement(NetHandlerPlayServer nhps, C08PacketPlayerBlockPlacement packet) {
 		startFROM();
-		nhps.playerEntity.getDistanceSq((double) ILOAD("6") + 0.5D, (double) ILOAD("7") + 0.5D, (double) ILOAD("8") + 0.5D);
+		nhps.playerEntity.getDistanceSq((double) ILOAD("6") + 0.5D, (double) ILOAD("7") + 0.5D, (double) ILOAD("8") + 0.5D); // TODO VARANY
 		startTO();
-		playerEyeBlockDistanceSq(nhps.playerEntity, ILOAD("6"), ILOAD("7"), ILOAD("8"));
+		playerEyeBlockDistanceSq(ILOAD("6"), ILOAD("7"), ILOAD("8"), nhps.playerEntity);
 		stop();
 	}
-	
-	public static double playerEyeBlockDistanceSq(EntityPlayerMP player, int x, int y, int z) {
-		double d3 = player.posX - (x + 0.5);
-		double d4 = (player.posY + player.eyeHeight) - (y + 0.5);
-		double d5 = player.posZ - (z + 0.5);
+
+	public static double playerEyeBlockDistanceSq(double x, double y, double z, EntityPlayerMP player) {
+		double d3 = player.posX - x;
+		double d4 = (player.posY + player.eyeHeight) - y;
+		double d5 = player.posZ - z;
 		return d3 * d3 + d4 * d4 + d5 * d5;
+	}
+
+	@HookReplacer(removePop = true)
+	public static List<ModContainer> discover(JarDiscoverer jd, ModCandidate candidate, ASMDataTable table) {
+		startFROM();
+		HookReplacer.Replacer.<String>ASKIP().startsWith("__MACOSX");
+		startTO();
+		shouldIgnoreJarEntry(ASKIP());
+		stop();
+
+		return null;
+	}
+
+	public static boolean shouldIgnoreJarEntry(String name) {
+		return name.startsWith("__MACOSX") || name.startsWith("META-INF/versions") || name.endsWith("module-info.class") || name.endsWith(".kotlin_module");
 	}
 }
 //@formatter:on

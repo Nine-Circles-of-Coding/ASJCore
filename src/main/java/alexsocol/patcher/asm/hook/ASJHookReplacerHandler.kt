@@ -2,33 +2,35 @@
 
 package alexsocol.patcher.asm.hook
 
-import alexsocol.patcher.*
+import alexsocol.patcher.PatcherConfigHandler
 import com.KAIIIAK.classManipulators.*
-import com.KAIIIAK.classManipulators.HookReplacer.*
+import com.KAIIIAK.classManipulators.HookReplacer.CreateHRG
 import com.KAIIIAK.classManipulators.HookReplacer.Replacer.*
-import cpw.mods.fml.client.*
-import cpw.mods.fml.common.*
+import cpw.mods.fml.client.GuiModList
+import cpw.mods.fml.common.ModContainer
 import net.minecraft.block.*
-import net.minecraft.block.material.*
+import net.minecraft.block.material.Material
 import net.minecraft.client.gui.*
 import net.minecraft.client.renderer.*
 import net.minecraft.command.*
 import net.minecraft.entity.*
-import net.minecraft.entity.effect.*
+import net.minecraft.entity.ai.EntityAIFleeSun
+import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.entity.item.*
 import net.minecraft.entity.monster.*
 import net.minecraft.entity.player.*
-import net.minecraft.init.*
+import net.minecraft.init.Blocks
 import net.minecraft.inventory.*
+import net.minecraft.inventory.Container
 import net.minecraft.item.*
 import net.minecraft.network.*
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.server.*
+import net.minecraft.network.play.server.S0APacketUseBed
 import net.minecraft.potion.*
-import net.minecraft.server.gui.*
+import net.minecraft.server.gui.StatsComponent
 import net.minecraft.tileentity.*
 import net.minecraft.util.*
-import net.minecraft.world.*
+import net.minecraft.world.World
 import net.minecraft.world.biome.*
 import net.minecraft.world.gen.feature.*
 import java.awt.*
@@ -272,7 +274,7 @@ fun addDependenciesInfo(thiz: GuiModList, mouseX: Int, mouseY: Int, ticks: Float
 	startTO()
 	POP(addDependenciesInfo(thiz, ILOAD("4"), ILOAD("5"), thiz.selectedMod))
 	ISTORE("5")
-	POP(thiz.width - ILOAD("4") - 21) // slight change to not trigger injection again -_-
+	POP(thiz.width - ILOAD("4") - 20)
 	stop()
 }
 
@@ -378,7 +380,7 @@ fun readPacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
 @HookReplacer(mandatoryGroups = ["highSleep"], removePop = true)
 fun writePacketData(packet: S0APacketUseBed, buf: PacketBuffer) {
 	startFROM()
-	buf.writeByte(packet.field_149096_c)
+	buf.writeByte(packet.field_149096_c) // FIXME CAPTUREALL
 	startTO()
 	buf.writeInt(packet.field_149096_c)
 	stop()
@@ -444,25 +446,124 @@ fun ignoreIllegalStates1(nhps: NetHandlerPlayServer, packet: C03PacketPlayer) {
 
 fun cantKick(nhps: NetHandlerPlayServer) = nhps.playerEntity.isPlayerSleeping || PatcherConfigHandler.ignoreIllegalStates
 
-@HookReplacer(removePop = true, targetMethod = "processPlayer")
-fun ignoreIllegalStates2a(nhps: NetHandlerPlayServer, packet: C03PacketPlayer) {
+@HookReplacer(removePop = true, targetMethod = "processPlayer", onlyNthMatches = [1, 2])
+fun ignoreIllegalStates2(nhps: NetHandlerPlayServer, packet: C03PacketPlayer) {
 	startFROM()
-	Math.abs(packet.func_149464_c())
+	Math.abs(DSKIP())
 	startTO()
-	checkPos(packet.func_149464_c())
-	stop()
-}
-
-@HookReplacer(removePop = true, targetMethod = "processPlayer")
-fun ignoreIllegalStates2b(nhps: NetHandlerPlayServer, packet: C03PacketPlayer) {
-	startFROM()
-	Math.abs(packet.func_149472_e())
-	startTO()
-	checkPos(packet.func_149472_e())
+	checkPos(DSKIP())
 	stop()
 }
 
 fun checkPos(coord: Double) = if (PatcherConfigHandler.ignoreIllegalStates) 0.0 else Math.abs(coord)
+
+
+@HookReplacer(removePop = true)
+fun updatePotionEffects(e: EntityLivingBase) {
+	startFROM()
+	ASTORE("3")
+	startTO()
+	ASTORE("3")
+	validatePotionEffect(ALOAD("3"))
+	stop()
+}
+
+fun validatePotionEffect(pe: PotionEffect) {
+	require(pe.potionID >= 0) { "Potion ID is negative (${pe.potionID}). Did you set some ID to 128+ without potion fixing mod?" }
+	require(pe.potionID in Potion.potionTypes.indices && Potion.potionTypes[pe.potionID] != null) { "Potential potion ID conflict #${pe.potionID}" }
+}
+
+@HookReplacer
+fun damageEntity(player: EntityPlayer, damage: DamageSource?, amount: Float) {
+	startFROM()
+	POP(1f)
+	startTO()
+	POP(0f)
+	stop()
+}
+
+
+@HookReplacer(removePop = true)
+fun onLivingUpdate(entity: EntityZombie) {
+	startFROM()
+	ASKIP<World>().isDaytime
+	startTO()
+	canBurn(ASKIP())
+	stop()
+}
+
+@HookReplacer(removePop = true)
+fun onLivingUpdate(entity: EntitySkeleton) {
+	startFROM()
+	ASKIP<World>().isDaytime
+	startTO()
+	canBurn(ASKIP())
+	stop()
+}
+
+@HookReplacer(removePop = true)
+fun shouldExecute(ai: EntityAIFleeSun): Boolean {
+	startFROM()
+	ASKIP<World>().isDaytime
+	startTO()
+	canBurn(ASKIP())
+	stop()
+	
+	return false
+}
+
+fun canBurn(world: World) = world.isDaytime && !world.isRaining
+
+
+@HookReplacer
+fun onContainerClosed(container: ContainerWorkbench, player: EntityPlayer) {
+	startFROM()
+	player.dropPlayerItemWithRandomChoice(ACAPTURE("1"), false)
+	startTO()
+	addToInventoryOrDrop(player, ACAPTURE("1"))
+	stop()
+}
+
+@HookReplacer
+fun onContainerClosed(container: ContainerPlayer, player: EntityPlayer) {
+	startFROM()
+	player.dropPlayerItemWithRandomChoice(ACAPTURE("1"), false)
+	startTO()
+	addToInventoryOrDrop(player, ACAPTURE("1"))
+	stop()
+}
+
+@HookReplacer
+fun onContainerClosed(container: ContainerEnchantment, player: EntityPlayer) {
+	startFROM()
+	player.dropPlayerItemWithRandomChoice(ACAPTURE("1"), false)
+	startTO()
+	addToInventoryOrDrop(player, ACAPTURE("1"))
+	stop()
+}
+
+@HookReplacer
+fun onContainerClosed(container: ContainerRepair, player: EntityPlayer) {
+	startFROM()
+	player.dropPlayerItemWithRandomChoice(ACAPTURE("1"), false)
+	startTO()
+	addToInventoryOrDrop(player, ACAPTURE("1"))
+	stop()
+}
+
+@HookReplacer
+fun onContainerClosed(container: Container, player: EntityPlayer) {
+	startFROM()
+	player.dropPlayerItemWithRandomChoice(ALOAD<InventoryPlayer>("2").itemStack, false) // FIXME CAPTUREALL
+	startTO()
+	addToInventoryOrDrop(player, ALOAD<InventoryPlayer>("2").itemStack, false)
+	stop()
+}
+
+fun addToInventoryOrDrop(player: EntityPlayer, stack: ItemStack, sync: Boolean = true) {
+	if (PatcherConfigHandler.dropItemsOnContainerClosing || !player.inventory.addItemStackToInventory(stack).also { if (sync && it && player is EntityPlayerMP) player.sendContainerToPlayer(player.inventoryContainer) })
+		player.dropPlayerItemWithRandomChoice(stack, false)
+}
 
 
 // call inserted by ASJClassTransformer#fixLiquidToBucket

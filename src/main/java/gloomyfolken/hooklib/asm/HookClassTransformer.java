@@ -44,6 +44,9 @@ public class HookClassTransformer {
 		List<AsmHook> hooks = hooksMap.get(className);
 		
 		if (hooks != null) {
+			// AlexSocol
+			hooks = new ArrayList<>(hooks);
+			// AlexSocol
 			Collections.sort(hooks);
 			logger.debug("Injecting hooks into class " + className);
 			try {

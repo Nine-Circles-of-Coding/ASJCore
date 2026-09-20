@@ -8,6 +8,7 @@ import cpw.mods.fml.common.gameevent.PlayerEvent.*
 import cpw.mods.fml.common.gameevent.TickEvent
 import cpw.mods.fml.common.gameevent.TickEvent.PlayerTickEvent
 import io.netty.channel.ChannelOption
+import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.SharedMonsterAttributes
 import net.minecraft.entity.player.*
 import net.minecraft.network.play.server.S1FPacketSetExperience
@@ -39,9 +40,14 @@ object PatcherEventHandler {
 	}
 	
 	@SubscribeEvent
-	fun fixNaNHealthBug(e: LivingUpdateEvent) {
+	fun onLivingUpdate(e: LivingUpdateEvent) {
 		val target = e.entityLiving
 		
+		fixNaNHealthBug(target)
+		saturationBoost(target)
+	}
+
+	fun fixNaNHealthBug(target: EntityLivingBase) {
 		var max = target.maxHealth
 		if (max.isNaN()) max = target.getEntityAttribute(SharedMonsterAttributes.maxHealth).attributeValue.F
 		if (max.isNaN()) max = target.getEntityAttribute(SharedMonsterAttributes.maxHealth).baseValue.F
@@ -54,6 +60,16 @@ object PatcherEventHandler {
 		
 		if (target.health > max) target.health = max
 		if (target.health < 0f) target.health = 0f
+	}
+
+	fun saturationBoost(target: EntityLivingBase) {
+		if (!PatcherConfigHandler.saturationBoost || target !is EntityPlayer || !target.shouldHeal() || !target.worldObj.gameRules.getGameRuleBooleanValue("naturalRegeneration")) return
+		
+		val foods = target.foodStats
+		if (foods.foodLevel == 20 && foods.foodSaturationLevel >= 1.5f && foods.foodTimer % 10 == 0) {
+			target.heal(1f)
+			foods.foodSaturationLevel -= 1.5f
+		}
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)

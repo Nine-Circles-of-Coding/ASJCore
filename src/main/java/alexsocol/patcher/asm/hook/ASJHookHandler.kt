@@ -1,10 +1,7 @@
 package alexsocol.patcher.asm.hook
 
 import alexsocol.asjlib.*
-import alexsocol.asjlib.extendables.block.IFenceConnectable
-import alexsocol.asjlib.extendables.block.IFenceGate
-import alexsocol.asjlib.extendables.block.IPaneConnectable
-import alexsocol.asjlib.extendables.block.IWallConnectable
+import alexsocol.asjlib.extendables.block.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.compat.AngelicaCompat
@@ -12,18 +9,13 @@ import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.GameRulesHandler
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
 import alexsocol.patcher.helper.FuckingSpigotFix
-import alexsocol.patcher.network.MessageClipboard
-import alexsocol.patcher.network.NetworkHandler
+import alexsocol.patcher.network.*
 import alexsocol.patcher.util.FakeStatsList
-import cpw.mods.fml.client.FMLClientHandler
-import cpw.mods.fml.client.GuiModList
-import cpw.mods.fml.client.SplashProgress
+import cpw.mods.fml.client.*
 import cpw.mods.fml.common.Loader
 import cpw.mods.fml.common.network.handshake.NetworkDispatcher
-import cpw.mods.fml.common.registry.GameRegistry
-import cpw.mods.fml.common.registry.LanguageRegistry
-import cpw.mods.fml.relauncher.Side
-import cpw.mods.fml.relauncher.SideOnly
+import cpw.mods.fml.common.registry.*
+import cpw.mods.fml.relauncher.*
 import cpw.mods.fml.server.FMLServerHandler
 import gloomyfolken.hooklib.asm.Hook
 import gloomyfolken.hooklib.asm.Hook.ReturnValue
@@ -37,11 +29,9 @@ import net.minecraft.client.gui.achievement.GuiStats
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.multiplayer.PlayerControllerMP
 import net.minecraft.client.renderer.*
-import net.minecraft.client.renderer.entity.Render
-import net.minecraft.client.renderer.entity.RenderPlayer
+import net.minecraft.client.renderer.entity.*
 import net.minecraft.client.resources.I18n
-import net.minecraft.client.settings.GameSettings
-import net.minecraft.client.settings.KeyBinding
+import net.minecraft.client.settings.*
 import net.minecraft.client.shader.ShaderLinkHelper
 import net.minecraft.command.*
 import net.minecraft.command.server.CommandSummon
@@ -49,72 +39,45 @@ import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.entity.*
 import net.minecraft.entity.DataWatcher.WatchableObject
 import net.minecraft.entity.ai.attributes.AttributeModifier
-import net.minecraft.entity.boss.EntityDragon
-import net.minecraft.entity.boss.EntityWither
-import net.minecraft.entity.effect.EntityLightningBolt
-import net.minecraft.entity.effect.EntityWeatherEffect
-import net.minecraft.entity.item.EntityEnderPearl
-import net.minecraft.entity.item.EntityItem
+import net.minecraft.entity.boss.*
+import net.minecraft.entity.effect.*
+import net.minecraft.entity.item.*
 import net.minecraft.entity.monster.*
 import net.minecraft.entity.passive.EntityMooshroom
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.entity.player.EntityPlayerMP
-import net.minecraft.entity.player.InventoryPlayer
-import net.minecraft.entity.projectile.EntityArrow
-import net.minecraft.entity.projectile.EntityEgg
-import net.minecraft.init.Blocks
-import net.minecraft.init.Items
-import net.minecraft.inventory.ContainerEnchantment
-import net.minecraft.inventory.Slot
+import net.minecraft.entity.player.*
+import net.minecraft.entity.projectile.*
+import net.minecraft.init.*
+import net.minecraft.inventory.*
 import net.minecraft.item.*
-import net.minecraft.nbt.NBTTagByteArray
-import net.minecraft.nbt.NBTTagCompound
-import net.minecraft.nbt.NBTTagList
-import net.minecraft.nbt.NBTTagString
-import net.minecraft.potion.Potion
-import net.minecraft.potion.PotionEffect
-import net.minecraft.potion.PotionHelper
+import net.minecraft.nbt.*
+import net.minecraft.potion.*
 import net.minecraft.profiler.PlayerUsageSnooper
-import net.minecraft.server.MinecraftServer
-import net.minecraft.server.ServerEula
+import net.minecraft.server.*
 import net.minecraft.server.dedicated.DedicatedServer
 import net.minecraft.server.gui.MinecraftServerGui
 import net.minecraft.server.integrated.IntegratedServer
 import net.minecraft.server.management.ItemInWorldManager
-import net.minecraft.stats.AchievementList
-import net.minecraft.stats.StatBase
-import net.minecraft.stats.StatBasic
-import net.minecraft.stats.StatList
+import net.minecraft.stats.*
 import net.minecraft.stats.StatList.*
-import net.minecraft.tileentity.TileEntityBeacon
-import net.minecraft.tileentity.TileEntityFurnace
+import net.minecraft.tileentity.*
 import net.minecraft.util.*
 import net.minecraft.world.*
-import net.minecraft.world.biome.BiomeGenBase
-import net.minecraft.world.biome.BiomeGenMutated
-import net.minecraft.world.biome.WorldChunkManager
+import net.minecraft.world.biome.*
 import net.minecraft.world.chunk.Chunk
 import net.minecraft.world.chunk.storage.AnvilChunkLoader
-import net.minecraftforge.common.DimensionManager
-import net.minecraftforge.common.ForgeHooks
-import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.common.*
 import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.fluids.IFluidBlock
 import org.lwjgl.opengl.GL11
 import org.objectweb.asm.Opcodes
 import ru.vamig.worldengine.WE_Biome
-import ru.vamig.worldengine.WE_WorldChunkManager
-import java.awt.Color
-import java.awt.Desktop
-import java.awt.Toolkit
+import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.io.File
 import java.util.*
 import javax.swing.*
 import javax.swing.plaf.basic.BasicScrollBarUI
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sqrt
+import kotlin.math.*
 
 @Suppress("UNUSED_PARAMETER", "unused", "FunctionName", "UNCHECKED_CAST", "DEPRECATION")
 object ASJHookHandler {
@@ -576,85 +539,6 @@ object ASJHookHandler {
 		return true
 	}
 	
-	
-	// potion fixes
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun updatePotionEffects(e: EntityLivingBase) {
-		try {
-			val iterator = e.activePotionsMap.keys.iterator()
-			
-			while (iterator.hasNext()) {
-				val integer = iterator.next() as Int
-				val potioneffect = e.activePotionsMap[integer] as PotionEffect
-				
-				if (potioneffect.potionID < 0)
-					throw IllegalArgumentException("Potion ID is negative (${potioneffect.potionID}). Did you set some ID to 128+ without potion fixing mod?")
-				
-				if (potioneffect.potionID !in Potion.potionTypes.indices || Potion.potionTypes[potioneffect.potionID] == null)
-					throw IllegalArgumentException("Potential potion ID conflict #${potioneffect.potionID}")
-				
-				if (!potioneffect.onUpdate(e)) {
-					//if (!e.worldObj.isRemote) {
-					iterator.remove()
-					e.onFinishedPotionEffect(potioneffect)
-					//}
-				} else if (potioneffect.duration % 600 == 0) {
-					e.onChangedPotionEffect(potioneffect, false)
-				}
-			}
-			
-			var i: Int
-			
-			if (e.potionsNeedUpdate) {
-				if (!e.worldObj.isRemote) {
-					if (e.activePotionsMap.isEmpty()) {
-						e.dataWatcher.updateObject(8, 0.toByte())
-						e.dataWatcher.updateObject(7, 0)
-						e.isInvisible = false
-					} else {
-						i = PotionHelper.calcPotionLiquidColor(e.activePotionsMap.values)
-						e.dataWatcher.updateObject(8, (if (PotionHelper.func_82817_b(e.activePotionsMap.values)) 1 else 0).toByte())
-						e.dataWatcher.updateObject(7, i)
-						e.isInvisible = e.isPotionActive(Potion.invisibility.id)
-					}
-				}
-				
-				e.potionsNeedUpdate = false
-			}
-			
-			i = e.dataWatcher.getWatchableObjectInt(7)
-			val flag1 = e.dataWatcher.getWatchableObjectByte(8) > 0
-			
-			if (i > 0) {
-				var flag: Boolean
-				
-				flag = if (!e.isInvisible) {
-					e.worldObj.rand.nextBoolean()
-				} else {
-					e.worldObj.rand.nextInt(15) == 0
-				}
-				
-				if (flag1) {
-					flag = flag and (e.worldObj.rand.nextInt(5) == 0)
-				}
-				
-				if (flag) {
-					val d0 = (i shr 16 and 255).D / 255.0
-					val d1 = (i shr 8 and 255).D / 255.0
-					val d2 = (i and 255).D / 255.0
-					e.worldObj.spawnParticle(if (flag1) "mobSpellAmbient" else "mobSpell", e.posX + (e.worldObj.rand.nextDouble() - 0.5) * e.width.D, e.posY + e.worldObj.rand.nextDouble() * e.height.D - e.yOffset.D, e.posZ + (e.worldObj.rand.nextDouble() - 0.5) * e.width.D, d0, d1, d2)
-				}
-			}
-		} catch (ex: ConcurrentModificationException) {
-			ASJUtilities.error("Well, that was expected. Ignore.", ex)
-		} catch (e: Exception) {
-			ASJReflectionHelper.setValue(message_f, e, ASJReflectionHelper.getValue<String>(message_f, e) + "\nIt is possible that you got potion ID conflict. Try installing 'Extended Potions' or make sure you have all IDs BELOW 128!", true)
-			val stackTrace = e.stackTrace.filter { "alexsocol" !in it.className }.toTypedArray()
-			ASJReflectionHelper.setValue(stackTrace_f, e, stackTrace)
-			throw e
-		}
-	}
 	
 	@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 	private val message_f = ASJReflectionHelper.getField(java.lang.Throwable::class.java, "detailMessage")
@@ -1658,32 +1542,14 @@ object ASJHookHandler {
 	@Hook(returnCondition = ON_TRUE, booleanReturnConstant = false)
 	fun tryUseItem(manager: ItemInWorldManager, player: EntityPlayer?, world: World?, stack: ItemStack) = stack.stackSize <= 0
 	
-	
 	// WE biome detection
 	@JvmStatic
-	@Hook
-	fun getChunkFromBlockCoords(world: World, x: Int, z: Int) {
-		worldChunkCoordX = x
-		worldChunkCoordZ = z
+	@Hook(returnCondition = ON_NOT_NULL)
+	fun getBiomeGenForWorldCoords(c: Chunk, localChunkX: Int, localChunkZ: Int, cm: WorldChunkManager): BiomeGenBase? {
+		val biomeIndex = (localChunkX and 15) * 16 + (localChunkZ and 15)
+		val biomeName = c.WorldEngine_SubBiomeList?.getOrNull(biomeIndex) ?: return null
+		return WE_Biome.biomeList[biomeName]
 	}
-	
-	var worldChunkCoordX = Int.MAX_VALUE
-	var worldChunkCoordZ = Int.MAX_VALUE
-	
-	@JvmStatic
-	@Hook(injectOnExit = true, returnCondition = ALWAYS)
-	fun getBiomeGenForWorldCoords(c: Chunk, localChunkX: Int, localChunkZ: Int, cm: WorldChunkManager, @ReturnValue oldBiome: BiomeGenBase): BiomeGenBase? {
-		if (worldChunkCoordX == Int.MAX_VALUE || worldChunkCoordZ == Int.MAX_VALUE)
-			return oldBiome
-		
-		try {
-			return WE_Biome.getBiomeAt((cm as? WE_WorldChunkManager ?: return oldBiome).cp, worldChunkCoordX.toLong(), worldChunkCoordZ.toLong())
-		} finally {
-			worldChunkCoordX = Int.MAX_VALUE
-			worldChunkCoordZ = Int.MAX_VALUE
-		}
-	}
-	
 	
 	// utility
 	@JvmStatic
@@ -1758,4 +1624,14 @@ object ASJHookHandler {
 		if (OpenGlHelper.shadersSupported && ShaderLinkHelper.getStaticShaderLinkHelper() == null)
 			ShaderLinkHelper.setNewStaticShaderLinkHelper()
 	}
+	
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun notifyBlocksOfNeighborChange(world: World, x: Int, y: Int, z: Int, block: Block?) =
+		PatcherConfigHandler.noAirUpdate && world.getBlock(x, y, z) === Blocks.air // not isAirBlock
+
+	@JvmStatic
+	@Hook(returnCondition = ON_TRUE)
+	fun notifyBlocksOfNeighborChange(world: World, x: Int, y: Int, z: Int, block: Block?, side: Int) =
+		PatcherConfigHandler.noAirUpdate && world.getBlock(x, y, z) === Blocks.air // not isAirBlock
 }

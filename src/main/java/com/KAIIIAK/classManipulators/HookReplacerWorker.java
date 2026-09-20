@@ -4,6 +4,8 @@ import com.KAIIIAK.KASMLib.KASMLib;
 import com.KAIIIAK.KASMLib.util.KASMUtil;
 import com.KAIIIAK.asm.AsmTextParser;
 import com.KAIIIAK.classManipulators.Tools.FlexiblePatternReplace;
+import com.KAIIIAK.classManipulators.fakeNode.AnyNode;
+import com.KAIIIAK.classManipulators.fakeNode.CaptureNode;
 import com.KAIIIAK.nullsafety.Opt;
 import com.KAIIIAK.superwrapper.McpToSrg;
 import gloomyfolken.hooklib.asm.HookLogger;
@@ -41,6 +43,7 @@ public class HookReplacerWorker implements IClassTransformer {
 		if (data == null) return basicClass;
 		
 		TreeMap<Integer, List<ChangesHolder>> registeredChanges = data.getValue();
+		registeredChanges.values().forEach(list -> list.forEach(ch -> ch.successor.state = IMandatoryCheck.CheckState.WAITING));
 		
 		if (KASMLib.has2DumpUnchangedClasses) {
 			try {
@@ -155,9 +158,9 @@ public class HookReplacerWorker implements IClassTransformer {
                 ch.from,
                 node -> (ch.ignoreLines && node instanceof LineNumberNode) || (ch.ignoreLabels && node instanceof LabelNode), // true - ignore
 				SomeUtil::myEquals,
-                (node, ctx) -> {},
+				SomeUtil::cleverCaptureSource,
                 null,
-                ctx -> copyListInstrs(ch.to),
+                ctx -> SomeUtil.cleverReplacementBuilder(ctx, copyListInstrs(ch.to)),
                 ch.onlyNthMatches
 		);
 		
@@ -368,8 +371,8 @@ public class HookReplacerWorker implements IClassTransformer {
 					to = getWithStaticIndexes(to);
 				}
 				
-				removeStoreLoad(from);
-				removeStoreLoad(to);
+				replaceOpcodeMethods(from);
+				replaceOpcodeMethods(to);
 				
 				changesHolder.from = from;
 				changesHolder.to = to;
@@ -452,9 +455,8 @@ public class HookReplacerWorker implements IClassTransformer {
 	/**
 	 * WARNING! Should be called AFTER removePOP() method here due to
 	 * AsmTextParser.OPCODES contains all opcodes including POP but POP should be handled in another way
-	 *
 	 */
-	private static void removeStoreLoad(List<AbstractInsnNode> list) {
+	private static void replaceOpcodeMethods(List<AbstractInsnNode> list) {
 		List<AbstractInsnNode> newList = new ArrayList<>();
 		boolean shouldRemoveCheckCast = false;
 		
@@ -470,17 +472,53 @@ public class HookReplacerWorker implements IClassTransformer {
 			}
 			
 			MethodInsnNode mnode = ((MethodInsnNode) node);
-			
-			if (node.getOpcode() != Opcodes.INVOKESTATIC || !Type.getInternalName(HookReplacer.Replacer.class).equals(mnode.owner) || !AsmTextParser.OPCODES.containsKey(mnode.name)) {
+			String methodName = mnode.name;
+
+			boolean skip = methodName.endsWith("SKIP");
+			boolean any = methodName.endsWith("ANY");
+			boolean capture = methodName.endsWith("CAPTURE");
+			if (node.getOpcode() != Opcodes.INVOKESTATIC || !(Type.getInternalName(HookReplacer.Replacer.class).equals(mnode.owner)) || !(AsmTextParser.OPCODES.containsKey(methodName) || skip || any || capture)) {
 				newList.add(mnode);
 				continue;
 			}
+
+			if (methodName.equals("INVOKESPECIAL")) {
+				LdcInsnNode ownerLdc = (LdcInsnNode) newList.remove(newList.size() - 1);
+				String newOwner = ownerLdc.cst.toString();
+				
+				for (int i = newList.size() - 1; i >= 0; i--) {
+					AbstractInsnNode newNode = newList.get(i);
+					if (!(newNode instanceof MethodInsnNode)) continue;
+					
+					MethodInsnNode nmnode = ((MethodInsnNode) newNode);
+					if (nmnode.getOpcode() == Opcodes.INVOKEVIRTUAL || nmnode.getOpcode() == Opcodes.INVOKEDYNAMIC || nmnode.getOpcode() == Opcodes.INVOKEINTERFACE) {
+						nmnode.setOpcode(Opcodes.INVOKESPECIAL);
+						nmnode.owner = newOwner;
+						break;
+					}
+				}
+				
+				continue;
+			}
 			
-			LdcInsnNode varIndex = (LdcInsnNode) newList.remove(newList.size() - 1);
-			int var = Integer.parseInt(varIndex.cst.toString());
+			if (!skip) {
+				if (methodName.endsWith("RETURN")) {
+					newList.add(new InsnNode(AsmTextParser.OPCODES.get(methodName)));
+				} else if(any) {
+					newList.add(new AnyNode());
+				} else {
+					LdcInsnNode varIndex = (LdcInsnNode) newList.remove(newList.size() - 1);
+					int var = Integer.parseInt(varIndex.cst.toString());
+					if (capture){
+						newList.add(new CaptureNode(var));
+					} else {
+						newList.add(new VarInsnNode(AsmTextParser.OPCODES.get(methodName), var));
+					}
+				}
+			}
 			
-			newList.add(new VarInsnNode(AsmTextParser.OPCODES.get(mnode.name), var));
-			if (mnode.name.equals("ALOAD")) shouldRemoveCheckCast = true;
+			if (methodName.equals("ALOAD") || methodName.equals("ASKIP") || methodName.equals("AANY") || methodName.equals("ACAPTURE"))
+				shouldRemoveCheckCast = true;
 		}
 		
 		list.clear();

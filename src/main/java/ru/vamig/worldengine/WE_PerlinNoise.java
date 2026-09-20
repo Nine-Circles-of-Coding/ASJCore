@@ -53,9 +53,27 @@ public class WE_PerlinNoise {
 		return a * (1.0D - f) + b * f;
 	}
 	
+//	public static double NumberNoise2D(long seed, long x, long y) {
+//		long n = x + y * 31L + seed * 11L;
+//		n = (n << 13) ^ n;
+//		return 1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7FFFFFFF) / 1073741824.0;
+//	}
+
 	public static double NumberNoise2D(long seed, long x, long y) {
-		long n = x + y * 31L + seed * 11L;
-		n = (n << 13) ^ n;
-		return 1.0 - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7FFFFFFF) / 1073741824.0;
+		seed ^= x * 0x9E3779B97F4A7C15L;
+		seed = Long.rotateLeft(seed, 27);
+
+		seed ^= y * 0xC2B2AE3D27D4EB4FL;
+		seed = Long.rotateLeft(seed, 31);
+
+		// Final avalanche
+		seed ^= seed >>> 30;
+		seed *= 0xBF58476D1CE4E5B9L;
+		seed ^= seed >>> 27;
+		seed *= 0x94D049BB133111EBL;
+		seed ^= seed >>> 31;
+
+		// [-1, 1]
+		return (seed / (double) Long.MAX_VALUE);
 	}
 }

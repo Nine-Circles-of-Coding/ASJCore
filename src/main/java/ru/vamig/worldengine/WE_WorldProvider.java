@@ -24,7 +24,6 @@ public abstract class WE_WorldProvider extends WorldProvider {
 	
 	@Override
 	public BiomeGenBase getBiomeGenForCoords(int x, int z) {
-		//worldObj.getChunkProvider()
 		return WE_Biome.getBiomeAt(getChunkProvider(), x, z);
 	}
 	

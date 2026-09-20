@@ -1,10 +1,12 @@
 Innovations:
- Removed "Using numeric IDs will not be supported in the future" message from commands
- @CallProxy for wrapping calls to injected fields/methods
- Excluded org.intellij.lang.annotations and org.jetbrains.annotations packages from jar files
+ Healing boost from food saturation
+ Items will be placed in inventory instead of falling out of containers on UI close (workbench, anvil, etc.)
 
 Fixes:
- reach distance conflicts with Botania, Starminer, Aether, ChromatiCraft, M&B:B2, LOTR, MineFantasy
- ignoreIllegalStates config
- phantom block placement when looking up
- raycast limit
+ World seed having low effect on World Engine terrain
+ World Engine biome info
+ Undead mobs burning in rain
+ Invalid "Corrupt zip" message from several mods
+ Redstone updating air blocks (config off by default
+ /tickrate 1 being handled incorrectly accumulating skipped ticks
+ Hooklib being unable to apply same hook several times
