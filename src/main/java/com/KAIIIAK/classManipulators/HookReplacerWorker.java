@@ -9,6 +9,8 @@ import com.KAIIIAK.classManipulators.fakeNode.CaptureNode;
 import com.KAIIIAK.nullsafety.Opt;
 import com.KAIIIAK.superwrapper.McpToSrg;
 import gloomyfolken.hooklib.asm.HookLogger;
+import gloomyfolken.hooklib.asm.SafeClassWriter;
+import gloomyfolken.hooklib.minecraft.HookLoader;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -96,7 +98,16 @@ public class HookReplacerWorker implements IClassTransformer {
 		if (changes.get() > 0) {
 			logger.debug(String.format("Trying to make %s changes in %s", changes, transformedName));
 			
-			ClassWriter cw = new ClassWriter(0);
+			// Frames must be recomputed, not carried over: replacers routinely delete or rewrite
+			// branching code (getMouseOver's reach-distance block is replaced with nothing), which
+			// leaves the original StackMapTable describing instructions that no longer exist.
+			// That went unnoticed while Minecraft was compiled to class version 50, where HotSpot
+			// falls back to the old type-inference verifier, but RetroFuturaGradle compiles the
+			// patched Minecraft to version 52, where the split verifier is used with no fallback
+			// and a stale frame is a hard VerifyError.
+			// SafeClassWriter resolves common supertypes without loading classes, which is what
+			// keeps COMPUTE_FRAMES from hitting ClassCircularityError inside a coremod transformer.
+			ClassWriter cw = new SafeClassWriter(HookLoader.getDeobfuscationMetadataReader(), ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
 			cn.accept(cw);
 			byte[] result = cw.toByteArray();
 			

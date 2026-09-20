@@ -70,6 +70,23 @@ fun blindnessDegreeOF(er: EntityRenderer, fogMode: Int, ticks: Float) {
 	stop()
 }
 
+/**
+ * Plain, untransformed `setupFog` keeps the blindness fog distance in local 6, not 7 or 8: the
+ * sequence is `ldc 5.0f; fstore 6; aload_3; getstatic Potion.blindness`, and it is the same in the
+ * MCP-recompiled dev jar and in the SRG production jar. The two variants above therefore only match
+ * once something else has shifted the locals, so on an untouched client the whole group failed the
+ * mandatory check and took the game down with it. The group is IF_ANY, so this simply covers the
+ * case the other two miss.
+ */
+@HookReplacer(targetMethod = "setupFog", mandatoryGroups = ["blindnessDegree"])
+fun blindnessDegreeVanilla(er: EntityRenderer, fogMode: Int, ticks: Float) {
+	startFROM()
+	POP(5f); FSTORE("6")
+	startTO()
+	POP(5f / (ALOAD<EntityLivingBase>("3").getActivePotionEffect(Potion.blindness).amplifier + 1)); FSTORE("6")
+	stop()
+}
+
 @HookReplacer(targetMethod = "setupFog")
 fun lavaFog(er: EntityRenderer, fogMode: Int, ticks: Float) {
 	startFROM()
