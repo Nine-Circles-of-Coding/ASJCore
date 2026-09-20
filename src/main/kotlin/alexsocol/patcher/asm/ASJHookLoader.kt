@@ -90,8 +90,10 @@ class ASJHookLoader: HookLoader() {
 		
 		registerHookContainer("alexsocol.patcher.asm.hook.ArmorFixes")
 		
+		// ASJCore_host and WorldEngine_SubBiomeList are added by MixinFoodStats/MixinChunk now, in
+		// both dev and production, so there is no field hook container left to register here.
+		// ASJASM.registerFieldHookContainer stays available for downstream mods.
 		if (OBF || System.getProperty("asjcore.fieldhooks", "false").toBoolean()) {
-			ASJASM.registerFieldHookContainer("alexsocol.patcher.asm.hook.ASJFieldHookHandler")
 			if (PatcherPreConfigHandler.optifinePostTransform) registerPostTransformer(OptiFinePostTransformer())
 		}
 		

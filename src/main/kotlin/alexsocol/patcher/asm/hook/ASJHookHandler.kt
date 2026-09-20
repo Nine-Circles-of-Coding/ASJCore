@@ -5,6 +5,8 @@ import alexsocol.asjlib.extendables.block.*
 import alexsocol.asjlib.render.ICustomArmSwingEndEntity
 import alexsocol.patcher.PatcherConfigHandler
 import alexsocol.patcher.compat.AngelicaCompat
+import alexsocol.patcher.duck.IFoodStatsHost
+import alexsocol.patcher.duck.ISubBiomeHolder
 import alexsocol.patcher.event.*
 import alexsocol.patcher.handler.GameRulesHandler
 import alexsocol.patcher.handler.GameRulesHandler.GR_DO_WEATHER_CYCLE
@@ -416,7 +418,7 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(returnCondition = ALWAYS)
 	fun addStats(stats: FoodStats, foodLevel: Int, foodSaturationLevel: Float) {
-		val e = PlayerEatingEvent(stats.ASJCore_host, foodLevel, foodSaturationLevel)
+		val e = PlayerEatingEvent((stats as IFoodStatsHost).asjHost, foodLevel, foodSaturationLevel)
 		MinecraftForge.EVENT_BUS.post(e)
 		
 		if (e.isCanceled) return
@@ -758,7 +760,7 @@ object ASJHookHandler {
 	@JvmStatic
 	@Hook(injectOnExit = true)
 	fun writeChunkToNBT(acl: AnvilChunkLoader, chunk: Chunk, world: World, nbt: NBTTagCompound) {
-		val subBiomes = chunk.WorldEngine_SubBiomeList ?: return
+		val subBiomes = (chunk as ISubBiomeHolder).asjSubBiomeList ?: return
 		
 		val subBiomesList = NBTTagList()
 		for (subBiome in subBiomes) subBiomesList.appendTag(NBTTagString(subBiome ?: "<null>"))
@@ -771,11 +773,13 @@ object ASJHookHandler {
 	fun readChunkFromNBT(acl: AnvilChunkLoader, world: World, nbt: NBTTagCompound, @ReturnValue chunk: Chunk): Chunk {
 		if (!nbt.hasKey("WorldEngine_SubBiomeList", 9)) return chunk
 		
-		chunk.WorldEngine_SubBiomeList = arrayOfNulls(256)
+		val subBiomes = arrayOfNulls<String>(256)
+		(chunk as ISubBiomeHolder).asjSubBiomeList = subBiomes
+
 		val subBiomesList = nbt.getTag("WorldEngine_SubBiomeList") as NBTTagList
 		for (i in 0 until subBiomesList.tagCount()) {
 			val subBiome = subBiomesList.getStringTagAt(i)
-			chunk.WorldEngine_SubBiomeList[i] = if (subBiome == "<null>") null else subBiome
+			subBiomes[i] = if (subBiome == "<null>") null else subBiome
 		}
 		
 		return chunk
@@ -1547,7 +1551,7 @@ object ASJHookHandler {
 	@Hook(returnCondition = ON_NOT_NULL)
 	fun getBiomeGenForWorldCoords(c: Chunk, localChunkX: Int, localChunkZ: Int, cm: WorldChunkManager): BiomeGenBase? {
 		val biomeIndex = (localChunkX and 15) * 16 + (localChunkZ and 15)
-		val biomeName = c.WorldEngine_SubBiomeList?.getOrNull(biomeIndex) ?: return null
+		val biomeName = (c as ISubBiomeHolder).asjSubBiomeList?.getOrNull(biomeIndex) ?: return null
 		return WE_Biome.biomeList[biomeName]
 	}
 	

@@ -2,6 +2,7 @@ package alexsocol.patcher.handler
 
 import alexsocol.asjlib.*
 import alexsocol.patcher.PatcherConfigHandler
+import alexsocol.patcher.duck.IFoodStatsHost
 import alexsocol.patcher.network.*
 import cpw.mods.fml.common.eventhandler.*
 import cpw.mods.fml.common.gameevent.PlayerEvent.*
@@ -82,7 +83,7 @@ object PatcherEventHandler {
 	fun assignFoodStatsHost(e: PlayerTickEvent) {
 		if (e.phase != TickEvent.Phase.START) return
 		
-		e.player.foodStats.ASJCore_host = e.player
+		(e.player.foodStats as IFoodStatsHost).asjHost = e.player
 	}
 	
 	@SubscribeEvent

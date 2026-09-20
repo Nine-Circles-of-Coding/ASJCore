@@ -4,6 +4,7 @@
 package ru.vamig.worldengine;
 
 import alexsocol.patcher.PatcherConfigHandler;
+import alexsocol.patcher.duck.ISubBiomeHolder;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.Loader;
 import net.minecraft.init.Blocks;
@@ -125,11 +126,11 @@ public abstract class WE_Biome extends BiomeGenBase {
 	
 	public static WE_Biome getBiomeAt(WE_ChunkProvider cp, int x, int z) {
 		Chunk chunk = null;
-		String[] biomes = cp.world.blockExists(x, 0, z) ? (chunk = cp.world.getChunkFromBlockCoords(x, z)).WorldEngine_SubBiomeList : null;
+		String[] biomes = cp.world.blockExists(x, 0, z) ? ((ISubBiomeHolder) (chunk = cp.world.getChunkFromBlockCoords(x, z))).getAsjSubBiomeList() : null;
 		int biomeIndex = (x & 15) * 16 + (z & 15);
-		
+
 		if (chunk != null && biomes == null)
-			chunk.WorldEngine_SubBiomeList = new String[256];
+			((ISubBiomeHolder) chunk).setAsjSubBiomeList(new String[256]);
 		
 		if (biomes != null) run: {
 			String biomeName = biomes[biomeIndex];
