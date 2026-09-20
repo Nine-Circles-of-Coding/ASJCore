@@ -35,4 +35,24 @@
  */
 dependencies {
     //runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.7.69-GTNH:dev")
+
+    // Compile-time only, for the ISpecialArmor.getProperties mixins in alexsocol.mixins.compat.
+    // These let the Mixin annotation processor validate the target class and method instead of
+    // trusting a string, which is the whole reason they are here - none of them is needed at
+    // runtime, and each corresponding mixin is gated on the mod actually being present.
+    // transitive = false: we only need the armour classes to resolve, not each mod's whole world.
+    compileOnly("com.github.GTNewHorizons:TinkersConstruct:1.14.113-GTNH:dev") { transitive = false }
+    compileOnly("com.github.GTNewHorizons:ThaumicTinkerer:2.12.33:dev") { transitive = false }
+    // Deliberately NOT Battlegear2, even though it is on this maven: src/api/java already stubs
+    // mods.battlegear2.items.ItemDagger/ItemSpear with a public `reach` field, and the real jar has
+    // it private/protected, so the dependency shadows the stub and breaks ReachDistanceHooks.
+    // Any mod that has a stub in src/api/java needs the stub removed before it can become a real
+    // dependency - that also rules out CodeChickenLib, The Aether, LOTR and Clayium for now.
+    //
+    // Deliberately NOT BetterStorage: the GTNH fork on this maven is net.mcft.betterstorage.*,
+    // while the hooks target copygirl's original net.mcft.copy.betterstorage.* - a different mod.
+    // Those two stay @Pseudo so their behaviour is unchanged.
+    //
+    // No coordinate found for IndustrialCraft2, GraviSuite, Witchery, Advanced Botany or
+    // Thaumic Revelations, so those mixins are @Pseudo too. See alexsocol.mixins.compat.
 }

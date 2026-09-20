@@ -3,12 +3,13 @@ package alexsocol.patcher.asm.hook
 import alexsocol.asjlib.I
 import codechicken.lib.vec.*
 import codechicken.multipart.minecraft.*
-import gloomyfolken.hooklib.asm.*
 import net.minecraft.block.*
 import net.minecraft.world.*
 import net.minecraftforge.common.util.ForgeDirection
 import net.minecraftforge.common.util.ForgeDirection.*
 
+// Called from alexsocol.mixins.common.MixinBlockButton (vanilla) and
+// alexsocol.mixins.compat.MixinButtonPart (Forge Multipart). Both check topDownButtons.
 @Suppress("unused")
 object BlockButtonExtender {
 	
@@ -16,18 +17,15 @@ object BlockButtonExtender {
 	private val Int.buttonSide get() = ForgeDirection.entries[6 - this]
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
 	fun canPlaceBlockOnSide(button: BlockButton, world: World, x: Int, y: Int, z: Int, side: Int): Boolean {
 		val dir = getOrientation(side).opposite
 		return world.isSideSolid(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ, dir.opposite)
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
 	fun canPlaceBlockAt(button: BlockButton, world: World, x: Int, y: Int, z: Int) = VALID_DIRECTIONS.any { world.isSideSolid(x + it.offsetX, y + it.offsetY, z + it.offsetZ, it) }
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
 	fun onBlockPlaced(button: BlockButton, world: World, x: Int, y: Int, z: Int, side: Int, hitX: Float, hitY: Float, hitZ: Float, metadata: Int): Int {
 		var meta = world.getBlockMetadata(x, y, z)
 		val pressedFlag = meta and 8
@@ -42,7 +40,6 @@ object BlockButtonExtender {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, targetMethod = "func_150045_e")
 	fun pickValidMeta(button: BlockButton, world: World, x: Int, y: Int, z: Int) =
 		VALID_DIRECTIONS.firstOrNull {
 			val op = it.opposite
@@ -52,7 +49,6 @@ object BlockButtonExtender {
 	val addedDirs = arrayOf(UP, DOWN)
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS)
 	fun onNeighborBlockChange(button: BlockButton, world: World, x: Int, y: Int, z: Int, block: Block?) {
 		val meta = world.getBlockMetadata(x, y, z)
 		val metaBase = meta and 7
@@ -64,7 +60,6 @@ object BlockButtonExtender {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_TRUE, targetMethod = "func_150043_b")
 	fun setBlockBoundsFromMeta(button: BlockButton, meta: Int): Boolean {
 		val metaBase = meta and 7
 		val isPressed = meta and 8 > 0
@@ -82,14 +77,12 @@ object BlockButtonExtender {
 	}
 	
 	@JvmStatic // why there already was a check for UP direction?
-	@Hook(returnCondition = ReturnCondition.ON_TRUE, intReturnConstant = 15)
 	fun isProvidingStrongPower(button: BlockButton, world: IBlockAccess, x: Int, y: Int, z: Int, side: Int): Boolean {
 		val meta = world.getBlockMetadata(x, y, z)
 		return if (meta and 8 == 0) false else meta and 7 == 6 && side == 0
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ALWAYS, targetMethod = "func_150042_a")
 	fun updateNeighbor(button: BlockButton, world: World, x: Int, y: Int, z: Int, metaBase: Int) {
 		world.notifyBlocksOfNeighborChange(x, y, z, button)
 		
@@ -99,14 +92,12 @@ object BlockButtonExtender {
 	
 	// for Forge Multipart:
 	@JvmStatic
-	@Hook(injectOnExit = true, targetMethod = "<clinit>")
 	fun `ButtonPart$clinit`(static: ButtonPart?) {
 		ButtonPart.sideMetaMap = intArrayOf(6, 5, 3, 4, 1, 2)
 		ButtonPart.metaSideMap = intArrayOf(-1, 4, 5, 2, 3, 0, 1)
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_NOT_NULL)
 	fun getBounds(button: ButtonPart): Cuboid6? {
 		val meta = button.meta.I
 		val metaBase = meta and 7
@@ -123,7 +114,6 @@ object BlockButtonExtender {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ReturnCondition.ON_NOT_NULL)
 	fun placement(button: ButtonPart?, world: World, pos: BlockCoord, side: Int, type: Int): McBlockPart? {
 		if (side != 0 && side != 1) return null
 		val newPos = pos.copy().offset(side xor 1)

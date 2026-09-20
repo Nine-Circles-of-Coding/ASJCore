@@ -39,12 +39,6 @@ object ASJSuperWrapperHandler {
 	}
 	
 	@JvmStatic
-	@SuperWrapper(callThis = false)
-	fun isMultiPlayer(server: MinecraftServer): Boolean {
-		throw NotImplementedError()
-	}
-	
-	@JvmStatic
 	@SuperWrapper
 	fun getItemAttributeModifiers(item: ItemTool): Multimap<String, AttributeModifier> {
 		throw NotImplementedError()

@@ -3,7 +3,7 @@
 package alexsocol.asjlib
 
 import alexsocol.asjlib.math.Vector3
-import alexsocol.patcher.asm.hook.ASJSuperWrapperHandler
+import alexsocol.patcher.duck.IMultiPlayerAware
 import cpw.mods.fml.common.FMLCommonHandler
 import net.minecraft.block.Block
 import net.minecraft.client.entity.EntityClientPlayerMP
@@ -356,4 +356,4 @@ fun NBTTagCompound.getChunkCoords(tag: String): ChunkCoordinates {
 }
 
 val MinecraftServer.isMultiPlayer // WTF
-	get() = ASJSuperWrapperHandler.isMultiPlayer(this)
+	get() = (this as IMultiPlayerAware).isMultiPlayer()

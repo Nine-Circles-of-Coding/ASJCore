@@ -81,14 +81,14 @@ class ASJHookLoader: HookLoader() {
 		FMLRelaunchLog.info("[ASJLib] Loaded coremod. Registering hooks...")
 		
 		registerHookContainer("alexsocol.patcher.asm.hook.ASJHookHandler")
-		registerHookContainer("alexsocol.patcher.asm.hook.BiomeDictionaryForWEHooks")
-		registerHookContainer("alexsocol.patcher.asm.hook.NoEntityInteractionHandler")
+		// BiomeDictionaryForWEHooks is mixins.asjlib.json now.
+		// NoEntityInteractionHandler is mixins.asjlib.json/client now.
 		registerHookContainer("alexsocol.patcher.asm.hook.ReachDistanceHooks")
 		
-		if (PatcherPreConfigHandler.topDownButtons) registerHookContainer("alexsocol.patcher.asm.hook.BlockButtonExtender")
-		if (PatcherPreConfigHandler.deleteRealms) registerHookContainer("alexsocol.patcher.asm.hook.RealmsDeleter")
+		// BlockButtonExtender is mixins.asjlib.json + .late.json now; both check topDownButtons.
+		// RealmsDeleter is mixins.asjlib.json/client now; it checks deleteRealms itself.
 		
-		registerHookContainer("alexsocol.patcher.asm.hook.ArmorFixes")
+		// ArmorFixes is mixins.asjlib.late.json now, gated by ASJLateMixins.
 		
 		// ASJCore_host and WorldEngine_SubBiomeList are added by MixinFoodStats/MixinChunk now, in
 		// both dev and production, so there is no field hook container left to register here.

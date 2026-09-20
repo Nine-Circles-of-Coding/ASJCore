@@ -25,6 +25,16 @@ import java.lang.reflect.*
 import java.util.*
 import kotlin.math.*
 
+// Partly migrated. The plain hooks are now mixins - see alexsocol.mixins.client.MixinPlayerControllerMP
+// and alexsocol.mixins.compat.ReachDistanceMixins / MixinAbilityCalls - and this object keeps their
+// bodies plus the @HookReplacer entries, which are a separate mechanism and stay on KASMLib.
+//
+// The ten @Hook methods left below all route through ASJSuperWrapperHandler to reach a super
+// implementation, and @SuperWrapper is deliberately out of scope for the mixin migration. Nine of
+// them are also createMethod = true, i.e. they add a method the target does not declare, on mods
+// that have no published coordinate - so they would have to be @Pseudo mixins that both merge a
+// new method and call super, which is past what @Pseudo reliably supports and is not testable
+// here. They stay on HookLib until @SuperWrapper itself is dealt with.
 @Suppress("unused")
 object ReachDistanceHooks {
 	
@@ -32,7 +42,6 @@ object ReachDistanceHooks {
 	
 	@SideOnly(Side.CLIENT)
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS) // FYI: ChromatiCraft targets this as well
 	fun getBlockReachDistance(pcmp: PlayerControllerMP) = PlayerReachDistanceHandler.getReachDistance(mc.thePlayer).F
 	
 	@JvmStatic
@@ -83,27 +92,17 @@ object ReachDistanceHooks {
 	// ######## COMPAT  ########
 	
 	// #### Botania
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetClass = "vazkii.botania.common.core.proxy.CommonProxy", targetMethod = "setExtraReach") // will break stuff so no
-	fun setExtraReachS(proxy: Any, entity: EntityLivingBase, reach: Float) = Unit
-	
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetClass = "vazkii.botania.client.core.proxy.ClientProxy", targetMethod = "setExtraReach") // useless now
-	fun setExtraReachC(proxy: Any, entity: EntityLivingBase, reach: Float) = Unit
-	
 	private val botaniaMod = HashMultimap.create<String, AttributeModifier>().apply {
 		put(PlayerReachDistanceHandler.reachDistance.attributeUnlocalizedName, AttributeModifier(UUID.fromString("a4e0e453-8efd-4177-8636-f8913eaaf213"), "Botania ItemReachRing", 3.5, 0))
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetClass = "vazkii.botania.common.item.equipment.bauble.ItemReachRing") // give mod
 	fun onEquippedOrLoadedIntoWorld(item: Any, stack: ItemStack?, player: EntityLivingBase?) {
 		if (player is EntityPlayerMP)
 			player.getAttributeMap().applyAttributeModifiers(botaniaMod)
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetClass = "vazkii.botania.common.item.equipment.bauble.ItemReachRing") // remove mod
 	fun onUnequipped(item: Any, stack: ItemStack?, player: EntityLivingBase?) {
 		if (player is EntityPlayerMP)
 			player.getAttributeMap().removeAttributeModifiers(botaniaMod)
@@ -122,7 +121,6 @@ object ReachDistanceHooks {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetClass = "jp.mc.ancientred.starminer.core.entity.EntityLivingGravitized") // just +2 reach with no reason but whatever
 	fun init(e: Any) {
 		EntityLivingGravitized_hasInit?.let { ASJReflectionHelper.setValue(it, e, true, false) }
 		
@@ -144,7 +142,6 @@ object ReachDistanceHooks {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS) // no shit
 	fun getMouseOver(aer: AetherEntityRenderer, ticks: Float) {
 		aer.previous.getMouseOver(ticks)
 		aer.pointedEntity = aer.previous.pointedEntity
@@ -157,7 +154,6 @@ object ReachDistanceHooks {
 	}
 	
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetClass = "Reika.ChromatiCraft.Auxiliary.Ability.AbilityCalls")
 	fun setReachDistance(static: Any?, player: EntityPlayer, dist: Int) {
 		if (player !is EntityPlayerMP) return
 		
@@ -169,25 +165,11 @@ object ReachDistanceHooks {
 	
 	
 	// #### M&B:B2
-	@JvmStatic 
-	@Hook(returnCondition = ALWAYS, targetClass = "mods.battlegear2.BattlemodeHookContainerClass")
-	fun attackEntity(target: Any, event: AttackEntityEvent) = Unit // will break SpecialActionTimer but whatever and "short hands" only for attack and not for digging is stupid
+	@JvmStatic
+	fun getAttributeModifiers(target: ItemDagger, stack: ItemStack?, result: Multimap<String, AttributeModifier>) = processMnBB2(result, target.reach)
 	
 	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun getReachModifierInBlocks(target: ItemDagger, stack: ItemStack?) = 0f
-	
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS)
-	fun getReachModifierInBlocks(target: ItemSpear, stack: ItemStack?) = 0f
-	
-	@JvmStatic
-	@Hook(injectOnExit = true)
-	fun getAttributeModifiers(target: ItemDagger, stack: ItemStack?, @Hook.ReturnValue result: Multimap<String, AttributeModifier>) = processMnBB2(result, target.reach)
-	
-	@JvmStatic
-	@Hook(injectOnExit = true)
-	fun getAttributeModifiers(target: ItemSpear, stack: ItemStack?, @Hook.ReturnValue result: Multimap<String, AttributeModifier>) = processMnBB2(result, target.reach)
+	fun getAttributeModifiers(target: ItemSpear, stack: ItemStack?, result: Multimap<String, AttributeModifier>) = processMnBB2(result, target.reach)
 	
 	private fun processMnBB2(result: Multimap<String, AttributeModifier>, reach: Float): Multimap<String, AttributeModifier> {
 		result.removeAll("weapon.extendedReach")
@@ -246,10 +228,6 @@ object ReachDistanceHooks {
 	
 	
 	// #### MineFantasy
-	@JvmStatic
-	@Hook(returnCondition = ALWAYS, targetClass = "minefantasy.mf2.mechanics.ExtendedReachMF")
-	fun tickEnd(target: Any, player: EntityPlayer) = Unit
-
 	@JvmStatic
 	@Hook(createMethod = true, returnCondition = ALWAYS, targetClass = "minefantasy.mf2.item.weapon.ItemHeavyWeaponMF", targetMethod = "getAttributeModifiers")
 	fun getAttributeModifiersItemHeavyWeaponMF(target: Any, stack: ItemStack) = processMF(target, stack, 2.0)
