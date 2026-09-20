@@ -3,8 +3,8 @@
 		"modid": "asjpatcher",
 		"name": "ASJCore",
 		"description": "Library for AlexSocol's mods",
-		"version": "${version}",
-		"mcversion": "${mcversion}",
+		"version": "${modVersion}",
+		"mcversion": "${minecraftVersion}",
 		"url": "https://discord.gg/dqQXZHq",
 		"updateUrl": "https://discord.gg/dqQXZHq",
 		"authorList": [
