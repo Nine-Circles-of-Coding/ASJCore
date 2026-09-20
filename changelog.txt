@@ -1,4 +1,10 @@
-Fixed entity flags
-Fixed entity gravity (by KAIIIAK)
+Innovations:
+ Removed "Using numeric IDs will not be supported in the future" message from commands
+ @CallProxy for wrapping calls to injected fields/methods
+ Excluded org.intellij.lang.annotations and org.jetbrains.annotations packages from jar files
 
-Invalid mandatory hooks now throw an exception in runtime
+Fixes:
+ reach distance conflicts with Botania, Starminer, Aether, ChromatiCraft, M&B:B2, LOTR, MineFantasy
+ ignoreIllegalStates config
+ phantom block placement when looking up
+ raycast limit

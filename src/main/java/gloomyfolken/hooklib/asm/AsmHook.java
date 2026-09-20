@@ -1,9 +1,16 @@
 package gloomyfolken.hooklib.asm;
 
-import gloomyfolken.hooklib.asm.HookInjectorFactory.*;
-import org.objectweb.asm.*;
+import com.KAIIIAK.asm.AsmTextParser;
+import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodEnter;
+import gloomyfolken.hooklib.asm.HookInjectorFactory.MethodExit;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.objectweb.asm.Opcodes.*;
 import static org.objectweb.asm.Type.*;
@@ -22,6 +29,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 	public static final HookInjectorFactory ON_ENTER_FACTORY = MethodEnter.INSTANCE;
 	public static final HookInjectorFactory ON_EXIT_FACTORY = MethodExit.INSTANCE;
 	private String targetClassName; // через точки
+	private boolean firstParameterIsObject;
 	private String targetMethodName;
 	private List<Type> targetMethodParameters = new ArrayList<>(2);
 	private Type targetMethodReturnType; //если не задано, то не проверяется
@@ -43,9 +51,13 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 	private String returnMethodName;
 	// может быть без возвращаемого типа
 	private String returnMethodDescription;
+	// модификатор доступа (public/package/protected/private)
+	private int access;
 	private boolean isAbstract;
 	private boolean isStatic;
 	private String superClass;
+	private String[] arbitraryPreAsmText;
+	private String[] arbitraryPostAsmText;
 	private boolean createMethod;
 	private boolean isMandatory;
 	
@@ -74,6 +86,14 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		return superClass;
 	}
 	
+	protected String[] getArbitraryPreAsmText() {
+		return arbitraryPreAsmText;
+	}
+	
+	protected String[] getArbitraryPostAsmText() {
+		return arbitraryPostAsmText;
+	}
+	
 	protected boolean getCreateMethod() {
 		return createMethod;
 	}
@@ -86,14 +106,14 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		return injectorFactory;
 	}
 	
-	protected void createMethod(HookInjectorClassVisitor classVisitor, boolean isStatic, boolean isAbstract, String superClass) {
-		if (isStatic && isAbstract) throw new IllegalArgumentException("Cannot make static abstract class");
+	protected void createMethod(HookInjectorClassVisitor classVisitor) {
+		if (isStatic && isAbstract) throw new IllegalArgumentException("Cannot make static abstract method");
 		
 		ClassMetadataReader.MethodReference superMethod = classVisitor.transformer.classMetadataReader.findVirtualMethod(getTargetClassInternalName(), targetMethodName, targetMethodDescription);
 		// юзаем название суперметода, потому что findVirtualMethod может вернуть метод с другим названием
 		MethodVisitor mv;
 		
-		int access = Opcodes.ACC_PUBLIC;
+		int access = this.access;
 		if (isStatic) {
 			access |= Opcodes.ACC_STATIC;
 		} else if (isAbstract) {
@@ -110,9 +130,8 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		
 		if (!isAbstract) {
 			inj.visitCode();
-			if (superClass.length() > 0) {
+			if (!superClass.isEmpty()) {
 				inj.visitVarInsn(ALOAD, 0);
-//				inj.visitMethodInsn(INVOKESPECIAL, superClass, "<init>", "()V", false);
 				// KAIIIAK
 				String[] superClassInfoList = superClass.split("\\.");
 				if (superClassInfoList.length == 1) { // только owner
@@ -136,7 +155,12 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 					}
 				}
 				// KAIIIAK
+			} else {
+				// KAIIIAK
+				new AsmTextParser().visitMulti(inj, getArbitraryPreAsmText());
+				// KAIIIAK
 			}
+			
 			inj.visitLabel(new Label());
 			if (superMethod == null) {
 				injectDefaultValue(inj, targetMethodReturnType);
@@ -230,6 +254,12 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 	}
 	
 	protected void inject(HookInjectorMethodVisitor inj) {
+		// KAIIIAK
+		AsmTextParser asmTextParser = new AsmTextParser();
+		if (!createMethod || !superClass.isEmpty())
+			asmTextParser.visitMulti(inj, getArbitraryPreAsmText());
+		// KAIIIAK
+		
 		Type targetMethodReturnType = inj.methodType.getReturnType();
 		
 		// сохраняем значение, которое было передано return в локальную переменную
@@ -293,6 +323,10 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		if (hasReturnValueParameter) {
 			injectLoad(inj, targetMethodReturnType, returnLocalId);
 		}
+		
+		// KAIIIAK
+		asmTextParser.visitMulti(inj, getArbitraryPostAsmText());
+		// KAIIIAK
 	}
 	
 	private boolean hasHookMethod() {
@@ -342,7 +376,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		sb.append(", ReturnValue=").append(returnValue);
 		if (returnValue == ReturnValue.PRIMITIVE_CONSTANT) sb.append(", Constant=").append(primitiveConstant);
 		sb.append(", InjectorFactory: ").append(injectorFactory.getClass().getName());
-		sb.append(", CreateMethod = ").append(createMethod);
+		sb.append(", CreateMethod=").append(createMethod);
 		
 		return sb.toString();
 	}
@@ -373,6 +407,14 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		 */
 		public Builder setTargetClass(String className) {
 			AsmHook.this.targetClassName = className;
+			return this;
+		}
+		
+		/**
+		 * Определяет, является ли тип первого параметра хук-метода идентичным targetClassName или java.lang.Object.
+		 */
+		public Builder setFirstParameterIsObject(boolean firstParameterIsObject) {
+			AsmHook.this.firstParameterIsObject = firstParameterIsObject;
 			return this;
 		}
 		
@@ -547,7 +589,7 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 				throw new IllegalStateException("Hook method is not specified, so can not append " +
 													"parameter to its parameters list.");
 			}
-			AsmHook.this.hookMethodParameters.add(TypeHelper.getType(targetClassName));
+			AsmHook.this.hookMethodParameters.add(TypeHelper.getType(AsmHook.this.firstParameterIsObject ? "java.lang.Object" : targetClassName));
 			AsmHook.this.transmittableVariableIds.add(0);
 			return this;
 		}
@@ -763,6 +805,15 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		}
 		
 		/**
+		 * Задаёт модификатор доступа создаваемого метода
+		 * (public/package/protected/private)
+		 */
+		public Builder setAccess(int access) {
+			AsmHook.this.access = access;
+			return this;
+		}
+		
+		/**
 		 * Задаёт статический модификатор создаваемого метода
 		 */
 		public Builder setIsStatic(boolean isStatic) {
@@ -783,6 +834,22 @@ public class AsmHook implements Cloneable, Comparable<AsmHook> {
 		 */
 		public Builder setSuperClass(String superClass) {
 			AsmHook.this.superClass = superClass;
+			return this;
+		}
+		
+		/**
+		 * Задает произвольный ASM текст который будет распаршен и вставлен до вызова хук-метода 
+		 */
+		public Builder setArbitraryPreAsmText(String[] arbitraryPreAsmText) {
+			AsmHook.this.arbitraryPreAsmText = arbitraryPreAsmText;
+			return this;
+		}
+		
+		/**
+		 * Задает произвольный ASM текст который будет распаршен и вставлен после вызова хук-метода 
+		 */
+		public Builder setArbitraryPostAsmText(String[] arbitraryPostAsmText) {
+			AsmHook.this.arbitraryPostAsmText = arbitraryPostAsmText;
 			return this;
 		}
 		

@@ -1,10 +1,17 @@
 package alexsocol.asjlib;
 
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.*;
-import java.util.*;
-import java.util.logging.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The class prev named CSReflection.
@@ -13,7 +20,7 @@ import java.util.logging.*;
  *
  * @author Clashsoft; slightly improved by AlexSocol
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked", "unused"})
 public class ASJReflectionHelper {
 	
 	public static final Field modifiersField;
@@ -213,7 +220,7 @@ public class ASJReflectionHelper {
 		try {
 			return clazz.getDeclaredMethod(methodName, parameterTypes);
 		} catch (NoSuchMethodException | SecurityException ex) {
-			ex.printStackTrace();
+			CSLog.error(ex);
 		}
 		return null;
 	}
@@ -237,7 +244,7 @@ public class ASJReflectionHelper {
 				return m;
 			}
 		}
-		CSLog.error(new NoSuchMethodException("Method not found! (Class: " + clazz + "; Expected field names: " + Arrays.toString(methodNames)));
+		CSLog.error(new NoSuchMethodException("Method not found! (Class: " + clazz + "; Expected method names: " + Arrays.toString(methodNames)));
 		return null;
 	}
 	
@@ -299,6 +306,7 @@ public class ASJReflectionHelper {
 		Field[] fields = clazz.getDeclaredFields();
 		for (Field field : fields) {
 			if (name.equals(field.getName())) {
+				field.setAccessible(true);
 				return field;
 			}
 		}
@@ -335,6 +343,7 @@ public class ASJReflectionHelper {
 		for (String fieldName : fieldNames) {
 			for (Field field : fields) {
 				if (fieldName.equals(field.getName())) {
+					field.setAccessible(true);
 					return field;
 				}
 			}
@@ -397,7 +406,9 @@ public class ASJReflectionHelper {
 	 * @return the field
 	 */
 	public static Field getField(Class clazz, int fieldID) {
-		return clazz.getDeclaredFields()[fieldID];
+		Field field = clazz.getDeclaredFields()[fieldID];
+		field.setAccessible(true);
+		return field;
 	}
 	
 	@Nullable

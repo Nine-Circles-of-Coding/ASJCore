@@ -12,7 +12,7 @@ import net.minecraft.util.IIcon
 import net.minecraft.world.World
 import kotlin.math.max
 
-open class BlockModMeta @JvmOverloads constructor(mat: Material, val subtypes: Int, val modid: String, val name: String, tab: CreativeTabs? = null, hard: Float = 1f, harvTool: String = "pickaxe", harvLvl: Int = 1, resist: Float = 5f, val folder: String = ""): Block(mat) {
+open class BlockModMeta @JvmOverloads constructor(mat: Material, val subtypes: Int, val modid: String, val name: String, tab: CreativeTabs? = null, hard: Float = 1f, harvTool: String? = "pickaxe", harvLvl: Int = 1, resist: Float = 5f, val folder: String = ""): Block(mat) {
 	
 	lateinit var icons: Array<IIcon>
 	

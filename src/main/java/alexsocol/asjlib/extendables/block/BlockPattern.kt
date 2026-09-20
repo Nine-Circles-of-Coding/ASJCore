@@ -8,7 +8,7 @@ import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.world.*
 import java.util.*
 
-class BlockPattern(modid: String, material: Material, name: String, tab: CreativeTabs?, lightlvl: Float = 0f, lightOpacity: Int = 255, hardness: Float = 1f, harvTool: String = "pickaxe", harvLvl: Int = 1, resistance: Float = 5f, sound: SoundType? = ASJUtilities.soundFromMaterial(material), private val isOpaque: Boolean = true, private val isBeacon: Boolean = false, private val isFalling: Boolean = false): BlockFalling(material) {
+open class BlockPattern(modid: String, material: Material, name: String, tab: CreativeTabs?, lightlvl: Float = 0f, lightOpacity: Int = 255, hardness: Float = 1f, harvTool: String = "pickaxe", harvLvl: Int = 1, resistance: Float = 5f, sound: SoundType? = ASJUtilities.soundFromMaterial(material), private val isOpaque: Boolean = true, private val isBeacon: Boolean = false, private val isFalling: Boolean = false): BlockFalling(material) {
 	
 	init {
 		setBlockName(name)
@@ -26,9 +26,9 @@ class BlockPattern(modid: String, material: Material, name: String, tab: Creativ
 	
 	override fun isOpaqueCube() = isOpaque
 	
-	override fun isBeaconBase(world: IBlockAccess?, x: Int, y: Int, z: Int, beaconX: Int, beaconY: Int, beaconZ: Int) = isBeacon
+	override fun isBeaconBase(world: IBlockAccess, x: Int, y: Int, z: Int, beaconX: Int, beaconY: Int, beaconZ: Int) = isBeacon
 	
-	override fun updateTick(world: World, x: Int, y: Int, z: Int, rand: Random?) {
+	override fun updateTick(world: World, x: Int, y: Int, z: Int, rand: Random) {
 		if (!world.isRemote && isFalling) func_149830_m(world, x, y, z)
 	}
 	

@@ -3,7 +3,7 @@ apply plugin: 'kotlin'
 apply plugin: 'idea'
 
 buildscript {
-	ext.kotlinVersion = '1.8.21'
+	ext.kotlinVersion = '2.3.20'
 	
 	repositories {
 		mavenCentral()
@@ -32,7 +32,7 @@ repositories {
 	mavenCentral()
 }
 
-version = "1.2.1.3"
+version = "1.7.0.2"
 archivesBaseName = "1.7.10-ASJCore"
 
 minecraft {
@@ -59,9 +59,11 @@ sourceCompatibility = targetCompatibility = '1.8'
 compileKotlin.kotlinOptions.jvmTarget = "1.8"
 
 jar {
-	duplicatesStrategy = 'include'
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	
 	from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+	exclude 'org/intellij/lang/annotations/**'
+	exclude 'org/jetbrains/annotations/**'
 	
 	manifest {
 		attributes 'FMLAT': 'asjlib_at.cfg'
@@ -71,7 +73,7 @@ jar {
 }
 
 processResources {
-	duplicatesStrategy = 'include'
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	
 	inputs.property "version", project.version
 	inputs.property "mcversion", project.minecraft.version
@@ -92,9 +94,39 @@ idea {
 	module {
 		inheritOutputDirs = false
 		outputDir = file('build/classes/main/')
+		excludeDirs += file(project.minecraft.runDir)
 	}
 }
 
 subprojects {
 	apply plugin: 'idea'
+}
+
+tasks.register('deobfJar', Jar) {
+	dependsOn reobf
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+	classifier 'deobf'
+
+	from sourceSets.main.output
+    from configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+	exclude 'org/intellij/lang/annotations/**'
+	exclude 'org/jetbrains/annotations/**'
+	manifest.attributes(jar.manifest.getAttributes())
+}
+
+tasks.register('sourcesJar', Jar) {
+	dependsOn classes
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	classifier 'deobf-sources'
+
+	from sourceSets.main.allSource
+	exclude "assets"
+	exclude "asjlib_at.cfg"
+	exclude "methods.bin"
+	exclude "McpToSrg.csv"
+}
+
+artifacts {
+	archives deobfJar
+	archives sourcesJar
 }

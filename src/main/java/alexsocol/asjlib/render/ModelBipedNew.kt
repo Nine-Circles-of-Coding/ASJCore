@@ -22,6 +22,11 @@ open class ModelBipedNew: ModelBase() {
 	val leftleg: ModelRenderer
 	val leftboot: ModelRenderer
 	
+	/** Records whether the model should be rendered holding an item in the right hand, and if that item is a block.  */
+	var heldItemRight = 0
+	/** Records whether the model should be rendered aiming a bow.  */
+	var aimedBow = false
+	
 	init { // ModelBiped
 		textureWidth = 64
 		textureHeight = 64
@@ -121,16 +126,13 @@ open class ModelBipedNew: ModelBase() {
 			leftleg.rotateAngleY = -(Math.PI.F / 10f)
 		}
 		
-		//if (heldItemLeft != 0) leftarm.rotateAngleX = leftarm.rotateAngleX * 0.5F - ((float)Math.PI / 10F) * (float)heldItemLeft;
-		//if (heldItemRight != 0) rightarm.rotateAngleX = rightarm.rotateAngleX * 0.5F - ((float)Math.PI / 10F) * (float)heldItemRight;
+		if (heldItemRight != 0) rightarm.rotateAngleX = rightarm.rotateAngleX * 0.5F - Math.PI.F / 10f * heldItemRight
 		
 		rightarm.rotateAngleY = 0f
 		leftarm.rotateAngleY = 0f
-		var f6: Float
-		val f7: Float
 		
 		if (onGround > -9990f) {
-			f6 = onGround
+			var f6 = onGround
 			body.rotateAngleY = MathHelper.sin(sqrt(f6) * Math.PI.F * 2f) * 0.2f
 			rightarm.rotationPointZ = MathHelper.sin(body.rotateAngleY) * 5f
 			rightarm.rotationPointX = -MathHelper.cos(body.rotateAngleY) * 5f
@@ -143,7 +145,7 @@ open class ModelBipedNew: ModelBase() {
 			f6 *= f6
 			f6 *= f6
 			f6 = 1f - f6
-			f7 = MathHelper.sin(f6 * Math.PI.F)
+			val f7 = MathHelper.sin(f6 * Math.PI.F)
 			val f8 = MathHelper.sin(onGround * Math.PI.F) * -(head.rotateAngleX - 0.7f) * 0.75f
 			rightarm.rotateAngleX = (rightarm.rotateAngleX.D - (f7.D * 1.2 + f8.D)).F
 			rightarm.rotateAngleY += body.rotateAngleY * 2f
@@ -174,6 +176,23 @@ open class ModelBipedNew: ModelBase() {
 		leftarm.rotateAngleZ -= MathHelper.cos(ticksExisted * 0.09f) * 0.05f + 0.05f
 		rightarm.rotateAngleX += MathHelper.sin(ticksExisted * 0.067f) * 0.05f
 		leftarm.rotateAngleX -= MathHelper.sin(ticksExisted * 0.067f) * 0.05f
+		
+		if (aimedBow) {
+			val f6 = 0.0f
+			val f7 = 0.0f
+			rightarm.rotateAngleZ = 0.0f
+			leftarm.rotateAngleZ = 0.0f
+			rightarm.rotateAngleY = -(0.1f - f6 * 0.6f) + head.rotateAngleY
+			leftarm.rotateAngleY = 0.1f - f6 * 0.6f + head.rotateAngleY + 0.4f
+			rightarm.rotateAngleX = -(Math.PI.toFloat() / 2f) + head.rotateAngleX
+			leftarm.rotateAngleX = -(Math.PI.toFloat() / 2f) + head.rotateAngleX
+			rightarm.rotateAngleX -= f6 * 1.2f - f7 * 0.4f
+			leftarm.rotateAngleX -= f6 * 1.2f - f7 * 0.4f
+			rightarm.rotateAngleZ += MathHelper.cos(ticksExisted * 0.09f) * 0.05f + 0.05f
+			leftarm.rotateAngleZ -= MathHelper.cos(ticksExisted * 0.09f) * 0.05f + 0.05f
+			rightarm.rotateAngleX += MathHelper.sin(ticksExisted * 0.067f) * 0.05f
+			leftarm.rotateAngleX -= MathHelper.sin(ticksExisted * 0.067f) * 0.05f
+		}
 	}
 	
 	companion object {

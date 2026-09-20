@@ -12,7 +12,23 @@ tile.endPortal.name=End Portal
 
 
 
-asjcore.commands.tpdim.worlderr=Dimension Initialization Error
+asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [filler] | <load> <filename> | <clearCache>
+asjcore.commands.explode.usage=/explode [size] [breakBlocks] [doFlame]
+asjcore.commands.heal.usage=/heal [[player]] [h (heal)][f (feed)][e (clear debuffs)[! (clear ALL effects)]]
+asjcore.commands.killall.usage=/killall [%s] [radius] [dimension id] [mod id]
+asjcore.commands.rtp.fail=%sFailed to find suitable teleportation location
+asjcore.commands.rtp.usage=/rtp [distance from spawn] [<origin x> <origin z>] [f (forced flag)]
+asjcore.commands.tickrate.usage=/tickrate <milliseconds for tick>
+asjcore.commands.tickrate.fail.fastcraft=Command is incompatible with fastcraft
+asjcore.commands.top.usage=/top
+asjcore.commands.tpdim.usage=/tpdim <dimension id> [player]
+asjcore.commands.wolk.jpeg.usage=/wolk.jpeg <player>
+
+asjcore.commands.diminfo.current=Current dimension is "%s" (id '%d')
+asjcore.commands.diminfo.list=%d. "%s" with id '%d'
+asjcore.commands.diminfo.list.fail=%d. Unknown dimension with id '%d'
+
+asjcore.commands.killall.counter=Killed %d entities
 
 asjcore.commands.schema.dumpOk=Schema dumped to: %s
 asjcore.commands.schema.dumpNo=Error dumping schema: %s
@@ -21,6 +37,27 @@ asjcore.commands.schema.noFile=File %s not found
 asjcore.commands.schema.noPosN=Set pos %s before saving
 asjcore.commands.schema.posSet=Pos %s set to (%s, %s, %s)
 
+asjcore.commands.tpdim.worlderr=Dimension Initialization Error
+
 commands.summon.usage.new=/summon <EntityName> [['x'count]] [x] [y] [z] [dataTag]
 
-explode.usage=/explode [size] [breakBlocks] [doFlame]
+asjcore.noEntityInteract=Toggle Entity Interaction
+asjcore.orthoProjection=Toggle Projection
+asjcore.noEntityInteract.false=[ASJCore] Entity interaction enabled
+asjcore.noEntityInteract.true=[ASJCore] Entity interaction disabled
+
+attribute.name.asjpatcher.reachDistance=Reach Distance
+
+options.snooper.view.new=Snooper Data...
+
+gui.stats.new=Statistics were disabled in ASJCore config
+
+gui.chunkmap.chunk=Chunk at %s
+gui.chunkmap.tp=Rightclick to teleport
+gui.chunkmap.type.current=You are here
+gui.chunkmap.type.forced=Forced (by %s)
+gui.chunkmap.type.loaded=Loaded
+gui.chunkmap.type.slimechunk=Slime chunk
+gui.chunkmap.type.spawnarea=Spawn area
+gui.chunkmap.type.spawnpoint=Spawn point
+gui.chunkmap.type.worldspawn=World spawn

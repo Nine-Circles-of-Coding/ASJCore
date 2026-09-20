@@ -1,12 +1,15 @@
 package gloomyfolken.hooklib.asm;
 
-import cpw.mods.fml.relauncher.*;
+import cpw.mods.fml.relauncher.FMLLaunchHandler;
+import cpw.mods.fml.relauncher.SideOnly;
+import gloomyfolken.hooklib.asm.Hook.LocalVariable;
 import gloomyfolken.hooklib.asm.Hook.ReturnValue;
-import gloomyfolken.hooklib.asm.Hook.*;
 import org.objectweb.asm.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 public class HookContainerParser {
@@ -42,11 +45,11 @@ public class HookContainerParser {
 	}
 	
 	protected void parseHooks(String className) {
-		transformer.logger.debug("Parsing hooks container " + className);
+		HookClassTransformer.logger.debug("Parsing hooks container " + className);
 		try {
 			transformer.classMetadataReader.acceptVisitor(className, new HookClassVisitor());
 		} catch (IOException e) {
-			transformer.logger.severe("Can not parse hooks container " + className, e);
+			HookClassTransformer.logger.error("Can not parse hooks container " + className, e);
 		}
 	}
 	
@@ -81,7 +84,12 @@ public class HookContainerParser {
 			return;
 		}
 		
-		builder.setTargetClass(argumentTypes[0].getClassName());
+		if (annotationValues.containsKey("targetClass")) {
+			builder	.setTargetClass((String) annotationValues.get("targetClass"))
+					.setFirstParameterIsObject(true);
+		} else {
+			builder.setTargetClass(argumentTypes[0].getClassName());
+		}
 		
 		if (annotationValues.containsKey("targetMethod")) {
 			builder.setTargetMethod((String) annotationValues.get("targetMethod"));
@@ -93,6 +101,18 @@ public class HookContainerParser {
 			builder.setSuperClass((String) annotationValues.get("superClass"));
 		} else {
 			builder.setSuperClass("");
+		}
+		
+		if (annotationValues.containsKey("arbitraryPreAsmText")) {
+			builder.setArbitraryPreAsmText((String[]) annotationValues.get("arbitraryPreAsmText"));
+		} else {
+			builder.setArbitraryPreAsmText(null);
+		}
+		
+		if (annotationValues.containsKey("arbitraryPostAsmText")) {
+			builder.setArbitraryPostAsmText((String[]) annotationValues.get("arbitraryPostAsmText"));
+		} else {
+			builder.setArbitraryPostAsmText(null);
 		}
 		
 		builder.setHookClass(currentClassName);
@@ -164,6 +184,9 @@ public class HookContainerParser {
 			invalidHook("Hook method must return object if returnCodition is ON_NULL or ON_NOT_NULL.");
 			return;
 		}
+		
+		builder.setAccess(annotationValues.containsKey("access") ? (Integer) annotationValues.get("access") : Opcodes.ACC_PUBLIC);
+		
 		if (annotationValues.containsKey("isAbstract")) {
 			builder.setIsAbstract(Boolean.TRUE.equals(annotationValues.get("isAbstract")));
 		}
@@ -184,12 +207,13 @@ public class HookContainerParser {
 		}
 		
 		transformer.registerHook(builder.build());
+		HookClassTransformer.logger.trace("Registered hook method " + currentMethodName + currentMethodDesc);
 	}
 	
 	private void invalidHook(String message) {
 		String hook = currentClassName + "#" + currentMethodName;
-		transformer.logger.warning("Found invalid hook " + hook);
-		transformer.logger.warning(message);
+		HookClassTransformer.logger.warning("Found invalid hook " + hook);
+		HookClassTransformer.logger.warning(message);
 
 		if (!annotationValues.containsKey("isMandatory") || Boolean.TRUE.equals(annotationValues.get("isMandatory")))
 			throw new IllegalStateException("Mandatory hook " + hook + " is invalid: " + message);
@@ -285,6 +309,24 @@ public class HookContainerParser {
 		}
 		
 		@Override
+		public AnnotationVisitor visitArray(String name) {
+			List<Object> values = new ArrayList<>();
+			
+			return new AnnotationVisitor(api) {
+				
+				@Override
+				public void visit(String name, Object value) {
+					values.add(value);
+				}
+				
+				@Override
+				public void visitEnd() {
+					annotationValues.put(name, listToTypedArray(values));
+				}
+			};
+		}
+		
+		@Override
 		public void visitEnum(String name, String desc, String value) {
 			visit(name, value);
 			
@@ -298,5 +340,15 @@ public class HookContainerParser {
 			inHookAnnotation = false;
 			isSideOnly = false;
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static <T> T[] listToTypedArray(List<Object> list) {
+		T[] array = (T[]) java.lang.reflect.Array.newInstance(list.get(0).getClass(), list.size());
+		
+		for (int i = 0; i < list.size(); i++)
+			array[i] = (T) list.get(i);
+		
+		return array;
 	}
 }

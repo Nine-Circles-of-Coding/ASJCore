@@ -1,5 +1,7 @@
 package gloomyfolken.hooklib.asm;
 
+import org.objectweb.asm.Opcodes;
+
 import java.lang.annotation.*;
 
 /**
@@ -33,6 +35,25 @@ public @interface Hook {
 	String superClass() default "";
 	
 	/**
+	 * Произвольный набор текстовых ASM инструкций, который будет распаршен и вставлен до вызова хук-метода.
+	 * @author KAIIIAK
+	 */
+	String[] arbitraryPreAsmText() default {};
+	
+	/**
+	 * Произвольный набор текстовых ASM инструкций, который будет распаршен и вставлен после вызова хук-метода.
+	 * @author KAIIIAK
+	 */
+	String[] arbitraryPostAsmText() default {};
+	
+	/**
+	 * Модификатор доступа создаваемого метода
+	 * (public/package/protected/private)
+	 * @author AlexSocol
+	 */
+	int access() default Opcodes.ACC_PUBLIC;
+	
+	/**
 	 * Делает создаваемый метод абстрактным
 	 * @author KAIIIAK
 	 */
@@ -57,6 +78,15 @@ public @interface Hook {
 	 * Хуки с большим приоритетом вызаваются раньше.
 	 */
 	HookPriority priority() default HookPriority.NORMAL;
+	
+	/**
+	 * Задает название целевого класса.
+	 * По умолчанию используется название класса первого параметра хук-метода.
+	 * Если указан, первый параметр обязан быть java.lang.Object.
+	 * Эта опция полезна, когда нужно вставить хук в класс, недоступный на момент компиляции.
+	 * @author AlexSocol
+	 */
+	String targetClass() default "";
 	
 	/**
 	 * Задает название целевого метода.

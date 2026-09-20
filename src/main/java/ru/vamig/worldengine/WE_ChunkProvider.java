@@ -3,11 +3,14 @@
 
 package ru.vamig.worldengine;
 
+import alexsocol.patcher.PatcherConfigHandler;
 import cpw.mods.fml.common.IWorldGenerator;
 import net.minecraft.block.*;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
+import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.*;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraftforge.common.MinecraftForge;
@@ -25,15 +28,15 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 	//////////////////
 	//- Generators -//
 	//////////////////
-	public final List<WE_CreateChunkGen> createChunkGen_List = new ArrayList();
-	public final List<WE_CreateChunkGen_InXZ> createChunkGen_InXZ_List = new ArrayList();
-	public final List<WE_CreateChunkGen_InXYZ> createChunkGen_InXYZ_List = new ArrayList();
-	public final List<IWorldGenerator> decorateChunkGen_List = new ArrayList();
+	public final List<WE_CreateChunkGen> createChunkGen_List = new ArrayList<>();
+	public final List<WE_CreateChunkGen_InXZ> createChunkGen_InXZ_List = new ArrayList<>();
+	public final List<WE_CreateChunkGen_InXYZ> createChunkGen_InXYZ_List = new ArrayList<>();
+	public final List<IWorldGenerator> decorateChunkGen_List = new ArrayList<>();
 	
 	//////////////////////
 	//- Biome Map Info -//
 	//////////////////////
-	public final List<WE_Biome> biomesList = new ArrayList();
+	public final List<WE_Biome> biomesList = new ArrayList<>();
 	public WE_Biome standardBiomeOnMap;
 	//-//
 	public double biomemapPersistence = 1.0D, biomemapScaleX = 1.0D, biomemapScaleY = 1.0D;
@@ -111,7 +114,10 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 		//=//
 		/////
 		
-		WE_ChunkSmartLight chunk = new WE_ChunkSmartLight(world, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ);
+		Chunk chunk = PatcherConfigHandler.INSTANCE.getWECustomLighting() ?
+					  new WE_ChunkSmartLight(world, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ) :
+					  new Chunk(world, chunkBlocks, chunkBlocksMeta, chunkX, chunkZ);
+		
 		chunk.generateSkylightMap();
 		return chunk;
 	}
@@ -142,7 +148,8 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 		BlockFalling.fallInstantly = false;
 	}
 	
-	public List getPossibleCreatures(EnumCreatureType type, int x, int y, int z) {
+	@SuppressWarnings("unchecked")
+	public List<BiomeGenBase.SpawnListEntry> getPossibleCreatures(EnumCreatureType type, int x, int y, int z) {
 		WE_Biome b = WE_Biome.getBiomeAt(this, x, z);
 		return /*type == EnumCreatureType.monster && this.scatteredFeatureGenerator.func_143030_a(x, y, z) ? this.scatteredFeatureGenerator.getScatteredFeatureSpawnList() :*/ b.getSpawnableList(type);
 	}
@@ -167,5 +174,15 @@ public class WE_ChunkProvider extends ChunkProviderGenerate {
 			return chunkBlocksMeta[(x * 16 + z) * 256 + y];
 		else
 			return 0;
+	}
+	
+	@Override
+	public ChunkPosition func_147416_a(World world, String structure, int x, int y, int z) {
+		return null;
+	}
+	
+	@Override
+	public void recreateStructures(int chunkX, int chunkZ) {
+		// NO-OP
 	}
 }

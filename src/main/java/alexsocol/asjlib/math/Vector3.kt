@@ -82,7 +82,7 @@ class Vector3: Serializable {
 	
 	fun set(e: Entity): Vector3 {
 		x = e.posX
-		y = e.posY
+		y = e.posYp
 		z = e.posZ
 		return this
 	}
@@ -145,7 +145,7 @@ class Vector3: Serializable {
 	
 	fun add(e: Entity): Vector3 {
 		x += e.posX
-		y += e.posY
+		y += e.posYp
 		z += e.posZ
 		return this
 	}
@@ -174,7 +174,7 @@ class Vector3: Serializable {
 	
 	fun sub(e: Entity): Vector3 {
 		x -= e.posX
-		y -= e.posY
+		y -= e.posYp
 		z -= e.posZ
 		return this
 	}

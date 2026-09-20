@@ -3,6 +3,7 @@ package ru.vamig.worldengine.standardcustomgen;
 import cpw.mods.fml.common.IWorldGenerator;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
+import ru.vamig.worldengine.WE_ChunkProvider;
 
 import java.util.*;
 
@@ -20,7 +21,7 @@ public class WE_StructureGen implements IWorldGenerator {
 			if (rand.nextInt(a.rarity) != 0) continue;
 			int x = chunkX * 16 + rand.nextInt(16);
 			int z = chunkZ * 16 + rand.nextInt(16);
-			a.str.generate(world, rand, x, world.getTopSolidOrLiquidBlock(x, z), z);
+			a.str.generate(world, rand, x, world.getTopSolidOrLiquidBlock(x, z), z, (WE_ChunkProvider) chunkProvider);
 		}
 	}
 	

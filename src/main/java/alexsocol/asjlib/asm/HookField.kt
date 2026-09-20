@@ -7,4 +7,4 @@ package alexsocol.asjlib.asm
  *
  * @param targetClassName full class name separated with dots
  */
-annotation class HookField(val targetClassName: String)
+annotation class HookField(val targetClassName: String, val targetFieldName: String = "")

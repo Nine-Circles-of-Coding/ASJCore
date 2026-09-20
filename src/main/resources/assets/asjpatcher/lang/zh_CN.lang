@@ -1,0 +1,62 @@
+tile.air.name=空气
+tile.brewingStand.name=酿造台
+tile.flowerPot.name=花盆
+tile.skull.name=头颅
+tile.pistonHead.name=活塞头
+tile.pistonExtension.name=移动的活塞
+tile.diode.name=红石中继器
+tile.pumpkinStem.name=南瓜茎
+tile.comparator.name=红石比较器
+tile.melonStem.name=西瓜茎
+tile.endPortal.name=末地传送门
+
+
+
+asjcore.commands.asjschema.usage=/asjschema <坐标1> | <坐标2> | <save> [文件名] | <load> <文件名> | <clearCache>
+asjcore.commands.explode.usage=/explode [大小] [breakBlocks] [doFlame]
+asjcore.commands.heal.usage=/heal [[玩家]] [h (治疗)][f (饱食)][e (清除负面效果)[! (清除所有效果)]]
+asjcore.commands.killall.usage=/killall [%s] [半径] [维度ID] [模组ID]
+asjcore.commands.rtp.fail=%s 未能找到合适的传送位置
+asjcore.commands.rtp.usage=/rtp [距出生点距离] [<origin x> <origin z>] [f (forced flag)]
+asjcore.commands.tickrate.usage=/tickrate <mspt>
+asjcore.commands.top.usage=/top
+asjcore.commands.tpdim.usage=/tpdim <维度ID> [玩家]
+asjcore.commands.wolk.jpeg.usage=/wolk.jpeg <玩家>
+
+asjcore.commands.diminfo.current=当前维度为 "%s" (ID '%d')
+asjcore.commands.diminfo.list=%d. "%s" ID 为 '%d'
+asjcore.commands.diminfo.list.fail=%d. ID 为 '%d' 的未知维度
+
+asjcore.commands.killall.counter=已清除 %d 个实体
+
+asjcore.commands.schema.dumpOk=结构已储存至：%s
+asjcore.commands.schema.dumpNo=储存结构时出错：%s
+asjcore.commands.schema.loadOk=结构已加载
+asjcore.commands.schema.noFile=未找到文件 %s
+asjcore.commands.schema.noPosN=保存前请先设置坐标 %s
+asjcore.commands.schema.posSet=坐标 %s 已设置为 (%s, %s, %s)
+
+asjcore.commands.tpdim.worlderr=维度初始化错误
+
+commands.summon.usage.new=/summon <实体名称> [['x'数量]] [x] [y] [z] [数据标签]
+
+asjcore.noEntityInteract=切换实体交互
+asjcore.orthoProjection=切换正交投影/透视投影
+asjcore.noEntityInteract.false=[ASJCore] 实体交互已启用
+asjcore.noEntityInteract.true=[ASJCore] 实体交互已禁用
+
+attribute.name.asjpatcher.reachDistance=交互距离
+
+options.snooper.view.new=匿名信息反馈数据...
+
+gui.stats.new=统计信息已在 ASJCore 配置中禁用
+
+gui.chunkmap.chunk=位于 %s 的区块
+gui.chunkmap.tp=右键单击传送
+gui.chunkmap.type.current=你在这里
+gui.chunkmap.type.forced=已强制加载 (由 %s)
+gui.chunkmap.type.loaded=已加载
+gui.chunkmap.type.slimechunk=史莱姆块
+gui.chunkmap.type.spawnarea=出生点区块
+gui.chunkmap.type.spawnpoint=出生点
+gui.chunkmap.type.worldspawn=世界出生点

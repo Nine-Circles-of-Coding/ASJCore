@@ -1,6 +1,10 @@
 /.gradle
+/.kotlin
+/.idea
 /build
 /minecraft
+.DS_Store
 *.iml
 *.ipr
 *.iws
+gradle.properties

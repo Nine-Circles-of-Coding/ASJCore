@@ -3,20 +3,18 @@
 
 package ru.vamig.worldengine;
 
-import alexsocol.patcher.PatcherConfigHandler;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.IChunkProvider;
 
 public abstract class WE_WorldProvider extends WorldProvider {
 	
-	public static final int we_id = PatcherConfigHandler.INSTANCE.getWEBiomeID();
 	public float rainfall = 0.1F;
 	public WE_ChunkProvider cp = null;
 	
 	@Override
 	public void registerWorldChunkManager() {
-		worldChunkMgr = new WE_WorldChunkManager(new WE_Biome(we_id, true), getChunkProvider(), rainfall);
+		worldChunkMgr = new WE_WorldChunkManager(getDefaultBiome(), getChunkProvider(), rainfall);
 	}
 	
 	@Override
@@ -36,4 +34,6 @@ public abstract class WE_WorldProvider extends WorldProvider {
 	}
 	
 	public abstract void genSettings(WE_ChunkProvider cp);
+	
+	public abstract WE_Biome getDefaultBiome();
 }

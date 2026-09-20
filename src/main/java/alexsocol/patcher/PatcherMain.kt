@@ -1,24 +1,56 @@
 package alexsocol.patcher
 
-import alexsocol.asjlib.*
+import alexsocol.asjlib.ASJUtilities
 import alexsocol.asjlib.command.*
+import alexsocol.asjlib.eventFML
+import alexsocol.asjlib.eventForge
+import alexsocol.asjlib.render.ASJShaderHelper
+import alexsocol.patcher.PatcherMain.MODID
 import alexsocol.patcher.asm.ASJHookLoader
-import alexsocol.patcher.event.*
-import alexsocol.patcher.handler.*
+import alexsocol.patcher.crafting.CraftingHandler
+import alexsocol.patcher.event.ServerStartedEvent
+import alexsocol.patcher.event.ServerStartingEvent
+import alexsocol.patcher.event.ServerStoppedEvent
+import alexsocol.patcher.event.ServerStoppingEvent
+import alexsocol.patcher.handler.KeyBindingHandler
+import alexsocol.patcher.handler.PatcherEventHandler
+import alexsocol.patcher.handler.PatcherEventHandlerClient
+import alexsocol.patcher.handler.PlayerReachDistanceHandler
+import alexsocol.patcher.network.NetworkHandler
+import cpw.mods.fml.client.config.GuiUtils
 import cpw.mods.fml.common.Mod
+import cpw.mods.fml.common.ModMetadata
 import cpw.mods.fml.common.event.*
 import cpw.mods.fml.common.registry.GameData
-import net.minecraft.block.*
-import net.minecraft.command.CommandBase
+import net.minecraft.block.Block
+import net.minecraft.block.BlockTrapDoor
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
+import net.minecraft.util.Facing
+import net.minecraft.world.biome.BiomeGenBase
+import net.minecraftforge.client.ClientCommandHandler
 import net.minecraftforge.common.MinecraftForge
+import ru.vamig.worldengine.WE_Biome
 
-@Mod(modid = "asjpatcher", modLanguageAdapter = KotlinAdapter.className)
+@Mod(modid = MODID, useMetadata = true, guiFactory = "alexsocol.patcher.client.GUIFactory", modLanguageAdapter = KotlinAdapter.className)
 object PatcherMain {
+	
+	const val MODID = "asjpatcher"
+	
+	@Mod.Metadata(MODID)
+	lateinit var meta: ModMetadata
+	
+	@Mod.EventHandler
+	fun construct(e: FMLConstructionEvent) {
+		PatcherConfigHandler.registerChangeHandler(MODID)
+		
+		fixPistonsCrash()
+	}
 	
 	@Mod.EventHandler
 	fun preInit(e: FMLPreInitializationEvent) {
+		fixGuiColors()
+		
 		Blocks.melon_stem.setBlockName("melonStem")
 		Blocks.piston_head.setBlockName("pistonHead")
 		Blocks.piston_extension.setBlockName("pistonExtension")
@@ -36,19 +68,41 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun init(e: FMLInitializationEvent) {
 		PatcherEventHandler.eventForge().eventFML()
+		PlayerReachDistanceHandler.eventForge()
+		
+		NetworkHandler
 		
 		BlockTrapDoor.disableValidation = PatcherConfigHandler.floatingTrapDoors
 		
-		if (ASJUtilities.isClient)
+		if (ASJUtilities.isClient) {
+			KeyBindingHandler.eventFML()
 			PatcherEventHandlerClient.eventForge()
+			ASJShaderHelper.registerHandlers()
+			if (!ASJHookLoader.OBF) ClientCommandHandler.instance.registerCommand(CommandResources)
+			if (PatcherPreConfigHandler.tickrateHooks) ClientCommandHandler.instance.registerCommand(CommandTickrate(true))
+		}
+	}
+	
+	@Mod.EventHandler
+	fun postInit(e: FMLPostInitializationEvent) {
+		CraftingHandler
 	}
 	
 	@Mod.EventHandler
 	fun onServerStarting(e: FMLServerStartingEvent) {
-		PatcherConfigHandler.commands.forEach { e.registerServerCommand(Commands.valueOf(it).command()) }
+		e.registerServerCommand(CommandChunkMap)
+		e.registerServerCommand(CommandDimInfo)
+		e.registerServerCommand(CommandDimTP)
+		e.registerServerCommand(CommandExplode)
+		e.registerServerCommand(CommandHeal)
+		e.registerServerCommand(CommandHookList)
+		e.registerServerCommand(CommandKillAll)
+		e.registerServerCommand(CommandPrintTransformers)
+		e.registerServerCommand(CommandRtp)
 		e.registerServerCommand(CommandSchema)
-		
-		if (!ASJHookLoader.OBF) e.registerServerCommand(CommandResources)
+		e.registerServerCommand(CommandTop)
+		if (PatcherPreConfigHandler.tickrateHooks) e.registerServerCommand(CommandTickrate(false))
+		e.registerServerCommand(CommandWolkJpeg)
 		
 		MinecraftForge.EVENT_BUS.post(ServerStartingEvent(e))
 	}
@@ -56,6 +110,11 @@ object PatcherMain {
 	@Mod.EventHandler
 	fun onServerStarted(e: FMLServerStartedEvent) {
 		MinecraftForge.EVENT_BUS.post(ServerStartedEvent(e))
+		
+		if (WE_Biome.biomeList.isNotEmpty())
+			BiomeGenBase.getBiome(PatcherConfigHandler.WEBiomeID)?.let {
+				throw IllegalArgumentException("[$MODID] WEBiomeID is set to ${PatcherConfigHandler.WEBiomeID} - this ID is occupied with ${it.biomeName} (${it::class.java.name}). Change that in configs!")
+			}
 	}
 	
 	@Mod.EventHandler
@@ -68,7 +127,16 @@ object PatcherMain {
 		MinecraftForge.EVENT_BUS.post(ServerStoppedEvent(e))
 	}
 	
-	enum class Commands(val command: () -> CommandBase) {
-		DIMTP({ CommandDimTP }), EXPLODE({ CommandExplode }), HEAL({ CommandHeal })
+	private fun fixGuiColors() {
+		val colors = GuiUtils.colorCodes
+		colors[0] = 0x010101
+		colors[16] = 0x010101
+	}
+	
+	private fun fixPistonsCrash() {
+		Facing.oppositeSide    += IntArray(10) { 0 }
+		Facing.offsetsXForSide += IntArray(10) { 0 }
+		Facing.offsetsYForSide += IntArray(10) { 0 }
+		Facing.offsetsZForSide += IntArray(10) { 0 }
 	}
 }

@@ -5,7 +5,7 @@ import alexsocol.asjlib.meta
 import net.minecraft.block.Block
 import net.minecraft.item.*
 
-class ItemBlockMetaName(block: Block): ItemBlockWithMetadata(block, block) {
+open class ItemBlockMetaName(block: Block): ItemBlockWithMetadata(block, block) {
 	
 	init {
 		setHasSubtypes(true)

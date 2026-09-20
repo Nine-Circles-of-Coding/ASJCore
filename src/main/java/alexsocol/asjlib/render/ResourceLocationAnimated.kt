@@ -13,10 +13,13 @@ import kotlin.streams.toList
 
 class ResourceLocationAnimated: ResourceLocation {
 	
-	private lateinit var frameList: IntArray
-	private var framerate: Int = 1
+	lateinit var frameList: IntArray
+	var framerate: Int = 1
 	
-	private constructor(): super("textures/entity/steve.png")
+	private constructor(): super("textures/entity/steve.png") {
+		frameList = IntArray(0)
+	}
+	
 	private constructor(mod: String, path: String): super(mod, path) {
 		init(getResourceSafe(ResourceLocation(resourceDomain, "$resourcePath.meta"))?.inputStream, mc.resourceManager.getResource(this).inputStream)
 	}
@@ -24,13 +27,15 @@ class ResourceLocationAnimated: ResourceLocation {
 	private fun init(metaStream: InputStream?, imageStream: InputStream): ResourceLocationAnimated {
 		val meta = metaStream?.bufferedReader()?.lines()?.toList()
 		framerate = getMeta(meta, MARKER_FRAMERATE, 1)
-		frameList = loadImage(getMeta(meta, MARKER_HEIGHT, 0), imageStream, getMeta(meta, MARKER_INTERPOLATION_STEPS, 1))
+		frameList = loadImage(getMeta(meta, MARKER_HEIGHT, 0), imageStream, getMeta(meta, MARKER_INTERPOLATION_STEPS, 1), getMeta(meta, MARKER_BLUR, false), getMeta(meta, MARKER_CLAMP, false))
 		return this
 	}
 	
 	private fun getMeta(meta: List<String>?, marker: String, default: Int) = (meta?.firstOrNull { it.startsWith(marker) } ?: "$marker$default").replace(marker, "").toInt()
 	
-	private fun loadImage(h: Int, imageStream: InputStream, interpolationFrames: Int): IntArray {
+	private fun getMeta(meta: List<String>?, marker: String, default: Boolean) = (meta?.firstOrNull { it.startsWith(marker) } ?: "$marker$default").replace(marker, "").toBoolean()
+	
+	private fun loadImage(h: Int, imageStream: InputStream, interpolationFrames: Int, blur: Boolean, clamp: Boolean): IntArray {
 		val image = ImageIO.read(imageStream)
 		val height = if (h == 0) image.width else h
 		val frameList = ArrayList<Int>()
@@ -47,23 +52,23 @@ class ResourceLocationAnimated: ResourceLocation {
 				if (first == null) {
 					first = part
 					prev = first
-					put(frameList, first)
+					put(frameList, first, blur, clamp)
 					continue
 				}
 				
-				doInterpolation(prev!!, part, frameList, interpolationFrames, false)
+				doInterpolation(prev!!, part, frameList, interpolationFrames, false, blur, clamp)
 				prev = part
 			} else {
-				put(frameList, part)
+				put(frameList, part, blur, clamp)
 			}
 		}
 		
-		if (interpolate) doInterpolation(prev!!, first!!, frameList, interpolationFrames, true)
+		if (interpolate) doInterpolation(prev!!, first!!, frameList, interpolationFrames, true, blur, clamp)
 		
 		return frameList.toIntArray()
 	}
 	
-	private fun doInterpolation(prev: BufferedImage, cur: BufferedImage, frameList: ArrayList<Int>, step: Int, last: Boolean) {
+	private fun doInterpolation(prev: BufferedImage, cur: BufferedImage, frameList: ArrayList<Int>, step: Int, last: Boolean, blur: Boolean, clamp: Boolean) {
 		val fraction = 1.0 / step
 		val width = cur.width
 		val height = cur.height
@@ -77,10 +82,10 @@ class ResourceLocationAnimated: ResourceLocation {
 				}
 			}
 			
-			put(frameList, interstep)
+			put(frameList, interstep, blur, clamp)
 		}
 		
-		if (!last) put(frameList, cur)
+		if (!last) put(frameList, cur, blur, clamp)
 	}
 	
 	private fun interpolateColor(color1: Int, color2: Int, fraction: Double): Int {
@@ -91,32 +96,43 @@ class ResourceLocationAnimated: ResourceLocation {
 	
 	private fun interpolateChannel(channel1: Int, channel2: Int, fraction: Double) = ((channel2 - channel1) * fraction + channel1).I
 	
-	private fun put(frameList: ArrayList<Int>, part: BufferedImage) = frameList.add(TextureUtil.uploadTextureImageAllocate(GL11.glGenTextures(), part, false, false))
+	private fun put(frameList: ArrayList<Int>, part: BufferedImage, blur: Boolean, clamp: Boolean) = frameList.add(TextureUtil.uploadTextureImageAllocate(GL11.glGenTextures(), part, blur, clamp))
 	
-	fun getCurrentFrame() = frameList[((mc.theWorld.totalWorldTime % (framerate * frameList.size)) / framerate).I]
+	fun getCurrentFrame(): Int {
+		if (ASJUtilities.isServer) return 0
+		return frameList[(((mc.theWorld?.totalWorldTime ?: 0L) % (framerate * frameList.size)) / framerate).I]
+	}
 	
-	fun bind() = GL11.glBindTexture(GL11.GL_TEXTURE_2D, getCurrentFrame())
+	fun bind() {
+		if (ASJUtilities.isClient)
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, getCurrentFrame())
+	}
 	
-	fun getResourceSafe(loc: ResourceLocation): IResource? {
+	private fun getResourceSafe(loc: ResourceLocation): IResource? {
 		return try {
 			mc.resourceManager.getResource(loc)
 		} catch (e: Throwable) {
-			e.printStackTrace()
+			ASJUtilities.error("Error loading $loc", e)
 			null
 		}
 	}
 	
 	companion object {
 		
+		private const val MARKER_BLUR = "blur="
+		private const val MARKER_CLAMP = "clamp="
 		private const val MARKER_FRAMERATE = "framerate="
 		private const val MARKER_HEIGHT = "height="
 		private const val MARKER_INTERPOLATION_STEPS = "interpolation="
 		
 		fun custom(metaStream: InputStream, imageStream: InputStream): ResourceLocationAnimated {
-			return ResourceLocationAnimated().init(metaStream, imageStream)
+			val rla = ResourceLocationAnimated()
+			if (ASJUtilities.isClient) rla.init(metaStream, imageStream)
+			return rla
 		}
 		
 		fun local(mod: String, path: String): ResourceLocationAnimated {
+			if (ASJUtilities.isServer) return ResourceLocationAnimated()
 			return ResourceLocationAnimated(mod, path)
 		}
 	}

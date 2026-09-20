@@ -107,8 +107,19 @@ object ASJUtilities {
 		
 		val worldTo = server.worldServerForDimension(dimTo)
 		
-		if (target is EntityPlayerMP)
-			return server.configurationManager.transferPlayerToDimension(target, dimTo, FreeTeleporter(worldTo, x, y, z))
+		if (target is EntityPlayerMP) {
+			var player: EntityPlayerMP = target
+			
+			if (player.worldObj.provider.dimensionId == 1) {
+				player.worldObj.removeEntity(player)
+				player.playerConqueredTheEnd = true
+				val respawnedPlayer = MinecraftServer.getServer().configurationManager.respawnPlayer(player, dimTo, true)
+				player.playerNetServerHandler.playerEntity = respawnedPlayer
+				player = respawnedPlayer
+			}
+			
+			return server.configurationManager.transferPlayerToDimension(player, dimTo, FreeTeleporter(worldTo, x, y, z))
+		}
 		
 		val dimFrom = target.dimension
 		val worldFrom = server.worldServerForDimension(dimFrom)
@@ -687,7 +698,8 @@ object ASJUtilities {
 	 */
 	@JvmStatic
 	fun registerDimension(id: Int, provider: Class<out WorldProvider>, keepLoaded: Boolean) {
-		require(DimensionManager.registerProviderType(id, provider, keepLoaded)) { String.format("Failed to register provider for id %d, One is already registered", id) }
+		val registered = DimensionManager.registerProviderType(id, provider, keepLoaded)
+		if (!Loader.isModLoaded("idcv")) require(registered) { String.format("Failed to register provider for id %d, One is already registered", id) }
 		DimensionManager.registerDimension(id, id)
 	}
 	
@@ -752,13 +764,6 @@ object ASJUtilities {
 	@JvmStatic
 	fun isBlockReplaceable(block: Block): Boolean {
 		return block === Blocks.air || block === Blocks.snow_layer || block.material in replaceableMaterials
-	}
-	
-	@JvmStatic
-	fun getTopLevel(worldObj: World, x: Int, z: Int): Int {
-		var y = 1
-		while (!worldObj.isAirBlock(x, y, z)) ++y
-		return y
 	}
 	
 	@JvmStatic
@@ -833,7 +838,7 @@ object ASJUtilities {
 	}
 	
 	private fun moddedLog(level: Level, message: String, e: Throwable? = null) {
-		val modid = Loader.instance().activeModContainer().modId.uppercase()
+		val modid = Loader.instance().activeModContainer()?.modId?.uppercase() ?: "UNKNOWN SOURCE"
 		
 		if (e == null)
 			FMLRelaunchLog.log(modid, level, message)
@@ -867,7 +872,7 @@ object ASJUtilities {
 	@JvmStatic
 	fun sayToAllOPs(message: String) {
 		val ops = MinecraftServer.getServer().configurationManager.func_152606_n()
-		MinecraftServer.getServer().configurationManager.playerEntityList.forEach { if ((it as EntityPlayer).commandSenderName in ops)  say(it, message) }
+		MinecraftServer.getServer().configurationManager.playerEntityList.forEach { if ((it as EntityPlayer).commandSenderName in ops) say(it, message) }
 		log(message)
 	}
 	

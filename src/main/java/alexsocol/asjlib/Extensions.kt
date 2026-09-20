@@ -3,6 +3,7 @@
 package alexsocol.asjlib
 
 import alexsocol.asjlib.math.Vector3
+import alexsocol.patcher.asm.hook.ASJSuperWrapperHandler
 import cpw.mods.fml.common.FMLCommonHandler
 import net.minecraft.block.Block
 import net.minecraft.client.entity.EntityClientPlayerMP
@@ -13,6 +14,7 @@ import net.minecraft.inventory.IInventory
 import net.minecraft.item.*
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.PotionEffect
+import net.minecraft.server.MinecraftServer
 import net.minecraft.stats.Achievement
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.*
@@ -30,12 +32,8 @@ fun convertRange(x: Number, originalStart: Number, originalEnd: Number, targetSt
 fun Int.bidiRange(range: Int) = (this - range)..(this + range)
 
 fun safeIndex(id: Int, size: Int) = max(0, min(id, size - 1))
-
 fun <T> List<T>.safeGet(id: Int): T = this[safeIndex(id, size)]
-fun <T> List<T>.safeZeroGet(id: Int): T? = if (isEmpty()) null else this[safeIndex(id, size)]
-
 fun <T> Array<T>.safeGet(id: Int): T = this[safeIndex(id, size)]
-fun <T> Array<T>.safeZeroGet(id: Int): T? = if (isEmpty()) null else this[safeIndex(id, size)]
 
 fun <T> Array<T>.shuffled(): MutableList<T> = toMutableList().apply { shuffle() }
 
@@ -70,7 +68,7 @@ fun <T> Iterable<T>.paired(last: T? = null): List<Pair<T, T>> {
 	return pairs
 }
 
-fun <T> MutableIterator<T>.onEach(action: MutableIterator<T>.(T) -> Unit): MutableIterator<T> {
+inline fun <T> MutableIterator<T>.onEach(action: MutableIterator<T>.(T) -> Unit): MutableIterator<T> {
 	return apply { for (element in this) action(element) }
 }
 
@@ -90,8 +88,6 @@ fun <T> Array<T?>.ensureCapacity(min: Int): Array<T?> {
  */
 infix fun <A, B, C> Pair<A, B>.with(third: C): Triple<A, B, C> = Triple(first, second, third)
 
-fun String.substringEnding(lastNChars: Int): String = this.substring(0, length - lastNChars)
-
 val Number.D get() = toDouble()
 val Number.F get() = toFloat()
 val Number.I get() = toInt()
@@ -103,7 +99,7 @@ fun String.capitalized() = replaceFirstChar { if (it.isLowerCase()) it.titlecase
 /**
  * Tries block and ignores any thrown exceptions
  */
-fun try_(try_: () -> Any?) {
+inline fun try_(try_: () -> Unit) {
 	try {
 		try_()
 	} catch (ignore: Throwable) {}
@@ -121,33 +117,6 @@ fun Double.mfloor() = MathHelper.floor_double(this)
 fun Float.mfloor() = MathHelper.floor_float(this)
 fun Double.mceil() = MathHelper.ceiling_double_int(this)
 fun Float.mceil() = MathHelper.ceiling_float_int(this)
-
-fun Entity.setSize(wid: Double, hei: Double) {
-	var f2: Float
-	val w = wid.F
-	val h = hei.F
-	
-	if (w != width || h != height) {
-		f2 = width
-		width = w
-		height = h
-		boundingBox.maxX = boundingBox.minX + width
-		boundingBox.maxZ = boundingBox.minZ + width
-		boundingBox.maxY = boundingBox.minY + height
-		if (width > f2 && !worldObj.isRemote) moveEntity((f2 - width).D, 0.0, (f2 - width).D)
-	}
-	
-	f2 = w % 2f
-	
-	myEntitySize = when {
-		f2 < 0.375 -> Entity.EnumEntitySize.SIZE_1
-		f2 < 0.75  -> Entity.EnumEntitySize.SIZE_2
-		f2 < 1.0   -> Entity.EnumEntitySize.SIZE_3
-		f2 < 1.375 -> Entity.EnumEntitySize.SIZE_4
-		f2 < 1.75  -> Entity.EnumEntitySize.SIZE_5
-		else       -> Entity.EnumEntitySize.SIZE_6
-	}
-}
 
 fun DataWatcher.getWatchableObjectChunkCoordinates(id: Int): ChunkCoordinates {
 	return getWatchedObject(id).`object` as ChunkCoordinates? ?: ChunkCoordinates()
@@ -266,10 +235,10 @@ operator fun IInventory.get(i: Int): ItemStack? = getStackInSlot(i)
 operator fun IInventory.set(i: Int, stack: ItemStack?) = setInventorySlotContents(i, stack)
 
 fun Block.toItem(): Item? = Item.getItemFromBlock(this)
-fun Item.toBlock(): Block? = Block.getBlockFromItem(this)
+fun Item.toBlock() = if (this is ItemReed) field_150935_a!! else Block.getBlockFromItem(this)!!
 val Block.id get() = Block.getIdFromBlock(this)
 val Item.id get() = Item.getIdFromItem(this)
-val ItemStack.block: Block? get() = item.toBlock()
+val ItemStack.block get() = item.toBlock()
 
 fun PotionEffectU(id: Int, time: Int, lvl: Int = 0, ambient: Boolean = false) = PotionEffect(id, time, lvl, ambient).apply { curativeItems.clear() }
 
@@ -365,3 +334,26 @@ fun EntityLivingBase.teleportTo(x: Double, y: Double, z: Double): Boolean {
 		true
 	}
 }
+
+private const val TAG_COOLDOWN = "cooldown"
+
+var ItemStack.cooldown
+	get() = ItemNBTHelper.getInt(this, TAG_COOLDOWN, 0)
+	set(value) = ItemNBTHelper.setInt(this, TAG_COOLDOWN, value)
+
+fun String.trimAtMostLength(maxLength: Int, postfix: String = "...") = if (this.length > maxLength) "${this.take(maxLength)}$postfix" else this
+
+fun NBTTagCompound.setChunkCoords(tag: String, coords: ChunkCoordinates) {
+	val (x, y, z) = coords
+	setIntArray(tag, intArrayOf(x, y, z))
+}
+
+fun NBTTagCompound.getChunkCoords(tag: String): ChunkCoordinates {
+	val ints = getIntArray(tag)
+	if (ints.size != 3) return ChunkCoordinates(0, -1, 0)
+	val (x, y, z) = ints
+	return ChunkCoordinates(x, y, z)
+}
+
+val MinecraftServer.isMultiPlayer // WTF
+	get() = ASJSuperWrapperHandler.isMultiPlayer(this)

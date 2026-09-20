@@ -1,8 +1,21 @@
 package gloomyfolken.hooklib.asm;
 
-import java.util.logging.*;
+import alexsocol.patcher.PatcherPreConfigHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("unused")
 public interface HookLogger {
+	
+	default boolean isTraceEnabled() {
+		return PatcherPreConfigHandler.INSTANCE.getLogTrace();
+	}
+	
+	void trace(String message);
+	
+	default boolean isDebugEnabled() {
+		return PatcherPreConfigHandler.INSTANCE.getLogDebug();
+	}
 	
 	void debug(String message);
 	
@@ -12,11 +25,26 @@ public interface HookLogger {
 	
 	void severe(String message, Throwable cause);
 	
+	default void error(String message) {
+		severe(message);
+	}
+	
+	default void error(String message, Throwable cause) {
+		severe(message, cause);
+	}
+	
 	class SystemOutLogger implements HookLogger {
 		
 		@Override
+		public void trace(String message) {
+			if (isTraceEnabled())
+				System.out.println("[TRACE] " + message);
+		}
+		
+		@Override
 		public void debug(String message) {
-			System.out.println("[DEBUG] " + message);
+			if (isDebugEnabled())
+				System.out.println("[DEBUG] " + message);
 		}
 		
 		@Override
@@ -38,15 +66,22 @@ public interface HookLogger {
 	
 	class VanillaLogger implements HookLogger {
 		
-		private Logger logger;
+		private java.util.logging.Logger logger;
 		
-		public VanillaLogger(Logger logger) {
+		public VanillaLogger(java.util.logging.Logger logger) {
 			this.logger = logger;
 		}
 		
 		@Override
+		public void trace(String message) {
+			if (isTraceEnabled())
+				logger.finest(message);
+		}
+		
+		@Override
 		public void debug(String message) {
-			logger.fine(message);
+			if (isDebugEnabled())
+				logger.fine(message);
 		}
 		
 		@Override
@@ -61,7 +96,45 @@ public interface HookLogger {
 		
 		@Override
 		public void severe(String message, Throwable cause) {
-			logger.log(Level.SEVERE, message, cause);
+			logger.log(java.util.logging.Level.SEVERE, message, cause);
+		}
+	}
+	
+	class Log4JLogger implements HookLogger {
+		
+		private final Logger logger;
+		
+		public Log4JLogger(String loggerName) {
+			logger = LogManager.getLogger(loggerName);
+		}
+		
+		@Override
+		public void trace(String message) {
+			if (isTraceEnabled())
+				// piece of inconfigurable shit
+				logger.info(message);
+		}
+		
+		@Override
+		public void debug(String message) {
+			if (isDebugEnabled())
+				// piece of inconfigurable shit
+				logger.info(message);
+		}
+		
+		@Override
+		public void warning(String message) {
+			logger.warn(message);
+		}
+		
+		@Override
+		public void severe(String message) {
+			logger.error(message);
+		}
+		
+		@Override
+		public void severe(String message, Throwable cause) {
+			logger.error(message, cause);
 		}
 	}
 }

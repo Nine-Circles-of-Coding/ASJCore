@@ -12,7 +12,23 @@ tile.endPortal.name=Портал в край
 
 
 
-asjcore.commands.tpdim.worlderr=Ошибка инициализации измерения
+asjcore.commands.asjschema.usage=/asjschema <pos1> | <pos2> | <save> [фильтр] | <load> <имя файла> | <clearCache>
+asjcore.commands.explode.usage=/explode [размер] [разрушения] [огонь]
+asjcore.commands.heal.usage=/heal [[игрок]] [h (вылечить)][f (накормить)][e (очистить дебаффы)[! (очистить все эффекты)]]
+asjcore.commands.killall.usage=/killall [%s] [радиус] [id измерения] [id мода]
+asjcore.commands.rtp.fail=%sНе удалось найти подходящее место для телепортации
+asjcore.commands.rtp.usage=/rtp [дистанция от спавна] [начальные x z] [f (принудительный флаг)]
+asjcore.commands.tickrate.usage=/tickrate <миллисекунд на тик>
+asjcore.commands.tickrate.fail.fastcraft=Команда несовместима с fastcraft
+asjcore.commands.top.usage=/top
+asjcore.commands.tpdim.usage=/tpdim <id измерения> [игрок]
+asjcore.commands.wolk.jpeg.usage=/wolk.jpeg <игрок>
+
+asjcore.commands.diminfo.current=Текущее измерение "%s" (id '%d')
+asjcore.commands.diminfo.list=%d. "%s" с id '%d'
+asjcore.commands.diminfo.list.fail=%d. Неизвестное измерение с id '%d'
+
+asjcore.commands.killall.counter=Убито %d сущностей
 
 asjcore.commands.schema.dumpOk=Схема выгружена в: %s
 asjcore.commands.schema.dumpNo=Ошибка при выгрузке схемы: %s
@@ -21,6 +37,27 @@ asjcore.commands.schema.noFile=Файл %s не найден
 asjcore.commands.schema.noPosN=Установите позицию %s перед сохранением
 asjcore.commands.schema.posSet=Позиция %s установлен на (%s, %s, %s)
 
+asjcore.commands.tpdim.worlderr=Ошибка инициализации измерения
+
 commands.summon.usage.new=/summon <имя> [['x'кол-во]] [x] [y] [z] [нбт]
 
-explode.usage=/explode [размер] [разрушения] [огонь]
+asjcore.noEntityInteract=Переключить взаимодействие с сущностями
+asjcore.orthoProjection=Переключить проекцию
+asjcore.noEntityInteract.false=[ASJCore] Взаимодействие с сущностями включено
+asjcore.noEntityInteract.true=[ASJCore] Взаимодействие с сущностями отключено
+
+attribute.name.asjpatcher.reachDistance=Досягаемость
+
+options.snooper.view.new=Данные Snooper...
+
+gui.stats.new=Статистика отключена в конфиге ASJCore
+
+gui.chunkmap.chunk=Чанк %s
+gui.chunkmap.tp=ПКМ для телепортации
+gui.chunkmap.type.current=Вы здесь
+gui.chunkmap.type.forced=Принудительно загружен (%s)
+gui.chunkmap.type.loaded=Загружен
+gui.chunkmap.type.slimechunk=Чанк со слизнями
+gui.chunkmap.type.spawnarea=Зона мирового спавна
+gui.chunkmap.type.spawnpoint=Точка спавна
+gui.chunkmap.type.worldspawn=Мировой спавн

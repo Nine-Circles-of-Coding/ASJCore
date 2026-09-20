@@ -1,13 +1,13 @@
 package gloomyfolken.hooklib.asm;
 
-import gloomyfolken.hooklib.asm.HookLogger.SystemOutLogger;
 import org.objectweb.asm.*;
 
 import java.util.*;
 
 public class HookClassTransformer {
 	
-	public HookLogger logger = new SystemOutLogger();
+	public static List<AsmHook> notInjectedHooks = new ArrayList<>();
+	public static HookLogger logger = new HookLogger.Log4JLogger("Hooklib");
 	protected HashMap<String, List<AsmHook>> hooksMap = new HashMap<String, List<AsmHook>>();
 	protected ClassMetadataReader classMetadataReader = new ClassMetadataReader();
 	private HookContainerParser containerParser = new HookContainerParser(this);
@@ -20,6 +20,7 @@ public class HookClassTransformer {
 			list.add(hook);
 			hooksMap.put(hook.getTargetClassName(), list);
 		}
+		notInjectedHooks.add(hook);
 	}
 	
 	public void registerHookContainer(String className) {
@@ -30,7 +31,16 @@ public class HookClassTransformer {
 		containerParser.parseHooks(classData);
 	}
 	
+	/*
+	* Флаг для предотвращения рекурсивного трансформирования при поиске супер-метода
+	* - добавлено с исправлением имён трансформируемых классов на использования '/' как разделитель вместо '.' 
+	*/  
+	public static boolean skipTransformation = false;
+	
 	public byte[] transform(String className, byte[] bytecode) {
+		if (bytecode == null) return null;
+		if (skipTransformation) return bytecode;
+		
 		List<AsmHook> hooks = hooksMap.get(className);
 		
 		if (hooks != null) {
@@ -47,21 +57,22 @@ public class HookClassTransformer {
 				boolean java7 = majorVersion > 50;
 				
 				ClassReader cr = new ClassReader(bytecode);
-				ClassWriter cw = createClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
+				// KAIIIAK
+				boolean java8Interface = majorVersion > 51 && (cr.getAccess() & Opcodes.ACC_INTERFACE) != 0;
+				// KAIIIAK
+				ClassWriter cw = createClassWriter(java7 ? ClassWriter.COMPUTE_FRAMES | (java8Interface ? ClassWriter.COMPUTE_MAXS : 0) : ClassWriter.COMPUTE_MAXS);
 				HookInjectorClassVisitor hooksWriter = createInjectorClassVisitor(cw, hooks);
 				cr.accept(hooksWriter, java7 ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES);
 				bytecode = cw.toByteArray();
-				for (AsmHook hook : hooksWriter.injectedHooks) {
-					logger.debug("Patching method " + hook.getPatchedMethodName());
-				}
 				hooks.removeAll(hooksWriter.injectedHooks);
+				notInjectedHooks.removeAll(hooksWriter.injectedHooks);
 			} catch (Exception e) {
-				logger.severe("A problem has occurred during transformation of class " + className + ".");
-				logger.severe("Attached hooks:");
+				logger.error("A problem has occurred during transformation of class " + className + ".");
+				logger.error("Attached hooks:");
 				for (AsmHook hook : hooks) {
-					logger.severe(hook.toString());
+					logger.error(hook.toString());
 				}
-				logger.severe("Stack trace:", e);
+				logger.error("Stack trace:", e);
 			}
 			
 			for (AsmHook notInjected : hooks) {

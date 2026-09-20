@@ -2,17 +2,9 @@ package alexsocol.asjlib.extendables
 
 import net.minecraft.block.material.*
 
-// For inline purpose; first call methods from here, then from Material
-class MaterialPublic(color: MapColor): Material(color) {
+class MaterialPublic(color: MapColor, val blocksWater: Boolean = true, val blocksLight: Boolean = true, val liquid: Boolean = false, val opaque: Boolean = true, val solid: Boolean = true, val allowBreakInAdventureMode: Boolean = false, val burnable: Boolean = false, val replaceable: Boolean = false, val requiresNoTool: Boolean = true): Material(color) {
 	
-	var blocker = true
-	var blocksLight = true
-	var liquid = false
-	var opaque = true
-	var solid = true
-	
-	// BLOCKS WATER
-	override fun blocksMovement() = blocker
+	override fun blocksMovement() = blocksWater
 	
 	override fun getCanBlockGrass() = blocksLight
 	
@@ -20,42 +12,17 @@ class MaterialPublic(color: MapColor): Material(color) {
 	
 	override fun isOpaque() = opaque
 	
-	/** Can be replaced -_-  */
 	override fun isSolid() = solid
 	
-	public override fun setAdventureModeExempt() = super.setAdventureModeExempt()!!
+	override fun isAdventureModeExempt() = allowBreakInAdventureMode
 	
-	public override fun setBurning() = super.setBurning()!!
+	override fun getCanBurn() = burnable
 	
-	public override fun setImmovableMobility() = super.setImmovableMobility()!!
+	override fun isReplaceable() = replaceable
 	
-	fun setLiquid(): MaterialPublic {
-		liquid = true
-		return this
-	}
+	override fun isToolNotRequired() = requiresNoTool
 	
-	fun setBlocksLight(): MaterialPublic {
-		blocksLight = true
-		return this
-	}
+	public override fun setNoPushMobility() = super.setNoPushMobility()
 	
-	public override fun setNoPushMobility() = super.setNoPushMobility()!!
-	
-	/** Can be washed away  */
-	fun setNotBlocker(): MaterialPublic {
-		blocker = false
-		return this
-	}
-	
-	fun setNotOpaque(): MaterialPublic {
-		opaque = false
-		return this
-	}
-	
-	fun setNotSolid(): MaterialPublic {
-		solid = false
-		return this
-	}
-	
-	public override fun setRequiresTool() = super.setRequiresTool()!!
+	public override fun setImmovableMobility() = super.setImmovableMobility()
 }

@@ -1,0 +1,62 @@
+============================== NINE CIRCLES OF CODING PUBLIC LICENSE ==============================
+==================================== Version 1.0, 20 May 2024 =====================================
+================================== Copyright (c) 2024 AlexSocol ===================================
+======================== (inspired by the Botania License and common sense) =======================
+
+0. General Clauses
+— All restrictive clauses may be ignored with individual authorization.
+
+— Your project should be open source (the code should be viewable, and modification and distribution
+  of the code should be allowed) and include a clause similar to this in its license.
+
+— You must give appropriate credit to AlexSocol as the author of the source code, assets, and
+  binary files you are using. If you make any alterations, the fact that you do so should
+  also be indicated. A link back is optional, but it would be cool if you would do so.
+
+— Certain parts of the source code, assets, and binary files are indicated to be licensed
+  under alternative licenses. You must respect these licenses equally.
+
+— This license will not hold up in court. I have no intention of suing anyone for breaking it.
+  The worst that can happen to you if you do is that I'll become annoyed and request that you
+  correct your mistake. If you use a public distribution platform (such as CurseForge/Modrinth)
+  it's also possible your project will get taken down. Breaking the license also doesn't
+  make you better in the eyes of other people. Don't be a douche!
+
+
+1. Usage Clauses
+— You may not use assets (authored by AlexSocol) with less than ~25% change from the original.
+
+— You may not use the source code, assets, and binary files (original or
+  modified) for commercial purposes.
+
+— You may use the source code, assets, and binary files for any purpose and in any way,
+  not subject to restrictive clauses.
+
+
+2. Modification Clauses
+— You may modify the source code, assets, and binary files (authored by AlexSocol) however you want.
+
+
+3. Distribution Clauses
+— You may not charge for access to the source code, assets, and binary files or otherwise
+  capitalize on limited access. This includes any type of inline advertisement, such as
+  URL shorteners (adf.ly or otherwise) that slow down file downloads. Charging for
+  ingame goods (mod items and blocks) or cosmetic features on a server does not
+  count as distribution and falls purely under the Mojang Terms of Service.
+
+— You may not host binaries for Minecraft 1.7.10 on public distribution platforms
+  (including but not limited to CurseForge/Modrinth).
+
+— You may host binaries ported to other versions of Minecraft while retaining functionality
+  on public distribution platforms (including but not limited to CurseForge/Modrinth).
+
+
+4. Feature Clauses
+— You may create and post video, audio and other source code, assets, and binary files based
+  materials for the purpose of bona fide posting on content distribution platforms
+  (including but not limited to YouTube/Twitch).
+
+— You must not claim to be the author of the source code, assets, and binary files when creating and
+  distributing video, audio and other materials. That's not good. Seriously, don't do that!
+  But you can give appropriate credit to AlexSocol as the author of the source code,
+  assets, and binary files, but you don't have to do it if you don't want to.

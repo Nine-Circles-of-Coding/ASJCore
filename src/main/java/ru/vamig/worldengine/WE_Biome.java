@@ -3,17 +3,23 @@
 
 package ru.vamig.worldengine;
 
+import alexsocol.patcher.PatcherConfigHandler;
 import cpw.mods.fml.common.IWorldGenerator;
+import cpw.mods.fml.common.Loader;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.BiomeDictionary.Type;
 import ru.vamig.worldengine.additions.*;
 import ru.vamig.worldengine.standardcustomgen.*;
 
 import java.util.*;
 
-public class WE_Biome extends BiomeGenBase {
+public abstract class WE_Biome extends BiomeGenBase {
+	
+	// Serialization
+	public static final HashMap<String, WE_Biome> biomeList = new HashMap<>();
+	public final String serializationName;
 	
 	//////////////////
 	//- Generators -//
@@ -33,17 +39,18 @@ public class WE_Biome extends BiomeGenBase {
 	public int biomeNumberOfOctaves = 1,
 		biomeSurfaceHeight = 63,
 		biomeInterpolateQuality = 16;
-	public int grassColor = 0x08F500;
+	public int grassColor = 0x91BD59;
+	
+	public EnumSet<BiomeDictionary.Type> typeList = EnumSet.noneOf(BiomeDictionary.Type.class);
 	
 	/////
 	//=//
 	/////
 	
-	public WE_Biome(int ID_FOR_ALL_WE_BIOMES,
-	                double minMapValue, double maxMapValue,
-	                double persistence, int numOctaves, double sx, double sy,
-	                int height, int interpolateQuality) {
-		this(ID_FOR_ALL_WE_BIOMES);
+	public WE_Biome(double minMapValue, double maxMapValue,
+					double persistence, int numOctaves, double sx, double sy,
+					int height, int interpolateQuality) {
+		this();
 		//-//
 		biomeMinValueOnMap = minMapValue;
 		biomeMaxValueOnMap = maxMapValue;
@@ -57,15 +64,12 @@ public class WE_Biome extends BiomeGenBase {
 		biomeInterpolateQuality = interpolateQuality;
 	}
 	
-	public WE_Biome(int ID_FOR_ALL_WE_BIOMES) {
-		this(ID_FOR_ALL_WE_BIOMES, false);
-	}
-	
-	public WE_Biome(int ID_FOR_ALL_WE_BIOMES, boolean r) {
-		super(ID_FOR_ALL_WE_BIOMES, r);
+	public WE_Biome() {
+		super(PatcherConfigHandler.INSTANCE.getWEBiomeID(), false);
 		setBiomeName("-=|World-Engine|=-");
 		
-		BiomeDictionary.registerBiomeType(this, Type.MAGICAL);
+		serializationName = Loader.instance().activeModContainer().getModId() + ":" + this.getClass().getName();
+		biomeList.put(serializationName, this);
 		
 		WE_BiomeLayer standardBiomeLayers = new WE_BiomeLayer();
 		standardBiomeLayers.add(Blocks.dirt, (byte) 0, Blocks.stone, (byte) 0, -256, 0, -4, -2, true);
@@ -115,12 +119,25 @@ public class WE_Biome extends BiomeGenBase {
 		return biome.id;
 	}
 	
-	@SuppressWarnings("RedundantCast")
-	public static WE_Biome getBiomeAt(WE_ChunkProvider cp, int x, int z) {
-		return getBiomeAt(cp, (long) x, (long) z);
+	public static WE_Biome getBiomeAt(WE_ChunkProvider cp, long x, long z) {
+		return getBiomeAt(cp, (int) x, (int) z);
 	}
 	
-	public static WE_Biome getBiomeAt(WE_ChunkProvider cp, long x, long z) {
+	public static WE_Biome getBiomeAt(WE_ChunkProvider cp, int x, int z) {
+		Chunk chunk = null;
+		String[] biomes = cp.world.blockExists(x, 0, z) ? (chunk = cp.world.getChunkFromBlockCoords(x, z)).WorldEngine_SubBiomeList : null;
+		int biomeIndex = (x & 15) * 16 + (z & 15);
+		
+		if (chunk != null && biomes == null)
+			chunk.WorldEngine_SubBiomeList = new String[256];
+		
+		if (biomes != null) run: {
+			String biomeName = biomes[biomeIndex];
+			if (biomeName == null) break run;
+			WE_Biome biome = biomeList.get(biomeName);
+			if (biome != null) return biome;
+		}
+		
 		double biomeMapData = WE_PerlinNoise.PerlinNoise2D((long) Math.pow(cp.world.getSeed() * 84, 6),
 			x / cp.biomemapScaleX, z / cp.biomemapScaleX,
 			cp.biomemapPersistence, cp.biomemapNumberOfOctaves)
@@ -137,6 +154,9 @@ public class WE_Biome extends BiomeGenBase {
 		//-//
 		if (r == null)
 			r = cp.standardBiomeOnMap;
+		
+		if (biomes != null) biomes[biomeIndex] = r.serializationName;
+		
 		return r;
 	}
 	
